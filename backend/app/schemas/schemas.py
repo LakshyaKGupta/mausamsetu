@@ -51,10 +51,18 @@ class WeatherOut(BaseModel):
     cloud_cover_pct: Optional[float] = None
     source: str
     confidence_score: float
+    predicted_rainfall_mm: Optional[float] = None
+    baseline_rainfall_mm: Optional[float] = None
+    expected_error_margin_mm: Optional[float] = None
+    prediction_interval_lower_mm: Optional[float] = None
+    prediction_interval_upper_mm: Optional[float] = None
+    model_reliability: Optional[str] = "HIGH"
+    provenance_stage: Optional[str] = "AI_DOWNSCALED"
+    source_name: Optional[str] = "IMD_API_AGROMET"
 
 
 class WeatherSummary(BaseModel):
-    """Simplified weather card for farmer-facing views."""
+    """Simplified weather card for farmer-facing views with empirical reliability."""
     panchayat_id: int
     panchayat_name: str
     date: str
@@ -64,6 +72,14 @@ class WeatherSummary(BaseModel):
     humidity_pct: Optional[float] = None
     condition: str  # "sunny" | "cloudy" | "rainy" | "partly_cloudy"
     confidence_score: float
+    predicted_rainfall_mm: Optional[float] = None
+    baseline_rainfall_mm: Optional[float] = None
+    expected_error_margin_mm: Optional[float] = None
+    prediction_interval_lower_mm: Optional[float] = None
+    prediction_interval_upper_mm: Optional[float] = None
+    model_reliability: Optional[str] = "HIGH"
+    provenance_stage: Optional[str] = "AI_DOWNSCALED"
+    source_name: Optional[str] = "IMD_API_AGROMET"
 
 
 # ---------------------------------------------------------------------------

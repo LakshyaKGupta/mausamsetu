@@ -1,0 +1,8 @@
+{
+  "methodology": "EMPIRICAL_VALIDATION_RESIDUALS",
+  "calibration_sample_size": 2920,
+  "calibration_period": "2022-01-01 to 2022-12-31",
+  "median_absolute_error_mm": 0.0,
+  "expected_error_margin_p80_mm": 0.11,
+  "expected_error_margin_p90_mm": 1.42
+}

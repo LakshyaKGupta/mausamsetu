@@ -27,8 +27,8 @@ from app.models.models import (
     Language,
     WeatherSource,
 )
-from app.ml.advisory_generator import generate_advisory
-from app.ml.weather_downscaler import make_mock_weather
+from app.ml.advisory_generator import generate_advisory, WeatherInput
+
 
 # ---------------------------------------------------------------------------
 # Seed Data
@@ -160,6 +160,20 @@ def seed_farmers(db, panchayats: list[Panchayat]) -> None:
     db.commit()
 
 
+def _get_seed_weather(p_id: int) -> tuple[WeatherInput, float]:
+    scenarios = [
+        WeatherInput(35.5, 24.0, 42.0, 85.0, 12.0, 90.0),   # rain_heavy
+        WeatherInput(29.0, 20.0, 18.0, 72.0, 8.0, 55.0),    # rain_moderate
+        WeatherInput(41.0, 28.0, 0.0, 30.0, 15.0, 10.0),    # dry_hot
+        WeatherInput(28.0, 18.0, 2.0, 45.0, 10.0, 20.0),    # dry_mild
+        WeatherInput(31.0, 22.0, 3.0, 80.0, 6.0, 65.0),     # humid_mild
+        WeatherInput(30.0, 21.0, 8.0, 65.0, 10.0, 40.0),    # optimal
+    ]
+    confidences = [0.92, 0.88, 0.90, 0.85, 0.82, 0.94]
+    base = p_id % len(scenarios)
+    return scenarios[base], confidences[base]
+
+
 def seed_weather(db, panchayats: list[Panchayat]) -> None:
     print("Seeding weather observations...")
     for p in panchayats:
@@ -167,7 +181,7 @@ def seed_weather(db, panchayats: list[Panchayat]) -> None:
             WeatherObservation.panchayat_id == p.id
         ).first()
         if not existing:
-            weather_input, confidence = make_mock_weather(p.id)
+            weather_input, confidence = _get_seed_weather(p.id)
             obs = WeatherObservation(
                 panchayat_id=p.id,
                 observed_at=datetime.utcnow(),
@@ -191,7 +205,7 @@ def seed_advisories(db, panchayats: list[Panchayat], officers: list[Officer]) ->
 
     for i, p in enumerate(panchayats):
         crop = CROPS[i % len(CROPS)]
-        weather_input, confidence = make_mock_weather(p.id)
+        weather_input, confidence = _get_seed_weather(p.id)
         result = generate_advisory(weather_input, crop, ml_confidence_override=confidence)
 
         status = random.choices(statuses, weights=weights)[0]

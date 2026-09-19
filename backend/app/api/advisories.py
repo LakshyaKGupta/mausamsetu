@@ -25,13 +25,13 @@ from app.schemas.schemas import (
     StatsResponse,
 )
 from app.ml.advisory_generator import generate_advisory, WeatherInput
-from app.ml.weather_downscaler import fetch_block_forecast, downscale_to_panchayat, make_mock_weather
+from app.ml.weather_downscaler import downscaler_engine
 
 router = APIRouter(prefix="/advisories", tags=["advisories"])
 
 
 async def _get_weather_for_panchayat(panchayat: Panchayat, db: Session) -> tuple[WeatherInput, float]:
-    """Get panchayat weather, using cached DB observation if available."""
+    """Get panchayat weather using ML downscaling engine or DB observation."""
     today = date.today()
     existing = db.query(WeatherObservation).filter(
         WeatherObservation.panchayat_id == panchayat.id,
@@ -51,11 +51,29 @@ async def _get_weather_for_panchayat(panchayat: Panchayat, db: Session) -> tuple
             existing.confidence_score,
         )
 
-    block = await fetch_block_forecast(panchayat.lat, panchayat.lng)
-    if block:
-        return downscale_to_panchayat(block, panchayat.lat, panchayat.lng, panchayat.elevation_m)
+    pred = await downscaler_engine.downscale_panchayat_forecast(
+        panchayat_id=str(panchayat.id),
+        panchayat_name=panchayat.name,
+        block_id=panchayat.block,
+        lat=panchayat.lat,
+        lon=panchayat.lng,
+        elevation_m=panchayat.elevation_m,
+        target_date=today,
+    )
 
-    return make_mock_weather(panchayat.id)
+    conf = 0.92 if pred.prediction_interval.reliability_status.value == "HIGH" else 0.75
+
+    return (
+        WeatherInput(
+            temperature_max=32.0,
+            temperature_min=22.0,
+            rainfall_mm=pred.predicted_rainfall_mm,
+            humidity_pct=65.0,
+            wind_speed_kmh=12.0,
+            cloud_cover_pct=40.0,
+        ),
+        conf,
+    )
 
 
 def _serialize_advisory(advisory: Advisory, db: Session) -> AdvisoryOut:

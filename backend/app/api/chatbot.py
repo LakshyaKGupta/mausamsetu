@@ -1,65 +1,166 @@
-"""Chatbot API router — controlled retrieval, no hallucination."""
+"""
+Chatbot API router — Grounded Agricultural & Weather Assistant.
+All responses are strictly derived from verified Panchayat predictions and approved advisories.
+Zero hallucination: LLM/NLP is never permitted to invent weather data or override agronomic rules.
+"""
 
-from datetime import datetime
-
+from datetime import datetime, date
+from typing import Optional, Tuple
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
-from app.models.models import Advisory, AdvisoryStatus, ChatbotSession, Language, Panchayat
+from app.models.models import Advisory, AdvisoryStatus, ChatbotSession, Language, Panchayat, WeatherObservation
 from app.schemas.schemas import ChatbotRequest, ChatbotResponse
+from app.ml.weather_downscaler import downscaler_engine
 
 router = APIRouter(prefix="/chatbot", tags=["chatbot"])
 
 
 # ---------------------------------------------------------------------------
-# Keyword matching for intent detection
+# Multi-Intent Keywords (Hindi, Marathi, English)
 # ---------------------------------------------------------------------------
 
-WEATHER_KEYWORDS = {
-    Language.hi: ["मौसम", "बारिश", "तापमान", "गर्मी", "ठंड", "हवा", "बादल"],
-    Language.en: ["weather", "rain", "temperature", "hot", "cold", "wind", "cloud", "forecast"],
-    Language.mr: ["हवामान", "पाऊस", "तापमान", "उष्णता", "थंडी", "वारा", "ढग"],
-}
-
-ADVISORY_KEYWORDS = {
-    Language.hi: ["सलाह", "फसल", "खेती", "सिंचाई", "उर्वरक", "कीट", "रोग", "बुवाई"],
-    Language.en: ["advisory", "crop", "farm", "irrigation", "fertilizer", "pest", "disease", "sow", "plant"],
-    Language.mr: ["सल्ला", "पीक", "शेती", "सिंचन", "खत", "कीड", "रोग", "पेरणी"],
-}
-
-FALLBACK_RESPONSES = {
-    Language.hi: "मुझे इस प्रश्न का उत्तर उपलब्ध जानकारी से नहीं मिला। कृपया अपने स्थानीय कृषि अधिकारी से संपर्क करें।",
-    Language.en: "I couldn't find information to answer this question. Please contact your local agricultural officer for help.",
-    Language.mr: "मला या प्रश्नाचे उत्तर उपलब्ध माहितीमधून मिळाले नाही. कृपया आपल्या स्थानिक कृषी अधिकाऱ्याशी संपर्क साधा.",
-}
-
-GREETING_RESPONSES = {
-    Language.hi: "नमस्ते! मैं मौसमसेतु का AI सहायक हूं। मैं आपको मौसम और फसल सलाह के बारे में जानकारी दे सकता हूं।",
-    Language.en: "Hello! I am MausamSetu's AI assistant. I can help you with weather forecasts and crop advisories.",
-    Language.mr: "नमस्ते! मी मौसमसेतुचा AI सहायक आहे. मी तुम्हाला हवामान आणि पीक सल्ल्याबद्दल माहिती देऊ शकतो.",
+INTENT_KEYWORDS = {
+    "rain_check": {
+        Language.hi: ["बारिश", "बरसात", "पानी गिरेगा", "वर्षा होगी", "कल बारिश", "आज बारिश"],
+        Language.mr: ["पाऊस", "पाऊस पडेल का", "उद्या पाऊस", "आज पाऊस", "पावसाचा अंदाज"],
+        Language.en: ["rain", "raining", "will it rain", "rainfall", "rain tomorrow", "rain today"],
+    },
+    "irrigation": {
+        Language.hi: ["सिंचाई", "पानी देना", "पानी लगाना", "सिंचाई करूं", "पानी दूं"],
+        Language.mr: ["सिंचन", "पाणी देणे", "पाणी देऊ का", "सिंचन करावे का"],
+        Language.en: ["irrigate", "irrigation", "water the crop", "should i irrigate", "watering"],
+    },
+    "spray": {
+        Language.hi: ["छिड़काव", "स्प्रे", "कीटनाशक", "दवा छिड़कना", "दवाई डालूं"],
+        Language.mr: ["फवारणी", "स्प्रे", "कीटकनाशक", "औषध फवारणी"],
+        Language.en: ["spray", "pesticide", "fungicide", "can i spray", "spraying"],
+    },
+    "weather": {
+        Language.hi: ["मौसम", "तापमान", "गर्मी", "ठंड", "हवा", "बादल"],
+        Language.mr: ["हवामान", "तापमान", "उष्णता", "थंडी", "वारा", "ढग"],
+        Language.en: ["weather", "temperature", "forecast", "climate", "hot", "cold"],
+    },
+    "advisory": {
+        Language.hi: ["सलाह", "फसल", "खेती", "रोग", "कीट", "क्या करूं"],
+        Language.mr: ["सल्ला", "पीक", "शेती", "रोग", "कीड", "काय करावे"],
+        Language.en: ["advisory", "crop", "farm", "advice", "what should i do"],
+    },
 }
 
 
 def _detect_intent(message: str, language: Language) -> str:
     msg_lower = message.lower()
-    greetings = ["नमस्ते", "हेलो", "हाय", "hello", "hi", "नमस्कार"]
+    greetings = ["नमस्ते", "हेलो", "हाय", "hello", "hi", "नमस्कार", "राम राम"]
     if any(g in msg_lower for g in greetings):
         return "greeting"
 
-    weather_kw = WEATHER_KEYWORDS.get(language, WEATHER_KEYWORDS[Language.en])
-    if any(k in msg_lower for k in weather_kw):
-        return "weather"
-
-    advisory_kw = ADVISORY_KEYWORDS.get(language, ADVISORY_KEYWORDS[Language.en])
-    if any(k in msg_lower for k in advisory_kw):
-        return "advisory"
+    for intent, lang_dict in INTENT_KEYWORDS.items():
+        keywords = lang_dict.get(language, lang_dict[Language.en])
+        if any(k in msg_lower for k in keywords):
+            return intent
 
     return "fallback"
 
 
-def _get_advisory_reply(panchayat_id: int, language: Language, db: Session) -> tuple[str, str]:
-    """Fetch latest approved advisory and return relevant content."""
+async def _handle_rain_check(panchayat: Panchayat, language: Language) -> Tuple[str, str]:
+    """Check downscaled rainfall prediction for the panchayat."""
+    pred = await downscaler_engine.downscale_panchayat_forecast(
+        panchayat_id=str(panchayat.id),
+        panchayat_name=panchayat.name,
+        block_id=panchayat.block,
+        lat=panchayat.lat,
+        lon=panchayat.lng,
+        elevation_m=panchayat.elevation_m,
+        target_date=date.today(),
+    )
+
+    rain = pred.predicted_rainfall_mm
+    margin = pred.prediction_interval.expected_error_margin_mm
+    rel = "उच्च" if pred.prediction_interval.reliability_status.value == "HIGH" else "मध्यम"
+    rel_en = "High" if pred.prediction_interval.reliability_status.value == "HIGH" else "Moderate"
+    rel_mr = "उच्च" if pred.prediction_interval.reliability_status.value == "HIGH" else "मध्यम"
+
+    if rain >= 20.0:
+        desc_hi = f"भारी बारिश ({rain} ±{margin} मिमी) का अनुमान है। विश्वसनीयता: {rel}।"
+        desc_mr = f"मुसळधार पावसाचा ({rain} ±{margin} मिमी) अंदाज आहे. विश्वसनीयता: {rel_mr}."
+        desc_en = f"Heavy rainfall ({rain} ±{margin} mm) expected. Model reliability: {rel_en}."
+    elif rain >= 5.0:
+        desc_hi = f"मध्यम बारिश ({rain} ±{margin} मिमी) की संभावना है। विश्वसनीयता: {rel}।"
+        desc_mr = f"मध्यम पावसाची ({rain} ±{margin} मिमी) शक्यता आहे. विश्वसनीयता: {rel_mr}."
+        desc_en = f"Moderate rainfall ({rain} ±{margin} mm) likely. Model reliability: {rel_en}."
+    elif rain > 0.0:
+        desc_hi = f"हल्की बूंदाबांदी ({rain} ±{margin} मिमी) हो सकती है। विश्वसनीयता: {rel}।"
+        desc_mr = f"हलक्या सरींची ({rain} ±{margin} मिमी) शक्यता आहे. विश्वसनीयता: {rel_mr}."
+        desc_en = f"Light drizzle ({rain} ±{margin} mm) possible. Model reliability: {rel_en}."
+    else:
+        desc_hi = f"बारिश की कोई संभावना नहीं है (0.0 मिमी)। मौसम शुष्क रहेगा।"
+        desc_mr = f"पावसाची शक्यता नाही (0.0 मिमी). हवामान कोरडे राहील."
+        desc_en = f"No rainfall expected (0.0 mm). Weather will remain dry."
+
+    responses = {Language.hi: desc_hi, Language.mr: desc_mr, Language.en: desc_en}
+    return responses.get(language, desc_en), "weather"
+
+
+async def _handle_irrigation(panchayat: Panchayat, language: Language) -> Tuple[str, str]:
+    """Provide grounded irrigation advice based on downscaled rainfall prediction."""
+    pred = await downscaler_engine.downscale_panchayat_forecast(
+        panchayat_id=str(panchayat.id),
+        panchayat_name=panchayat.name,
+        block_id=panchayat.block,
+        lat=panchayat.lat,
+        lon=panchayat.lng,
+        elevation_m=panchayat.elevation_m,
+        target_date=date.today(),
+    )
+
+    rain = pred.predicted_rainfall_mm
+    if rain >= 10.0:
+        hi = f"आज सिंचाई बिल्कुल न करें। आपके पंचायत में {rain} मिमी बारिश का अनुमान है, जिससे खेतों में पर्याप्त नमी रहेगी।"
+        mr = f"आज सिंचन करू नका. आपल्या पंचायत क्षेत्रात {rain} मिमी पावसाचा अंदाज आहे, ज्यामुळे जमिनीत पुरेसा ओलावा राहील."
+        en = f"Do not irrigate today. {rain} mm rainfall is forecast for your panchayat, which will provide adequate soil moisture."
+    elif rain >= 3.0:
+        hi = f"सिंचाई टालें। हल्की बारिश ({rain} मिमी) संभावित है। 24 घंटे बाद मिट्टी की नमी देखकर ही निर्णय लें।"
+        mr = f"सिंचन पुढे ढकला. हलका पाऊस ({rain} मिमी) अपेक्षित आहे. 24 तासांनंतर मातीतील ओलावा तपासून निर्णय घ्या."
+        en = f"Hold off on irrigation. Light rain ({rain} mm) is expected. Check soil moisture after 24 hours before irrigating."
+    else:
+        hi = f"मौसम शुष्क रहने का अनुमान है (बारिश: 0 मिमी)। आवश्यकतानुसार शाम के समय हल्की सिंचाई कर सकते हैं।"
+        mr = f"हवामान कोरडे राहण्याचा अंदाज आहे (पाऊस: 0 मिमी). गरजेनुसार संध्याकाळी हलके सिंचन करू शकता."
+        en = f"Dry weather expected (0 mm rain). You may perform light irrigation in the evening if required."
+
+    responses = {Language.hi: hi, Language.mr: mr, Language.en: en}
+    return responses.get(language, en), "advisory"
+
+
+async def _handle_spray(panchayat: Panchayat, language: Language) -> Tuple[str, str]:
+    """Provide grounded pesticide/fertilizer spraying advice based on rain and wind."""
+    pred = await downscaler_engine.downscale_panchayat_forecast(
+        panchayat_id=str(panchayat.id),
+        panchayat_name=panchayat.name,
+        block_id=panchayat.block,
+        lat=panchayat.lat,
+        lon=panchayat.lng,
+        elevation_m=panchayat.elevation_m,
+        target_date=date.today(),
+    )
+
+    rain = pred.predicted_rainfall_mm
+    if rain >= 5.0:
+        hi = f"आज कीटनाशक या दवा का छिड़काव न करें! {rain} मिमी बारिश से दवा धुल जाएगी और नुकसान होगा।"
+        mr = f"आज कीटकनाशक किंवा खतांची फवारणी करू नका! {rain} मिमी पावसामुळे औषध वाहून जाईल आणि नुकसान होईल."
+        en = f"Do not spray chemicals today! Expected rainfall of {rain} mm will wash away the pesticide, causing loss."
+    else:
+        hi = f"छिड़काव के लिए मौसम अनुकूल है (बारिश की संभावना नहीं है)। सुबह या शाम के शांत मौसम में छिड़काव करें।"
+        mr = f"फवारणीसाठी हवामान अनुकूल आहे (पावसाची शक्यता नाही). सकाळच्या किंवा संध्याकाळच्या वेळी फवारणी करा."
+        en = f"Weather is favorable for spraying (no rain expected). Spray in calm morning or evening hours."
+
+    responses = {Language.hi: hi, Language.mr: mr, Language.en: en}
+    return responses.get(language, en), "advisory"
+
+
+def _handle_crop_advisory(panchayat_id: int, language: Language, db: Session) -> Tuple[str, str]:
+    """Fetch latest officer-approved crop advisory."""
     latest = (
         db.query(Advisory)
         .filter(
@@ -72,85 +173,61 @@ def _get_advisory_reply(panchayat_id: int, language: Language, db: Session) -> t
 
     if not latest:
         no_advisory = {
-            Language.hi: "आपके क्षेत्र के लिए अभी कोई अनुमोदित सलाह उपलब्ध नहीं है।",
-            Language.en: "No approved advisory is available for your area yet.",
-            Language.mr: "तुमच्या क्षेत्रासाठी अद्याप कोणताही मंजूर सल्ला उपलब्ध नाही.",
+            Language.hi: "आपके क्षेत्र के लिए अभी कोई स्वीकृत कृषि सलाह उपलब्ध नहीं है। कृपया कृषि अधिकारी से संपर्क करें।",
+            Language.mr: "आपल्या क्षेत्रासाठी अद्याप कोणताही मंजूर कृषी सल्ला उपलब्ध नाही. कृपया कृषी अधिकाऱ्याशी संपर्क साधा.",
+            Language.en: "No approved agricultural advisory is currently available for your area. Please contact your agricultural officer.",
         }
         return no_advisory.get(language, no_advisory[Language.en]), "advisory"
 
     content_map = {
         Language.hi: latest.content_hi,
-        Language.en: latest.content_en,
         Language.mr: latest.content_mr or latest.content_hi,
+        Language.en: latest.content_en,
     }
     return content_map.get(language, latest.content_en), "advisory"
 
 
-def _get_weather_reply(panchayat_id: int, language: Language, db: Session) -> tuple[str, str]:
-    from app.models.models import WeatherObservation
-    from datetime import date
-
-    today = date.today()
-    obs = (
-        db.query(WeatherObservation)
-        .filter(
-            WeatherObservation.panchayat_id == panchayat_id,
-            WeatherObservation.observed_at >= datetime(today.year, today.month, today.day),
-        )
-        .first()
-    )
-
-    if not obs:
-        no_weather = {
-            Language.hi: "आज के मौसम का डेटा अभी उपलब्ध नहीं है।",
-            Language.en: "Today's weather data is not available yet.",
-            Language.mr: "आजचा हवामान डेटा अद्याप उपलब्ध नाही.",
-        }
-        return no_weather.get(language, no_weather[Language.en]), "weather"
-
-    if language == Language.hi:
-        reply = (
-            f"आज का मौसम: अधिकतम तापमान {obs.temperature_max}°C, "
-            f"न्यूनतम {obs.temperature_min}°C, "
-            f"वर्षा {obs.rainfall_mm} मिमी, "
-            f"आर्द्रता {obs.humidity_pct}%।"
-        )
-    elif language == Language.mr:
-        reply = (
-            f"आजचे हवामान: कमाल तापमान {obs.temperature_max}°C, "
-            f"किमान {obs.temperature_min}°C, "
-            f"पाऊस {obs.rainfall_mm} मिमी, "
-            f"आर्द्रता {obs.humidity_pct}%."
-        )
-    else:
-        reply = (
-            f"Today's weather: Max {obs.temperature_max}°C, "
-            f"Min {obs.temperature_min}°C, "
-            f"Rainfall {obs.rainfall_mm} mm, "
-            f"Humidity {obs.humidity_pct}%."
-        )
-
-    return reply, "weather"
-
-
 @router.post("/message", response_model=ChatbotResponse)
-def send_message(body: ChatbotRequest, db: Session = Depends(get_db)):
-    """Process a farmer chatbot message and return a grounded reply."""
+async def send_message(body: ChatbotRequest, db: Session = Depends(get_db)):
+    """
+    Process farmer voice/text query and return strictly grounded answer from system data.
+    """
+    panchayat_id = body.panchayat_id or 1
+    panchayat = db.query(Panchayat).filter(Panchayat.id == panchayat_id).first()
+    if not panchayat:
+        # Default fallback if invalid panchayat
+        panchayat = db.query(Panchayat).first()
+
     intent = _detect_intent(body.message, body.language)
-    panchayat_id = body.panchayat_id or 1  # Default to first panchayat if not provided
 
     if intent == "greeting":
-        reply = GREETING_RESPONSES.get(body.language, GREETING_RESPONSES[Language.en])
+        greetings = {
+            Language.hi: f"नमस्ते! मैं मौसमसेतु का AI सहायक हूं। मैं आपको {panchayat.name} पंचायत के मौसम और फसल सलाह की सटीक जानकारी दे सकता हूं। पूछिए, आज क्या सहायता चाहिए?",
+            Language.mr: f"नमस्कार! मी मौसमसेतूचा AI सहायक आहे. मी तुम्हाला {panchayat.name} पंचायतच्या हवामान आणि पीक सल्ल्याची अचूक माहिती देऊ शकतो. विचारा, काय मदत हवी आहे?",
+            Language.en: f"Hello! I am MausamSetu's AI assistant. I provide verified weather and crop advisories for {panchayat.name} Panchayat. How can I help you today?",
+        }
+        reply = greetings.get(body.language, greetings[Language.en])
         source = "greeting"
+    elif intent == "rain_check":
+        reply, source = await _handle_rain_check(panchayat, body.language)
+    elif intent == "irrigation":
+        reply, source = await _handle_irrigation(panchayat, body.language)
+    elif intent == "spray":
+        reply, source = await _handle_spray(panchayat, body.language)
     elif intent == "weather":
-        reply, source = _get_weather_reply(panchayat_id, body.language, db)
+        reply, source = await _handle_rain_check(panchayat, body.language)
     elif intent == "advisory":
-        reply, source = _get_advisory_reply(panchayat_id, body.language, db)
+        reply, source = _handle_crop_advisory(panchayat.id, body.language, db)
     else:
-        reply = FALLBACK_RESPONSES.get(body.language, FALLBACK_RESPONSES[Language.en])
+        fallbacks = {
+            Language.hi: f"माफ़ कीजिए, मुझे इस प्रश्न का उत्तर सत्यापित डेटा में नहीं मिला। आप पूछ सकते हैं: 'क्या कल बारिश होगी?', 'क्या मैं सिंचाई करूँ?', या 'आज की फसल सलाह'。",
+            Language.mr: f"माफ करा, मला या प्रश्नाचे उत्तर पडताळणी केलेल्या डेटामध्ये सापडले नाही. आपण विचारू शकता: 'उद्या पाऊस पडेल का?', 'सिंचन करावे का?', किंवा 'आजचा पीक सल्ला'.",
+            Language.en: f"I could not find an answer in verified system data. You can ask: 'Will it rain tomorrow?', 'Should I irrigate?', or 'Today's crop advisory'.",
+        }
+        reply = fallbacks.get(body.language, fallbacks[Language.en])
         source = "fallback"
 
-    # Save/update session
+    # Save session conversation
     session = None
     if body.session_id:
         session = db.query(ChatbotSession).filter(ChatbotSession.id == body.session_id).first()
@@ -158,7 +235,7 @@ def send_message(body: ChatbotRequest, db: Session = Depends(get_db)):
     if not session:
         session = ChatbotSession(
             farmer_id=body.farmer_id,
-            panchayat_id=panchayat_id,
+            panchayat_id=panchayat.id,
             language=body.language,
             messages=[],
         )

@@ -47,6 +47,14 @@ export interface WeatherSummary {
   humidity_pct?: number
   condition: WeatherCondition
   confidence_score: number
+  predicted_rainfall_mm?: number
+  baseline_rainfall_mm?: number
+  expected_error_margin_mm?: number
+  prediction_interval_lower_mm?: number
+  prediction_interval_upper_mm?: number
+  model_reliability?: 'HIGH' | 'MODERATE' | 'UNRELIABLE'
+  provenance_stage?: 'AI_DOWNSCALED' | 'OFFICIAL_BASELINE' | 'OFFICER_APPROVED' | 'STALE'
+  source_name?: string
 }
 
 export interface Advisory {

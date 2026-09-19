@@ -54,6 +54,9 @@ dist-ssr/
 *.png
 *.webp
 *.log
+*.db
+*.sqlite
+*.sqlite3
 ml/data/raw/*
 !ml/data/raw/.gitkeep
 ml/data/processed/*
