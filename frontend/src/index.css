@@ -1,0 +1,154 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --radius: 0.75rem;
+  }
+
+  * {
+    @apply border-slate-200;
+  }
+
+  html {
+    @apply scroll-smooth;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    @apply bg-slate-50 text-slate-900 antialiased;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  }
+
+  /* Devanagari text gets the appropriate font */
+  .devanagari {
+    font-family: 'Noto Sans Devanagari', 'Inter', sans-serif;
+  }
+}
+
+@layer components {
+  .card {
+    @apply bg-white rounded-2xl shadow-soft border border-slate-100 p-6;
+  }
+
+  .card-sm {
+    @apply bg-white rounded-xl shadow-soft border border-slate-100 p-4;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-brand-600 
+           hover:bg-brand-700 active:bg-brand-800 text-white text-sm font-semibold 
+           rounded-xl transition-all duration-200 shadow-sm hover:shadow-md 
+           disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none 
+           focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-white 
+           hover:bg-slate-50 active:bg-slate-100 text-slate-700 text-sm font-semibold 
+           rounded-xl border border-slate-200 transition-all duration-200 shadow-sm 
+           disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none 
+           focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2;
+  }
+
+  .btn-danger {
+    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-red-600 
+           hover:bg-red-700 text-white text-sm font-semibold rounded-xl 
+           transition-all duration-200 shadow-sm;
+  }
+
+  .badge {
+    @apply inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold;
+  }
+
+  .badge-green {
+    @apply badge bg-brand-100 text-brand-700;
+  }
+
+  .badge-yellow {
+    @apply badge bg-earth-100 text-earth-700;
+  }
+
+  .badge-red {
+    @apply badge bg-red-100 text-red-700;
+  }
+
+  .badge-blue {
+    @apply badge bg-sky-100 text-sky-700;
+  }
+
+  .badge-slate {
+    @apply badge bg-slate-100 text-slate-600;
+  }
+
+  .input {
+    @apply w-full px-4 py-2.5 text-sm bg-white border border-slate-200 rounded-xl 
+           text-slate-900 placeholder-slate-400 transition-colors duration-200
+           focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent;
+  }
+
+  .label {
+    @apply text-sm font-medium text-slate-700 mb-1.5 block;
+  }
+
+  /* Confidence indicator */
+  .confidence-high {
+    @apply text-brand-600 bg-brand-50;
+  }
+
+  .confidence-medium {
+    @apply text-earth-600 bg-earth-50;
+  }
+
+  .confidence-low {
+    @apply text-red-600 bg-red-50;
+  }
+
+  /* Sidebar nav item */
+  .nav-item {
+    @apply flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium 
+           text-slate-600 hover:bg-slate-100 hover:text-slate-900 
+           transition-all duration-200 cursor-pointer;
+  }
+
+  .nav-item-active {
+    @apply nav-item bg-brand-50 text-brand-700 hover:bg-brand-100;
+  }
+
+  /* Weather card weather conditions */
+  .weather-sunny {
+    @apply bg-gradient-to-br from-earth-400 to-orange-400;
+  }
+
+  .weather-rainy {
+    @apply bg-gradient-to-br from-sky-500 to-blue-700;
+  }
+
+  .weather-partly-cloudy {
+    @apply bg-gradient-to-br from-sky-400 to-slate-400;
+  }
+
+  .weather-cloudy {
+    @apply bg-gradient-to-br from-slate-400 to-slate-600;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  .glass {
+    @apply bg-white/80 backdrop-blur-sm;
+  }
+}
