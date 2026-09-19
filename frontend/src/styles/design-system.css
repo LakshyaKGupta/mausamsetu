@@ -1,0 +1,66 @@
+/* MausamSetu Agricultural Design System Tokens */
+
+:root {
+  /* Core Agricultural Palette */
+  --color-brand-primary: #166534;    /* Deep agricultural green */
+  --color-brand-dark: #14532D;       /* Dark forest green */
+  --color-brand-light: #DCFCE7;      /* Pale soft green */
+  --color-bg-pale: #F7FAF7;          /* Light agricultural background */
+
+  /* Neutrals */
+  --color-text: #17201A;             /* High contrast dark slate */
+  --color-text-muted: #647067;       /* Calm muted secondary text */
+  --color-surface: #FFFFFF;          /* Pure white card surface */
+  --color-border: #E2E8E4;           /* Subtle border */
+
+  /* Semantic Highlights (strictly contextual) */
+  --color-weather-blue: #3B82F6;     /* Weather info only */
+  --color-weather-light: #EFF6FF;
+  --color-warning-amber: #D97706;    /* Critical agricultural alert */
+  --color-warning-light: #FFFBEB;
+  --color-danger-red: #DC2626;
+  --color-danger-light: #FEF2F2;
+
+  /* Spacing Scale */
+  --container-max-width: 1200px;
+}
+
+/* Subtle data pulse animation for pipeline visualization */
+@keyframes dataPulse {
+  0% {
+    transform: scale(0.95);
+    opacity: 0.6;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 1;
+    box-shadow: 0 0 16px rgba(22, 101, 52, 0.4);
+  }
+  100% {
+    transform: scale(0.95);
+    opacity: 0.6;
+  }
+}
+
+.animate-data-pulse {
+  animation: dataPulse 2.5s infinite ease-in-out;
+}
+
+/* Animated geographic contour lines */
+@keyframes contourDrift {
+  0% {
+    background-position: 0% 0%;
+  }
+  50% {
+    background-position: 100% 100%;
+  }
+  100% {
+    background-position: 0% 0%;
+  }
+}
+
+.bg-contour-pattern {
+  background-image: radial-gradient(circle at 50% 50%, rgba(22, 101, 52, 0.05) 1px, transparent 1px),
+                    radial-gradient(circle at 20% 20%, rgba(22, 101, 52, 0.03) 1px, transparent 1px);
+  background-size: 32px 32px, 48px 48px;
+}

@@ -35,6 +35,7 @@ yarn-error.log*
 dist/
 dist-ssr/
 *.local
+*.tsbuildinfo
 
 # Environment variables & secrets
 .env
