@@ -33,24 +33,24 @@ export const Footer: React.FC = () => {
             </h4>
             <ul className="space-y-2.5 text-sm text-[#cbd5ce]">
               <li>
-                <Link to="/" className="hover:text-white transition-colors">
-                  Home
-                </Link>
+                <a href="/#downscaling" className="hover:text-white transition-colors">
+                  Geographic Downscaling
+                </a>
               </li>
               <li>
-                <Link to="/how-it-works" className="hover:text-white transition-colors">
-                  How It Works
-                </Link>
+                <a href="/#decision-intelligence" className="hover:text-white transition-colors">
+                  Decision Intelligence
+                </a>
               </li>
               <li>
-                <Link to="/farmers" className="hover:text-white transition-colors">
-                  For Farmers
-                </Link>
+                <a href="/#verification" className="hover:text-white transition-colors">
+                  Human Verification
+                </a>
               </li>
               <li>
-                <Link to="/officers" className="hover:text-white transition-colors">
-                  For Agricultural Officers
-                </Link>
+                <a href="/#experience" className="hover:text-white transition-colors">
+                  Farmer & Officer Portals
+                </a>
               </li>
             </ul>
           </div>
@@ -101,7 +101,7 @@ export const Footer: React.FC = () => {
 
         {/* Bottom Bar */}
         <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#9ca89f]">
-          <p>© 2026 MausamSetu. Developed for Smart India Hackathon (SIH 2026).</p>
+          <p>© 2026 MausamSetu. All rights reserved.</p>
           <div className="flex items-center gap-6">
             <span className="flex items-center gap-1">
               Built with <Heart size={12} className="text-red-400 fill-red-400" /> for Indian Farmers

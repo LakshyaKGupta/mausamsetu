@@ -25,6 +25,10 @@
   --container-max-width: 1200px;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 /* Subtle data pulse animation for pipeline visualization */
 @keyframes dataPulse {
   0% {
@@ -46,6 +50,24 @@
   animation: dataPulse 2.5s infinite ease-in-out;
 }
 
+/* Subtle floating animation for contextual icons */
+@keyframes floatSubtle {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+.animate-float-subtle {
+  animation: floatSubtle 4s ease-in-out infinite;
+}
+
+.animate-float-delayed {
+  animation: floatSubtle 4.5s ease-in-out 1.5s infinite;
+}
+
 /* Animated geographic contour lines */
 @keyframes contourDrift {
   0% {
@@ -64,3 +86,28 @@
                     radial-gradient(circle at 20% 20%, rgba(22, 101, 52, 0.03) 1px, transparent 1px);
   background-size: 32px 32px, 48px 48px;
 }
+
+/* Respect prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  video {
+    display: none !important;
+  }
+
+  .video-poster-fallback {
+    display: block !important;
+  }
+}
+

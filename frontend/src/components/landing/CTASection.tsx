@@ -14,12 +14,12 @@ export const CTASection: React.FC = () => {
           Ready for Field Deployment
         </span>
 
-        <h2 className="text-3xl sm:text-5xl font-bold tracking-tight text-white leading-tight">
-          From weather forecast to farm decision.
+        <h2 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-white leading-tight uppercase">
+          FROM FORECAST TO FARM DECISION.
         </h2>
 
-        <p className="max-w-2xl mx-auto text-base sm:text-lg text-[#DCFCE7] leading-relaxed">
-          Experience hyper-local weather intelligence designed specifically for Indian agriculture. Start testing your Panchayat or explore the officer portal.
+        <p className="max-w-2xl mx-auto text-base sm:text-lg text-[#DCFCE7] leading-relaxed font-normal">
+          Local weather intelligence for every Panchayat. Start exploring localized micro-forecasts or access the officer verification portal.
         </p>
 
         <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4">
