@@ -1,4 +1,4 @@
-/* MausamSetu Agricultural Design System Tokens */
+/* MausamSetu Agricultural Design System Tokens & Motion System */
 
 :root {
   /* Core Agricultural Palette */
@@ -29,19 +29,96 @@ html {
   scroll-behavior: smooth;
 }
 
+/* Full-page scroll snap container for desktop */
+@media (min-width: 1024px) {
+  .snap-container {
+    scroll-snap-type: y mandatory;
+    overflow-y: scroll;
+    height: calc(100vh - 4.5rem);
+    scroll-behavior: smooth;
+  }
+
+  .snap-section {
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+    scroll-margin-top: 4.5rem;
+    height: calc(100vh - 4.5rem);
+    min-height: calc(100vh - 4.5rem);
+    max-height: calc(100vh - 4.5rem);
+    overflow: hidden;
+  }
+}
+
+/* Floating Animation Engine for Contextual Telemetry Icons */
+@keyframes floatSlow {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-8px) rotate(1.5deg);
+  }
+}
+
+@keyframes floatDrift {
+  0%, 100% {
+    transform: translate(0px, 0px);
+  }
+  33% {
+    transform: translate(4px, -6px);
+  }
+  66% {
+    transform: translate(-3px, -3px);
+  }
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(22, 101, 52, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 0 10px rgba(22, 101, 52, 0);
+  }
+}
+
+@keyframes radarSweep {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-float-slow {
+  animation: floatSlow 5s ease-in-out infinite;
+}
+
+.animate-float-drift {
+  animation: floatDrift 7s ease-in-out infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.animate-radar-sweep {
+  animation: radarSweep 6s linear infinite;
+  transform-origin: center center;
+}
+
 /* Subtle data pulse animation for pipeline visualization */
 @keyframes dataPulse {
   0% {
-    transform: scale(0.95);
+    transform: scale(0.96);
     opacity: 0.6;
   }
   50% {
-    transform: scale(1.05);
+    transform: scale(1.04);
     opacity: 1;
-    box-shadow: 0 0 16px rgba(22, 101, 52, 0.4);
+    box-shadow: 0 0 16px rgba(22, 101, 52, 0.35);
   }
   100% {
-    transform: scale(0.95);
+    transform: scale(0.96);
     opacity: 0.6;
   }
 }
@@ -50,41 +127,34 @@ html {
   animation: dataPulse 2.5s infinite ease-in-out;
 }
 
-/* Subtle floating animation for contextual icons */
-@keyframes floatSubtle {
-  0%, 100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-5px);
-  }
-}
-
-.animate-float-subtle {
-  animation: floatSubtle 4s ease-in-out infinite;
-}
-
-.animate-float-delayed {
-  animation: floatSubtle 4.5s ease-in-out 1.5s infinite;
-}
-
 /* Animated geographic contour lines */
-@keyframes contourDrift {
-  0% {
-    background-position: 0% 0%;
-  }
-  50% {
-    background-position: 100% 100%;
-  }
-  100% {
-    background-position: 0% 0%;
-  }
+.bg-contour-pattern {
+  background-image: radial-gradient(circle at 50% 50%, rgba(22, 101, 52, 0.06) 1.5px, transparent 1.5px),
+                    radial-gradient(circle at 20% 20%, rgba(22, 101, 52, 0.04) 1px, transparent 1px);
+  background-size: 36px 36px, 54px 54px;
 }
 
-.bg-contour-pattern {
-  background-image: radial-gradient(circle at 50% 50%, rgba(22, 101, 52, 0.05) 1px, transparent 1px),
-                    radial-gradient(circle at 20% 20%, rgba(22, 101, 52, 0.03) 1px, transparent 1px);
-  background-size: 32px 32px, 48px 48px;
+/* Topographic elevation lines overlay */
+.bg-topo-grid {
+  background-image: linear-gradient(to right, rgba(22, 101, 52, 0.04) 1px, transparent 1px),
+                    linear-gradient(to bottom, rgba(22, 101, 52, 0.04) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+/* Custom scrollbar for clean aesthetic */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #F7FAF7;
+}
+::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94A3B8;
 }
 
 /* Respect prefers-reduced-motion */
@@ -110,4 +180,3 @@ html {
     display: block !important;
   }
 }
-
