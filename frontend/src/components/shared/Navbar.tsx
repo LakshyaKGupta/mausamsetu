@@ -97,11 +97,11 @@ export const Navbar: React.FC = () => {
       />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16 sm:h-20">
+        <div className="flex items-center justify-between h-16">
           {/* Brand Logo & Name */}
           <Link to="/" className="flex items-center gap-2.5 group focus:outline-none" aria-label="MausamSetu home">
             {/* Geometric Mark: M + bridge arch + rain-drop negative space */}
-            <div className="w-9 h-9 rounded-xl bg-[#126B3A] flex items-center justify-center shadow-sm transition-all duration-200 group-hover:bg-[#0B4F2A]">
+            <div className="w-9 h-9 rounded-xl bg-[#126B3A] flex items-center justify-center shadow-xs transition-all duration-200 group-hover:bg-[#0B4F2A]">
               <svg viewBox="0 0 32 32" width="22" height="22" fill="none" aria-hidden="true">
                 {/* Bridge arch */}
                 <path d="M5 22 Q5 10 16 10 Q27 10 27 22" stroke="white" strokeWidth="2.2" strokeLinecap="round" fill="none" />
@@ -113,7 +113,7 @@ export const Navbar: React.FC = () => {
                 <path d="M16 19 L16 26" stroke="#86EFAC" strokeWidth="1.5" strokeLinecap="round" strokeDasharray="2 2" />
               </svg>
             </div>
-            <span className="font-bold text-[1.1rem] text-[#111814] tracking-tight">
+            <span className="font-bold text-[1.15rem] text-[#111814] tracking-tight">
               Mausam<span className="text-[#126B3A]">Setu</span>
             </span>
           </Link>
