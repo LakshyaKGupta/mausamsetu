@@ -109,8 +109,8 @@ export const Hero: React.FC = () => {
           <source src="/videos/hero-farm-bg.webm" type="video/webm" />
         </video>
 
-        {/* Ambient base lighting */}
-        <div className="absolute inset-0 bg-gradient-to-b from-[#F6F9F5]/30 via-transparent to-[#F6F9F5]/80" />
+        {/* Ambient base lighting — very subtle to let the video shine through */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/5 via-transparent to-black/10" />
 
         {/* Interactive Cursor Spotlight with Video Glow (Compact & Subtle) */}
         <motion.div
@@ -125,9 +125,9 @@ export const Hero: React.FC = () => {
           }}
         />
 
-        {/* Top & bottom subtle fades for seamless section transitions */}
-        <div className="absolute top-0 inset-x-0 h-24 bg-gradient-to-b from-[#F6F9F5]/90 via-[#F6F9F5]/40 to-transparent" />
-        <div className="absolute bottom-0 inset-x-0 h-32 bg-gradient-to-t from-[#F6F9F5] via-[#F6F9F5]/70 to-transparent" />
+        {/* Minimal edge connection to Navbar & Downscaling section without cloudy white wash */}
+        <div className="absolute top-0 inset-x-0 h-14 bg-gradient-to-b from-[#F6F9F5]/40 to-transparent" />
+        <div className="absolute bottom-0 inset-x-0 h-16 bg-gradient-to-t from-[#F6F9F5]/50 to-transparent" />
 
         {/* Subtle static film grain */}
         <div className="absolute inset-0 bg-grain opacity-15 mix-blend-overlay" />

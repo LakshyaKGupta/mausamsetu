@@ -36,9 +36,6 @@ export const Home: React.FC = () => {
       {/* 0. Hero Section: Animated atmospheric weather background, editorial typography, pan-India resolution engine */}
       <Hero />
 
-      {/* Smooth Transition Divider: Hero -> Downscaling */}
-      <div className="w-full h-8 bg-gradient-to-b from-[#F0FDF4] to-[#FFFFFF] pointer-events-none" />
-
       {/* 1. How It Works: Geographic Downscaling & Weather Refinement */}
       <motion.div
         initial={{ opacity: 0.92, y: 12 }}
