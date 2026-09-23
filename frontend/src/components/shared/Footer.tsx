@@ -71,23 +71,23 @@ export const Footer: React.FC = () => {
             </h4>
             <ul className="space-y-2.5 text-sm text-[#cbd5ce]">
               <li>
-                <Link to="/app/farmer" className="hover:text-white transition-colors">
-                  Farmer PWA App
+                <Link to="/login?role=farmer" className="hover:text-white transition-colors">
+                  Farmer Advisory Sign In
                 </Link>
               </li>
               <li>
-                <Link to="/login" className="hover:text-white transition-colors">
-                  Officer Portal Login
+                <Link to="/login?role=officer" className="hover:text-white transition-colors">
+                  Agricultural Officer Portal
+                </Link>
+              </li>
+              <li>
+                <Link to="/login?role=admin" className="hover:text-white transition-colors">
+                  District Admin Console
                 </Link>
               </li>
               <li>
                 <Link to="/signup" className="hover:text-white transition-colors">
-                  Farmer Registration
-                </Link>
-              </li>
-              <li>
-                <Link to="/app/admin" className="hover:text-white transition-colors">
-                  District Admin Overview
+                  New User Registration
                 </Link>
               </li>
             </ul>

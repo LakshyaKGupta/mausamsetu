@@ -30,9 +30,18 @@ import AdminDashboard from './pages/app/admin/Admin'
 function OfficerRoute({ children }: { children: React.ReactNode }) {
   const token = localStorage.getItem('mausamsetu_token')
   const role = localStorage.getItem('mausamsetu_role')
-  // Allow access if token or role is officer (supports both full JWT and demo session)
-  if (!token && role !== 'officer') {
+  // Allow access if token or role is officer or admin (supports full JWT and demo session)
+  if (!token && role !== 'officer' && role !== 'admin') {
     return <Navigate to="/login?role=officer" replace />
+  }
+  return <>{children}</>
+}
+
+// Admin Auth Guard
+function AdminRoute({ children }: { children: React.ReactNode }) {
+  const role = localStorage.getItem('mausamsetu_role')
+  if (role !== 'admin') {
+    return <Navigate to="/login?role=admin" replace />
   }
   return <>{children}</>
 }
@@ -72,13 +81,21 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
             }
           />
 
-          {/* District Admin Console */}
-          <Route path="admin" element={<AdminDashboard />} />
+          {/* District Admin Console (Protected) */}
+          <Route
+            path="admin"
+            element={
+              <AdminRoute>
+                <AdminDashboard />
+              </AdminRoute>
+            }
+          />
         </Route>
 
         {/* 4. Backward Compatibility Redirects */}
         <Route path="/officer/login" element={<Navigate to="/login?role=officer" replace />} />
         <Route path="/officer" element={<Navigate to="/app/officer" replace />} />
+        <Route path="/admin" element={<Navigate to="/app/admin" replace />} />
 
         {/* 5. Catch-All Redirect */}
         <Route path="*" element={<Navigate to="/" replace />} />
