@@ -1,167 +1,158 @@
-/* MausamSetu Agricultural Design System Tokens & Motion System */
+/* MausamSetu Design System — V3
+   Visual concept: Weather → Geography → Panchayat → Crop → Farm Decision
+   Color system is strict; animation is scientific, not decorative.
+*/
 
+/* ──────────────────────────────────────────────────────
+   COLOR TOKENS
+────────────────────────────────────────────────────── */
 :root {
-  /* Core Agricultural Palette */
-  --color-brand-primary: #166534;    /* Deep agricultural green */
-  --color-brand-dark: #14532D;       /* Dark forest green */
-  --color-brand-light: #DCFCE7;      /* Pale soft green */
-  --color-bg-pale: #F7FAF7;          /* Light agricultural background */
+  /* Brand greens — MausamSetu / verified */
+  --color-brand:       #126B3A;
+  --color-brand-deep:  #0B4F2A;
+  --color-brand-light: #EAF5EC;
 
-  /* Neutrals */
-  --color-text: #17201A;             /* High contrast dark slate */
-  --color-text-muted: #647067;       /* Calm muted secondary text */
-  --color-surface: #FFFFFF;          /* Pure white card surface */
-  --color-border: #E2E8E4;           /* Subtle border */
+  /* Page backgrounds */
+  --color-bg:          #F6F9F5;
+  --color-surface:     #FFFFFF;
 
-  /* Semantic Highlights (strictly contextual) */
-  --color-weather-blue: #3B82F6;     /* Weather info only */
-  --color-weather-light: #EFF6FF;
-  --color-warning-amber: #D97706;    /* Critical agricultural alert */
-  --color-warning-light: #FFFBEB;
-  --color-danger-red: #DC2626;
-  --color-danger-light: #FEF2F2;
+  /* Typography */
+  --color-text:        #111814;
+  --color-text-muted:  #66736B;
+  --color-border:      #E2E8E4;
 
-  /* Spacing Scale */
-  --container-max-width: 1200px;
+  /* Semantic — weather only */
+  --color-weather:     #3B82F6;
+  --color-weather-bg:  #EFF6FF;
+
+  /* Semantic — caution only */
+  --color-warning:     #D97706;
+  --color-warning-bg:  #FFFBEB;
+
+  /* Semantic — danger */
+  --color-danger:      #DC2626;
+  --color-danger-bg:   #FEF2F2;
 }
 
 html {
   scroll-behavior: smooth;
+  scroll-padding-top: 80px;
 }
 
-/* Full-page scroll snap container for desktop */
-@media (min-width: 1024px) {
-  .snap-container {
-    scroll-snap-type: y mandatory;
-    overflow-y: scroll;
-    height: calc(100vh - 4.5rem);
-    scroll-behavior: smooth;
-  }
-
-  .snap-section {
-    scroll-snap-align: start;
-    scroll-snap-stop: always;
-    scroll-margin-top: 4.5rem;
-    height: calc(100vh - 4.5rem);
-    min-height: calc(100vh - 4.5rem);
-    max-height: calc(100vh - 4.5rem);
-    overflow: hidden;
-  }
+/* ──────────────────────────────────────────────────────
+   TOPOGRAPHIC BACKGROUND PATTERNS
+   (semantic: represents actual geographic terrain lines)
+────────────────────────────────────────────────────── */
+.bg-topo-grid {
+  background-image:
+    linear-gradient(to right, rgba(18, 107, 58, 0.045) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(18, 107, 58, 0.045) 1px, transparent 1px);
+  background-size: 44px 44px;
 }
 
-/* Floating Animation Engine for Contextual Telemetry Icons */
-@keyframes floatSlow {
-  0%, 100% {
-    transform: translateY(0px) rotate(0deg);
-  }
-  50% {
-    transform: translateY(-8px) rotate(1.5deg);
-  }
-}
-
-@keyframes floatDrift {
-  0%, 100% {
-    transform: translate(0px, 0px);
-  }
-  33% {
-    transform: translate(4px, -6px);
-  }
-  66% {
-    transform: translate(-3px, -3px);
-  }
-}
-
-@keyframes pulseGlow {
-  0%, 100% {
-    box-shadow: 0 0 0 0 rgba(22, 101, 52, 0.2);
-  }
-  50% {
-    box-shadow: 0 0 0 10px rgba(22, 101, 52, 0);
-  }
-}
-
-@keyframes radarSweep {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
-}
-
-.animate-float-slow {
-  animation: floatSlow 5s ease-in-out infinite;
-}
-
-.animate-float-drift {
-  animation: floatDrift 7s ease-in-out infinite;
-}
-
-.animate-pulse-glow {
-  animation: pulseGlow 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-.animate-radar-sweep {
-  animation: radarSweep 6s linear infinite;
-  transform-origin: center center;
-}
-
-/* Subtle data pulse animation for pipeline visualization */
-@keyframes dataPulse {
-  0% {
-    transform: scale(0.96);
-    opacity: 0.6;
-  }
-  50% {
-    transform: scale(1.04);
-    opacity: 1;
-    box-shadow: 0 0 16px rgba(22, 101, 52, 0.35);
-  }
-  100% {
-    transform: scale(0.96);
-    opacity: 0.6;
-  }
-}
-
-.animate-data-pulse {
-  animation: dataPulse 2.5s infinite ease-in-out;
-}
-
-/* Animated geographic contour lines */
 .bg-contour-pattern {
-  background-image: radial-gradient(circle at 50% 50%, rgba(22, 101, 52, 0.06) 1.5px, transparent 1.5px),
-                    radial-gradient(circle at 20% 20%, rgba(22, 101, 52, 0.04) 1px, transparent 1px);
+  background-image:
+    radial-gradient(circle at 50% 50%, rgba(18, 107, 58, 0.07) 1.5px, transparent 1.5px),
+    radial-gradient(circle at 20% 20%, rgba(18, 107, 58, 0.05) 1px, transparent 1px);
   background-size: 36px 36px, 54px 54px;
 }
 
-/* Topographic elevation lines overlay */
-.bg-topo-grid {
-  background-image: linear-gradient(to right, rgba(22, 101, 52, 0.04) 1px, transparent 1px),
-                    linear-gradient(to bottom, rgba(22, 101, 52, 0.04) 1px, transparent 1px);
-  background-size: 40px 40px;
+/* Animated contour — used in hero bg */
+@keyframes topo-drift {
+  0%   { background-position: 0px 0px, 0px 0px; }
+  50%  { background-position: 22px 18px, -16px 22px; }
+  100% { background-position: 0px 0px, 0px 0px; }
 }
 
-/* Custom scrollbar for clean aesthetic */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-::-webkit-scrollbar-track {
-  background: #F7FAF7;
-}
-::-webkit-scrollbar-thumb {
-  background: #CBD5E1;
-  border-radius: 9999px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: #94A3B8;
+.bg-topo-animated {
+  background-image:
+    radial-gradient(ellipse at 50% 50%, rgba(18, 107, 58, 0.065) 1.5px, transparent 1.5px),
+    linear-gradient(to right, rgba(18, 107, 58, 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(18, 107, 58, 0.04) 1px, transparent 1px);
+  background-size: 48px 48px, 48px 48px, 48px 48px;
+  animation: topo-drift 22s ease-in-out infinite;
 }
 
-/* Respect prefers-reduced-motion */
+/* Grain texture overlay */
+.bg-grain {
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  background-size: 200px 200px;
+}
+
+/* ──────────────────────────────────────────────────────
+   NODE PULSE — panchayat node indicator
+   (represents a live broadcasting location marker)
+────────────────────────────────────────────────────── */
+@keyframes node-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(18, 107, 58, 0.3); }
+  50%       { box-shadow: 0 0 0 8px rgba(18, 107, 58, 0); }
+}
+
+.animate-node-pulse {
+  animation: node-pulse 2.4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* ──────────────────────────────────────────────────────
+   DATA PACKET FLOW — green signal in pipeline
+────────────────────────────────────────────────────── */
+@keyframes flow-dash {
+  to { stroke-dashoffset: -24; }
+}
+
+.animate-flow-dash {
+  stroke-dasharray: 6 6;
+  animation: flow-dash 1.2s linear infinite;
+}
+
+/* ──────────────────────────────────────────────────────
+   ATMOSPHERE DRIFT — very slow radial ambient
+────────────────────────────────────────────────────── */
+@keyframes atmosphere-drift {
+  0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.4; }
+  33%       { transform: translate(2%, -1.5%) scale(1.03); opacity: 0.5; }
+  66%       { transform: translate(-1.5%, 1%) scale(0.98); opacity: 0.35; }
+}
+
+.animate-atmosphere {
+  animation: atmosphere-drift 18s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
+/* ──────────────────────────────────────────────────────
+   NUMBER COUNT-UP helper class
+────────────────────────────────────────────────────── */
+.count-up {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+/* ──────────────────────────────────────────────────────
+   SOUNDWAVE BARS — voice indicator in farmer PWA
+────────────────────────────────────────────────────── */
+@keyframes soundwave-bar {
+  0%, 100% { height: 4px; }
+  50%       { height: 18px; }
+}
+
+.soundwave-1 { animation: soundwave-bar 0.8s ease-in-out infinite 0.1s; }
+.soundwave-2 { animation: soundwave-bar 0.8s ease-in-out infinite 0.3s; }
+.soundwave-3 { animation: soundwave-bar 0.8s ease-in-out infinite 0.5s; }
+.soundwave-4 { animation: soundwave-bar 0.8s ease-in-out infinite 0.2s; }
+.soundwave-5 { animation: soundwave-bar 0.8s ease-in-out infinite 0.4s; }
+
+/* ──────────────────────────────────────────────────────
+   CUSTOM SCROLLBAR
+────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: #F6F9F5; }
+::-webkit-scrollbar-thumb { background: #C8D5C8; border-radius: 9999px; }
+::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
+
+/* ──────────────────────────────────────────────────────
+   ACCESSIBILITY — Prefers Reduced Motion
+────────────────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
-  html {
-    scroll-behavior: auto;
-  }
+  html { scroll-behavior: auto; }
 
   *,
   *::before,
@@ -172,11 +163,10 @@ html {
     scroll-behavior: auto !important;
   }
 
-  video {
-    display: none !important;
-  }
-
-  .video-poster-fallback {
-    display: block !important;
+  .bg-topo-animated,
+  .animate-node-pulse,
+  .animate-atmosphere,
+  .animate-flow-dash {
+    animation: none !important;
   }
 }

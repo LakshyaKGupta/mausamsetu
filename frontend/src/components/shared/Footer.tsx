@@ -9,9 +9,18 @@ export const Footer: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-10 lg:gap-12 pb-12 border-b border-[#2A372E]">
           {/* Col 1: Brand & Purpose */}
           <div className="md:col-span-1 space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-[#166534] text-white flex items-center justify-center font-bold text-xl shadow-sm">
-                M
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-xl bg-[#126B3A] flex items-center justify-center shadow-md shadow-emerald-950/30">
+                <svg viewBox="0 0 32 32" width="22" height="22" fill="none" aria-hidden="true">
+                  {/* Bridge arch */}
+                  <path d="M5 22 Q5 10 16 10 Q27 10 27 22" stroke="white" strokeWidth="2.2" strokeLinecap="round" fill="none" />
+                  {/* M letterform uprights */}
+                  <path d="M5 22 L5 27" stroke="white" strokeWidth="2.2" strokeLinecap="round" />
+                  <path d="M27 22 L27 27" stroke="white" strokeWidth="2.2" strokeLinecap="round" />
+                  {/* Rain drop */}
+                  <circle cx="16" cy="17" r="2" fill="#86EFAC" />
+                  <path d="M16 19 L16 26" stroke="#86EFAC" strokeWidth="1.5" strokeLinecap="round" strokeDasharray="2 2" />
+                </svg>
               </div>
               <span className="font-bold text-xl text-white tracking-tight">
                 Mausam<span className="text-[#4ade80]">Setu</span>
@@ -90,11 +99,11 @@ export const Footer: React.FC = () => {
               Governance & Data
             </h4>
             <p className="text-xs text-[#9ca89f] leading-relaxed mb-3">
-              MausamSetu downscales coarse weather models utilizing local topography and micro-climate parameters, verified by Block Agricultural Extension Officers before field dissemination.
+              MausamSetu downscales coarse weather models utilising local topography and micro-climate parameters, verified by Block Agricultural Extension Officers before field dissemination.
             </p>
             <div className="flex items-center gap-1.5 text-xs text-[#9ca89f]">
               <MapPin size={14} className="text-[#4ade80]" />
-              <span>Pilot deployment: Nagpur District, Maharashtra</span>
+              <span>Designed for India's rural agricultural communities</span>
             </div>
           </div>
         </div>

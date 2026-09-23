@@ -64,3 +64,6 @@ ml/data/processed/*
 !ml/data/processed/.gitkeep
 ml/models/*
 !ml/models/.gitkeep
+
+# Agent configs
+.agents/

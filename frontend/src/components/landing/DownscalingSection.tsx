@@ -1,265 +1,221 @@
-import React, { useState } from 'react'
-import { motion } from 'framer-motion'
-import { Mountain, Compass, Layers, Activity, TrendingUp, Radio } from 'lucide-react'
+import React, { useState, useEffect, useRef } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Layers, Database, Cpu, MapPin, Play, Pause } from 'lucide-react'
+import { SectionReveal } from '../shared/SectionReveal'
+import { WeatherField } from '../shared/WeatherField'
 
 export const DownscalingSection: React.FC = () => {
-  const [selectedPanchayatIndex, setSelectedPanchayatIndex] = useState(0)
-  const [elevationOffset, setElevationOffset] = useState(35) // meters above base
+  const [activeStep, setActiveStep] = useState<number>(1)
+  const [isPaused, setIsPaused] = useState<boolean>(false)
+  const [progress, setProgress] = useState<number>(0)
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const progressTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
-  const panchayats = [
+  const STEP_DURATION = 5000
+
+  useEffect(() => {
+    if (isPaused) return
+    setProgress(0)
+    const startTime = Date.now()
+    progressTimerRef.current = setInterval(() => {
+      const elapsed = Date.now() - startTime
+      setProgress(Math.min(100, (elapsed / STEP_DURATION) * 100))
+    }, 50)
+    timerRef.current = setTimeout(() => {
+      setActiveStep((prev) => (prev >= 3 ? 1 : prev + 1))
+    }, STEP_DURATION)
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current)
+      if (progressTimerRef.current) clearInterval(progressTimerRef.current)
+    }
+  }, [activeStep, isPaused])
+
+  const steps = [
     {
-      name: 'Dhapewada',
-      elevation: 295,
-      coarseRain: 12.0,
-      refinedRain: 4.2,
-      aspect: 'North-East (38°)',
-      slope: '3.8°',
-      soil: 'Black Clay Loam',
-      note: 'Rain shadow leeward depression reduces localized precipitation.',
+      step: 1,
+      icon: Database,
+      title: '1. Ingest Coarse National Forecasts',
+      subtitle: 'Regional Grid Ingestion',
+      desc: 'Numerical weather models divide India into large regional blocks. Every Panchayat inside a block receives the same broad prediction — ignoring terrain variation completely.',
+      metric: 'Coarse',
+      metricLabel: 'Base Forecast',
     },
     {
-      name: 'Kalmeshwar Central',
-      elevation: 320,
-      coarseRain: 12.0,
-      refinedRain: 8.6,
-      aspect: 'Flat (0°)',
-      slope: '1.2°',
-      soil: 'Medium Black',
-      note: 'Plateau basin closely mirrors regional convective rainfall.',
+      step: 2,
+      icon: Cpu,
+      title: '2. Terrain & Sensor Fusion',
+      subtitle: 'Local Feature Calibration',
+      desc: 'Our models integrate elevation data, valley slope angles, ridge aspect vectors, and local ground-station telemetry to account for orographic lift and rain-shadow effects.',
+      metric: '30m DEM',
+      metricLabel: 'Terrain Resolution',
     },
     {
-      name: 'Mohpa Ridge',
-      elevation: 365,
-      coarseRain: 12.0,
-      refinedRain: 14.1,
-      aspect: 'South-West (215°)',
-      slope: '7.4°',
-      soil: 'Shallow Gravelly',
-      note: 'Orographic lift along windward ridge increases precipitation by +17.5%.',
+      step: 3,
+      icon: MapPin,
+      title: '3. Panchayat-Level Dispatch',
+      subtitle: 'Hyperlocal Precision',
+      desc: 'Farmers and local authorities receive tailored predictions accounting for local rain-shadows, ridge winds, and soil moisture — ready for officer verification.',
+      metric: 'Local',
+      metricLabel: 'Panchayat Scale',
     },
   ]
-
-  const current = panchayats[selectedPanchayatIndex]
-  // Simulated dynamic lapse calculation based on slider
-  const dynamicRefined = (current.coarseRain * (1 + (elevationOffset - 35) * 0.008)).toFixed(1)
 
   return (
     <section
       id="downscaling"
-      className="snap-section relative w-full bg-white border-b border-[#E2E8E4] flex flex-col justify-center overflow-hidden"
+      className="relative scroll-mt-20 min-h-[calc(100vh-5rem)] w-full bg-white border-b border-[#E2E8E4] flex flex-col justify-center overflow-hidden py-12 lg:py-10"
     >
-      {/* Background contour lines */}
-      <div className="absolute inset-0 opacity-25 bg-contour-pattern pointer-events-none" />
+      <div className="absolute inset-0 bg-topo-animated opacity-25 pointer-events-none" aria-hidden="true" />
+      <div className="absolute -top-[10%] right-[15%] w-[420px] h-[420px] rounded-full bg-[#EAF5EC]/60 blur-3xl pointer-events-none" />
 
-      {/* Floating Telemetry Icon 1: SRTM DEM Grid */}
-      <div className="hidden xl:flex absolute top-8 right-16 z-20 items-center gap-2 px-3 py-1.5 rounded-full bg-white/95 border border-[#E2E8E4] shadow-xs text-xs font-semibold text-[#14532D] animate-float-slow backdrop-blur-sm">
-        <Layers size={14} className="text-[#166534]" />
-        <span>30m SRTM Digital Elevation Model</span>
-        <span className="w-1.5 h-1.5 rounded-full bg-[#166534] animate-pulse" />
-      </div>
-
-      {/* Floating Telemetry Icon 2: Orographic Lift */}
-      <div className="hidden xl:flex absolute bottom-8 left-14 z-20 items-center gap-2 px-3 py-1.5 rounded-full bg-white/95 border border-[#BBF7D0] shadow-xs text-xs font-semibold text-[#166534] animate-float-drift backdrop-blur-sm">
-        <TrendingUp size={14} className="text-[#166534]" />
-        <span>Orographic Factor: +3.6 mm / 100m Ascent</span>
-      </div>
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full py-4 sm:py-6">
-        {/* Section Header */}
-        <div className="max-w-3xl mb-4 sm:mb-6 text-left">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#DCFCE7] text-[#14532D] text-xs font-semibold uppercase tracking-wider mb-2">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full my-auto">
+        <SectionReveal variant="default" className="max-w-3xl mb-6 sm:mb-8 text-left">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#EAF5EC] border border-[#126B3A]/20 text-[#126B3A] text-xs font-mono font-semibold uppercase tracking-wider mb-2.5">
             <Layers size={13} />
-            <span>01 • Geographic Downscaling & Weather Refinement</span>
+            <span>Methodology &middot; Section 01</span>
           </div>
-          <h2 className="text-2xl sm:text-4xl xl:text-5xl font-black text-[#17201A] tracking-tight leading-tight">
-            Coarse block forecasts fail farms. <br />
-            <span className="text-[#166534]">Topography changes weather.</span>
+          <h2 className="text-2xl sm:text-4xl xl:text-5xl font-black text-[#111814] tracking-tight leading-[1.08]">
+            From Coarse Forecast to{' '}
+            <span className="text-[#126B3A]">Panchayat Precision</span>
           </h2>
-          <p className="text-xs sm:text-sm text-[#647067] mt-1.5 leading-relaxed font-normal">
-            A standard weather forecast covers a 40×40 km block as a single flat number. In reality, a 70-meter elevation change and ridge orientation creates completely different rainfall between neighboring villages.
+          <p className="text-sm sm:text-base text-[#66736B] mt-2 leading-relaxed">
+            Standard weather forecasts treat entire districts as flat, uniform zones. In reality,
+            elevation and terrain gradients dramatically alter weather between neighbouring Panchayats.
           </p>
-        </div>
+          <div className="flex items-center gap-3 mt-3">
+            <button
+              onClick={() => setIsPaused(!isPaused)}
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-white border border-[#E2E8E4] text-[#126B3A] hover:bg-[#F6F9F5] transition-colors"
+              aria-label={isPaused ? 'Resume' : 'Pause'}
+            >
+              {isPaused ? <Play size={11} className="fill-current" /> : <Pause size={11} className="fill-current" />}
+              <span>{isPaused ? 'Resume' : 'Auto-animating'}</span>
+            </button>
+            <span className="text-xs text-[#66736B]">Steps advance every 5s &middot; Click to inspect</span>
+          </div>
+        </SectionReveal>
 
-        {/* Visual Pipeline & Interactive Simulation */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-6 items-stretch">
-          {/* Left: Spatial Zoom Hierarchy */}
-          <div className="lg:col-span-5 bg-[#F7FAF7] rounded-2xl border border-[#E2E8E4] p-4 sm:p-5 flex flex-col justify-between text-left relative">
-            <div>
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-bold text-[#17201A]">
-                  Spatial Downscaling Hierarchy
-                </h3>
-                <span className="bg-white border border-[#E2E8E4] px-2 py-0.5 rounded text-[10px] font-semibold text-[#166534] flex items-center gap-1">
-                  <Activity size={10} /> 40km → 1km
-                </span>
-              </div>
-
-              {/* Geographic Steps */}
-              <div className="space-y-2">
-                {[
-                  { level: 'National Grid', name: 'India (IMD Regional Model)', res: '0.25° (~25 km)', active: false },
-                  { level: 'State Model', name: 'Maharashtra Agro-Zone VII', res: '12 km', active: false },
-                  { level: 'District Forecast', name: 'Nagpur District Hub', res: '9 km', active: false },
-                  { level: 'Official Block', name: 'Kalmeshwar Block Forecast', res: 'Coarse 12.0 mm', active: false },
-                  { level: 'MausamSetu Panchayat', name: `${current.name} Panchayat`, res: `Refined: ${dynamicRefined} mm`, active: true },
-                ].map((step, idx) => (
-                  <div
-                    key={idx}
-                    className={`p-2.5 rounded-xl border transition-all flex items-center justify-between ${
-                      step.active
-                        ? 'bg-white border-[#166534] shadow-xs ring-1 ring-[#166534]'
-                        : 'bg-white/60 border-[#E2E8E4] opacity-80'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <div
-                        className={`w-6 h-6 rounded-md flex items-center justify-center font-bold text-[11px] ${
-                          step.active
-                            ? 'bg-[#166534] text-white'
-                            : 'bg-[#E2E8E4] text-[#647067]'
-                        }`}
-                      >
-                        0{idx + 1}
-                      </div>
-                      <div>
-                        <p className={`text-[10px] font-bold ${step.active ? 'text-[#166534]' : 'text-[#647067]'}`}>
-                          {step.level}
-                        </p>
-                        <p className="text-xs font-bold text-[#17201A]">{step.name}</p>
-                      </div>
-                    </div>
-                    <span className={`text-[10px] font-mono px-2 py-0.5 rounded ${
-                      step.active ? 'bg-[#DCFCE7] text-[#14532D] font-bold' : 'bg-[#F1F5F9] text-[#647067]'
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-center">
+          {/* Left: Steps */}
+          <div
+            className="lg:col-span-7 space-y-3"
+            onMouseEnter={() => setIsPaused(true)}
+            onMouseLeave={() => setIsPaused(false)}
+          >
+            {steps.map((s, idx) => {
+              const Icon = s.icon
+              const isSelected = activeStep === s.step
+              return (
+                <SectionReveal
+                  key={s.step}
+                  variant="stagger"
+                  delay={idx * 100}
+                  className={`relative overflow-hidden p-4 sm:p-5 rounded-2xl border transition-all duration-300 cursor-pointer text-left ${
+                    isSelected
+                      ? 'bg-[#EAF5EC]/70 border-[#126B3A] shadow-sm ring-1 ring-[#126B3A]/30'
+                      : 'bg-white border-[#E2E8E4] hover:border-[#126B3A]/30 hover:bg-[#F6F9F5]'
+                  }`}
+                  onClick={() => { setActiveStep(s.step); setProgress(0) }}
+                >
+                  {isSelected && (
+                    <div
+                      className="absolute bottom-0 left-0 h-[2px] bg-[#126B3A] transition-all duration-75"
+                      style={{ width: `${progress}%` }}
+                    />
+                  )}
+                  <div className="flex items-start gap-3.5">
+                    <div className={`p-2.5 rounded-xl shrink-0 transition-all duration-200 ${
+                      isSelected ? 'bg-[#126B3A] text-white' : 'bg-[#F1F5F9] text-[#66736B]'
                     }`}>
-                      {step.res}
-                    </span>
+                      <Icon size={20} />
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between">
+                        <span className={`text-[10px] font-bold uppercase tracking-wider ${
+                          isSelected ? 'text-[#126B3A]' : 'text-[#66736B]'
+                        }`}>{s.subtitle}</span>
+                        <span className="text-xs font-mono font-black text-[#126B3A] hidden sm:block">{s.metric}</span>
+                      </div>
+                      <h3 className="text-sm sm:text-base font-bold text-[#111814] mt-0.5">{s.title}</h3>
+                      <p className="text-xs text-[#66736B] mt-1 leading-relaxed">{s.desc}</p>
+                    </div>
                   </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Bottom note */}
-            <div className="mt-4 pt-3 border-t border-[#E2E8E4] flex items-center justify-between text-[11px] text-[#647067]">
-              <span>Ground Stations: 8 AWS in Nagpur</span>
-              <span className="font-semibold text-[#166534]">Haversine Spatially Calibrated</span>
-            </div>
+                </SectionReveal>
+              )
+            })}
           </div>
 
-          {/* Right: Interactive Downscaling Comparison */}
-          <div className="lg:col-span-7 bg-[#F7FAF7] rounded-2xl border border-[#E2E8E4] p-4 sm:p-6 flex flex-col justify-between text-left">
-            <div>
-              <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
-                <div>
-                  <h3 className="text-base font-bold text-[#17201A]">
-                    Coarse Block vs. Topographic Micro-Forecast
-                  </h3>
-                  <p className="text-[11px] text-[#647067]">
-                    Select a Panchayat to observe how terrain alters official forecasts.
-                  </p>
+          {/* Right: Spatial scientific visualization */}
+          <div className="lg:col-span-5">
+            <SectionReveal variant="scale">
+              <div className="rounded-2xl bg-[#0B1120] border border-white/10 overflow-hidden shadow-xl">
+                <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
+                  <span className="text-[10px] uppercase tracking-widest font-bold text-white/60">Spatial Visualization</span>
+                  <span className="text-[10px] font-mono bg-white/10 text-white/70 px-2 py-0.5 rounded">Step {activeStep}/3</span>
                 </div>
 
-                {/* Village Selector */}
-                <div className="flex items-center gap-1 bg-white p-1 rounded-xl border border-[#E2E8E4]">
-                  {panchayats.map((p, idx) => (
-                    <button
-                      key={p.name}
-                      onClick={() => setSelectedPanchayatIndex(idx)}
-                      className={`text-xs font-semibold px-3 py-1 rounded-lg transition-all ${
-                        selectedPanchayatIndex === idx
-                          ? 'bg-[#166534] text-white shadow-xs'
-                          : 'text-[#647067] hover:bg-[#F7FAF7]'
-                      }`}
+                <div className="relative px-2 py-2">
+                  <AnimatePresence mode="wait">
+                    <motion.div
+                      key={activeStep}
+                      initial={{ opacity: 0, scale: 0.97 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.97 }}
+                      transition={{ duration: 0.35 }}
                     >
-                      {p.name.split(' ')[0]}
-                    </button>
+                      <WeatherField
+                        phase={activeStep === 1 ? 'regional' : activeStep === 2 ? 'resolving' : 'panchayat'}
+                        activeNodeId={activeStep === 3 ? 'dhapewada' : undefined}
+                        showWind={activeStep >= 2}
+                        showContours={true}
+                        height={240}
+                      />
+                    </motion.div>
+                  </AnimatePresence>
+                </div>
+
+                <div className="px-4 py-3 border-t border-white/10">
+                  <AnimatePresence mode="wait">
+                    <motion.div
+                      key={activeStep + 'ins'}
+                      initial={{ opacity: 0, y: 4 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.25 }}
+                    >
+                      {activeStep === 1 && (
+                        <p className="text-[11px] text-amber-300 font-mono">
+                          Uniform regional forecast — terrain elevation ignored
+                        </p>
+                      )}
+                      {activeStep === 2 && (
+                        <p className="text-[11px] text-blue-300 font-mono">
+                          Integrating terrain data + station telemetry...
+                        </p>
+                      )}
+                      {activeStep === 3 && (
+                        <p className="text-[11px] text-[#86EFAC] font-mono">
+                          Dhapewada: 4.2mm — Advisory: Hold irrigation 24h
+                        </p>
+                      )}
+                    </motion.div>
+                  </AnimatePresence>
+                </div>
+
+                <div className="flex items-center justify-center gap-2 pb-3">
+                  {[1, 2, 3].map((step) => (
+                    <button
+                      key={step}
+                      onClick={() => { setActiveStep(step); setProgress(0) }}
+                      className={`rounded-full transition-all duration-300 ${
+                        activeStep === step ? 'bg-[#126B3A] w-5 h-1.5' : 'bg-white/20 w-1.5 h-1.5 hover:bg-white/40'
+                      }`}
+                      aria-label={`Step ${step}`}
+                    />
                   ))}
                 </div>
               </div>
-
-              {/* The Visual Split Comparison Card */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
-                {/* Coarse Block Box */}
-                <div className="bg-white rounded-xl border border-[#E2E8E4] p-4 shadow-xs">
-                  <div className="flex items-center justify-between text-[11px] text-[#647067] font-semibold mb-1">
-                    <span>COARSE BLOCK FORECAST</span>
-                    <span className="text-[#D97706] font-mono">IMD Regional</span>
-                  </div>
-                  <div className="text-3xl font-black text-[#17201A] tracking-tight">
-                    {current.coarseRain.toFixed(1)} <span className="text-sm font-medium text-[#647067]">mm</span>
-                  </div>
-                  <p className="text-[11px] text-[#647067] mt-1 leading-relaxed">
-                    Same 12.0 mm applied indiscriminately across all 84 villages in Kalmeshwar block.
-                  </p>
-                </div>
-
-                {/* MausamSetu Topographic Refinement */}
-                <div className="bg-[#F0FDF4] rounded-xl border border-[#BBF7D0] p-4 shadow-xs">
-                  <div className="flex items-center justify-between text-[11px] text-[#166534] font-bold mb-1">
-                    <span>MAUSAMSETU REFINED</span>
-                    <span className="bg-[#DCFCE7] text-[#14532D] px-2 py-0.5 rounded text-[10px] font-mono font-bold">
-                      ±0.11 mm Error
-                    </span>
-                  </div>
-                  <div className="text-3xl font-black text-[#166534] tracking-tight">
-                    {dynamicRefined} <span className="text-sm font-medium text-[#166534]/70">mm</span>
-                  </div>
-                  <p className="text-[11px] text-[#14532D] mt-1 leading-relaxed">
-                    Refined via XGBoost with DEM elevation, aspect angle, and moisture gradient.
-                  </p>
-                </div>
-              </div>
-
-              {/* Geographic Features Active for this Panchayat */}
-              <div className="grid grid-cols-3 gap-2.5 mb-4">
-                <div className="bg-white border border-[#E2E8E4] rounded-xl p-2.5 text-center">
-                  <div className="flex items-center justify-center text-[#166534] mb-0.5">
-                    <Mountain size={14} />
-                  </div>
-                  <p className="text-[10px] text-[#647067]">Elevation</p>
-                  <p className="text-xs font-bold text-[#17201A]">{current.elevation} m</p>
-                </div>
-
-                <div className="bg-white border border-[#E2E8E4] rounded-xl p-2.5 text-center">
-                  <div className="flex items-center justify-center text-[#166534] mb-0.5">
-                    <Compass size={14} />
-                  </div>
-                  <p className="text-[10px] text-[#647067]">Aspect & Slope</p>
-                  <p className="text-xs font-bold text-[#17201A]">{current.slope} ({current.aspect.split(' ')[0]})</p>
-                </div>
-
-                <div className="bg-white border border-[#E2E8E4] rounded-xl p-2.5 text-center">
-                  <div className="flex items-center justify-center text-[#166534] mb-0.5">
-                    <Layers size={14} />
-                  </div>
-                  <p className="text-[10px] text-[#647067]">Soil Substrate</p>
-                  <p className="text-xs font-bold text-[#17201A]">{current.soil.split(' ')[0]}</p>
-                </div>
-              </div>
-
-              {/* Interactive Elevation Bias Slider */}
-              <div className="bg-white border border-[#E2E8E4] rounded-xl p-3">
-                <div className="flex items-center justify-between text-xs font-semibold text-[#17201A] mb-1.5">
-                  <span className="flex items-center gap-1">
-                    <Mountain size={13} className="text-[#166534]" />
-                    Topographic Bias Simulation: {elevationOffset}m offset
-                  </span>
-                  <span className="font-mono text-[#166534] font-bold">
-                    Refined: {dynamicRefined} mm
-                  </span>
-                </div>
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  value={elevationOffset}
-                  onChange={(e) => setElevationOffset(Number(e.target.value))}
-                  className="w-full h-1.5 bg-[#E2E8E4] rounded-lg appearance-none cursor-pointer accent-[#166534]"
-                />
-                <p className="text-[10px] text-[#647067] mt-1.5 italic">
-                  * {current.note}
-                </p>
-              </div>
-            </div>
+            </SectionReveal>
           </div>
         </div>
       </div>

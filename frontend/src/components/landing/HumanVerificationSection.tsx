@@ -1,242 +1,267 @@
-import React, { useState } from 'react'
-import { motion } from 'framer-motion'
-import { UserCheck, CheckCircle2, AlertCircle, RefreshCw, FileText, Lock, ShieldCheck } from 'lucide-react'
+import React, { useState, useEffect, useRef } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { UserCheck, Cpu, CheckCircle2, ShieldCheck, FileCheck, Send, Play, Pause } from 'lucide-react'
+import { SectionReveal } from '../shared/SectionReveal'
+import { DataFlow } from '../shared/DataFlow'
 
 export const HumanVerificationSection: React.FC = () => {
-  const [advisoryStatus, setAdvisoryStatus] = useState<'PENDING' | 'APPROVED' | 'MODIFIED' | 'REJECTED'>('PENDING')
-  const [officerNote, setOfficerNote] = useState<string>('Heavy rainfall expected in low-lying fields. Ensure drainage channels are clear.')
+  const [activeNode, setActiveNode] = useState<number>(1) // 1: AI, 2: Officer, 3: Farmer
+  const [isPaused, setIsPaused] = useState<boolean>(false)
+  const [progress, setProgress] = useState<number>(0)
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const progressTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
-  const handleAction = (status: 'APPROVED' | 'MODIFIED' | 'REJECTED') => {
-    setAdvisoryStatus(status)
+  const NODE_DURATION = 4000
+
+  useEffect(() => {
+    if (isPaused) return
+    setProgress(0)
+    const startTime = Date.now()
+    progressTimerRef.current = setInterval(() => {
+      const elapsed = Date.now() - startTime
+      setProgress(Math.min(100, (elapsed / NODE_DURATION) * 100))
+    }, 50)
+    timerRef.current = setTimeout(() => {
+      setActiveNode((prev) => (prev >= 4 ? 1 : prev + 1))
+    }, NODE_DURATION)
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current)
+      if (progressTimerRef.current) clearInterval(progressTimerRef.current)
+    }
+  }, [activeNode, isPaused])
+
+  const pipelineStages = [
+    {
+      id: 'ai',
+      label: 'AI Forecast Model',
+      sublabel: 'Terrain-refined prediction generated',
+    },
+    {
+      id: 'officer',
+      label: 'Officer Review Portal',
+      sublabel: 'Block Agricultural Officer inspects & signs',
+    },
+    {
+      id: 'advisory',
+      label: 'Verified Advisory',
+      sublabel: 'Advisory marked approved + timestamp',
+    },
+    {
+      id: 'farmer',
+      label: 'Farmer Delivery',
+      sublabel: 'Delivered via PWA + voice in local language',
+    },
+  ]
+
+  // activeNode maps to pipeline 1→0, 2→1, 3→2, 4→3
+  const pipelineActive = activeNode - 1
+
+  const nodeDetails: Record<number, { title: string; body: string; state: string; stateColor: string }> = {
+    1: {
+      title: '1. AI Downscaled Proposal',
+      body: 'Numerical forecast downscaled to 30m terrain resolution. Draft recommendation generated for Panchayat cluster.',
+      state: 'Draft Proposal',
+      stateColor: 'bg-[#EFF6FF] text-[#3B82F6] border-blue-200',
+    },
+    2: {
+      title: '2. Officer Inspection & Calibration',
+      body: 'Block Agricultural Extension Officer inspects local pest risks, ground-station telemetry, and field conditions.',
+      state: 'In Review',
+      stateColor: 'bg-[#FFFBEB] text-[#D97706] border-amber-200',
+    },
+    3: {
+      title: '3. Digital Signature & Verification',
+      body: 'Advisory approved and cryptographically stamped with officer credentials. Draft status immediately transforms to verified public notice.',
+      state: 'Verified',
+      stateColor: 'bg-[#EAF5EC] text-[#126B3A] border-[#126B3A]/30',
+    },
+    4: {
+      title: '4. Last-Mile Field Delivery',
+      body: 'Disseminated instantly to farmers through offline-capable PWA, WhatsApp integration, and native vernacular voice playback.',
+      state: 'Dispatched',
+      stateColor: 'bg-emerald-50 text-emerald-800 border-emerald-300',
+    },
   }
+
+  const detail = nodeDetails[activeNode]
 
   return (
     <section
       id="verification"
-      className="snap-section relative w-full bg-white border-b border-[#E2E8E4] flex flex-col justify-center overflow-hidden"
+      className="relative scroll-mt-20 min-h-[calc(100vh-5rem)] w-full bg-white border-b border-[#E2E8E4] flex flex-col justify-center overflow-hidden py-12 lg:py-10"
     >
-      {/* Background subtle contour */}
-      <div className="absolute inset-0 opacity-25 bg-contour-pattern pointer-events-none" />
+      <div className="absolute inset-0 bg-topo-grid opacity-15 pointer-events-none" aria-hidden="true" />
+      <div className="absolute top-[15%] left-[10%] w-[420px] h-[420px] rounded-full bg-[#EAF5EC]/40 blur-3xl pointer-events-none" />
 
-      {/* Floating Telemetry Icon 1: Cryptographic Seal */}
-      <div className="hidden xl:flex absolute top-8 right-16 z-20 items-center gap-2 px-3 py-1.5 rounded-full bg-white/95 border border-[#BBF7D0] shadow-xs text-xs font-semibold text-[#14532D] animate-float-slow backdrop-blur-sm">
-        <Lock size={13} className="text-[#166534]" />
-        <span>SHA-256 Digitally Signed • KVK Nagpur Hub</span>
-      </div>
-
-      {/* Floating Telemetry Icon 2: Topographic Delta */}
-      <div className="hidden xl:flex absolute bottom-8 left-16 z-20 items-center gap-2 px-3 py-1.5 rounded-full bg-white/95 border border-[#E2E8E4] shadow-xs text-xs font-semibold text-[#17201A] animate-float-drift backdrop-blur-sm">
-        <ShieldCheck size={13} className="text-[#166534]" />
-        <span>Threshold Check: Δ +3.6 mm &gt; 2.0 mm (Review Required)</span>
-      </div>
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full py-4 sm:py-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full my-auto">
         {/* Section Header */}
-        <div className="max-w-3xl mb-4 sm:mb-6 text-left">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#DCFCE7] text-[#14532D] text-xs font-semibold uppercase tracking-wider mb-2">
+        <SectionReveal variant="default" className="max-w-3xl mb-6 sm:mb-8 text-left">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#EAF5EC] border border-[#126B3A]/20 text-[#126B3A] text-xs font-mono font-semibold uppercase tracking-wider mb-2.5">
             <UserCheck size={13} />
-            <span>03 • Human-in-the-Loop Verification</span>
+            <span>Governance &middot; Section 03</span>
           </div>
-          <h2 className="text-2xl sm:text-4xl xl:text-5xl font-black text-[#17201A] tracking-tight leading-tight">
-            AI proposes. <br />
-            <span className="text-[#166534]">Agricultural officers verify.</span>
+          <h2 className="text-2xl sm:text-4xl xl:text-5xl font-black text-[#111814] tracking-tight leading-[1.08]">
+            Verified by Agricultural Officers{' '}
+            <span className="text-[#126B3A]">Before Reaching Farmers</span>
           </h2>
-          <p className="text-xs sm:text-sm text-[#647067] mt-1.5 leading-relaxed font-normal">
-            No machine learning output ever reaches a farmer without the review and digital sign-off of an authorized Block Agricultural Officer. This eliminates AI hallucinations and guarantees field accountability.
+          <p className="text-sm sm:text-base text-[#66736B] mt-2 leading-relaxed">
+            No machine learning advisory is ever sent directly to a farmer without human oversight.
+            Block Agricultural Officers review, customise, and digitally sign every recommendation.
           </p>
-        </div>
+          <div className="flex items-center gap-3 mt-3">
+            <button
+              onClick={() => setIsPaused(!isPaused)}
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-white border border-[#E2E8E4] text-[#126B3A] hover:bg-[#F6F9F5] transition-colors"
+              aria-label={isPaused ? 'Resume' : 'Pause'}
+            >
+              {isPaused ? <Play size={11} className="fill-current" /> : <Pause size={11} className="fill-current" />}
+              <span>{isPaused ? 'Resume' : 'Auto-animating'}</span>
+            </button>
+            <span className="text-xs text-[#66736B]">Pipeline advances every 4s</span>
+          </div>
+        </SectionReveal>
 
-        {/* The Human-in-the-Loop Workflow Console */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-6 items-stretch">
-          {/* Left Column: 4-Step Verification Chain */}
-          <div className="lg:col-span-5 bg-[#F7FAF7] rounded-2xl border border-[#E2E8E4] p-4 sm:p-5 flex flex-col justify-between text-left relative">
-            <div>
-              <h3 className="text-sm font-bold text-[#17201A] mb-1">
-                Data Provenance & Audit Trail
-              </h3>
-              <p className="text-[11px] text-[#647067] mb-3">
-                Every advisory is digitally stamped with its origin and approval hash.
-              </p>
-
-              {/* Steps */}
-              <div className="space-y-2.5">
-                {[
-                  {
-                    step: '01',
-                    title: 'ML Downscaling',
-                    desc: 'XGBoost model downscales IMD block forecast to 1km Panchayat grid.',
-                    status: 'COMPLETED',
-                    time: '06:00 AM IST',
-                  },
-                  {
-                    step: '02',
-                    title: 'Empirical Uncertainty Check',
-                    desc: 'Residuals validated against 2022-2023 ground truth (E80 error: ±0.11 mm).',
-                    status: 'PASSED',
-                    time: '06:05 AM IST',
-                  },
-                  {
-                    step: '03',
-                    title: 'Officer Review & Sanction',
-                    desc: 'Block Officer reviews discrepancy and authorizes dispatch.',
-                    status: advisoryStatus === 'PENDING' ? 'IN_REVIEW' : 'COMPLETED',
-                    time: '06:15 AM IST',
-                  },
-                  {
-                    step: '04',
-                    title: 'Farmer Broadcast',
-                    desc: 'PWA notification, SMS broadcast, and Voice Assistant update.',
-                    status: advisoryStatus === 'PENDING' ? 'QUEUED' : 'ACTIVE',
-                    time: '06:30 AM IST',
-                  },
-                ].map((item, idx) => (
-                  <div key={idx} className="flex items-start gap-2.5">
-                    <div className="w-7 h-7 rounded-lg bg-white border border-[#E2E8E4] flex items-center justify-center text-[11px] font-bold text-[#166534] shadow-xs shrink-0">
-                      {item.step}
-                    </div>
-                    <div className="flex-1 bg-white border border-[#E2E8E4] rounded-xl p-2.5 shadow-xs">
-                      <div className="flex items-center justify-between">
-                        <p className="text-xs font-bold text-[#17201A]">{item.title}</p>
-                        <span className={`text-[9px] font-semibold px-2 py-0.5 rounded ${
-                          item.status === 'COMPLETED' || item.status === 'PASSED' || item.status === 'ACTIVE'
-                            ? 'bg-[#DCFCE7] text-[#14532D]'
-                            : item.status === 'IN_REVIEW'
-                            ? 'bg-[#FEF3C7] text-[#92400E]'
-                            : 'bg-[#F1F5F9] text-[#647067]'
-                        }`}>
-                          {item.status}
-                        </span>
-                      </div>
-                      <p className="text-[11px] text-[#647067] mt-0.5">{item.desc}</p>
-                      <p className="text-[9px] text-[#94A3B8] font-mono mt-1">{item.time}</p>
-                    </div>
-                  </div>
-                ))}
+        {/* 2-Column: Pipeline left, Detail right */}
+        <div
+          className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start"
+          onMouseEnter={() => setIsPaused(true)}
+          onMouseLeave={() => setIsPaused(false)}
+        >
+          {/* Left: DataFlow pipeline */}
+          <SectionReveal variant="left" className="lg:col-span-6">
+            <div className="bg-white rounded-2xl border border-[#E2E8E4] p-5 shadow-sm">
+              <div className="flex items-center gap-2 mb-5 pb-3 border-b border-[#F1F5F9]">
+                <span className="w-2 h-2 rounded-full bg-[#126B3A] animate-node-pulse" />
+                <span className="text-xs font-bold uppercase tracking-wider text-[#66736B]">Advisory Pipeline</span>
+              </div>
+              <DataFlow
+                stages={pipelineStages}
+                activeIndex={pipelineActive}
+                vertical={true}
+              />
+              {/* Progress bar at bottom */}
+              <div className="mt-5 pt-3 border-t border-[#F1F5F9]">
+                <div className="h-1 bg-[#F1F5F9] rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-[#126B3A] rounded-full transition-all duration-75"
+                    style={{ width: `${progress}%` }}
+                  />
+                </div>
+                <div className="flex justify-between mt-1.5 text-[10px] text-[#66736B]">
+                  <span>Stage {pipelineActive + 1} of {pipelineStages.length}</span>
+                  <span>{Math.round(progress)}%</span>
+                </div>
               </div>
             </div>
+          </SectionReveal>
 
-            {/* Bottom Audit Tag */}
-            <div className="mt-4 pt-3 border-t border-[#E2E8E4] flex items-center justify-between text-[11px] text-[#647067]">
-              <span>Officer: Dr. A. Sharma (KVK Nagpur)</span>
-              <span className="font-semibold text-[#166534]">Digital Cryptographic Stamp</span>
-            </div>
-          </div>
+          {/* Right: Animated detail */}
+          <SectionReveal variant="scale" className="lg:col-span-6">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeNode}
+                initial={{ opacity: 0, y: 12, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -8, scale: 0.98 }}
+                transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                className="bg-white rounded-2xl border border-[#E2E8E4] p-5 shadow-sm space-y-4"
+              >
+                {/* Status badge */}
+                <div className="flex items-center justify-between">
+                  <span className={`text-[11px] font-bold px-2.5 py-1 rounded-full border ${detail.stateColor}`}>
+                    {detail.state}
+                  </span>
+                  <span className="text-[10px] text-[#66736B] font-mono">Stage {pipelineActive + 1}/{pipelineStages.length}</span>
+                </div>
 
-          {/* Right Column: Interactive Officer Console Preview */}
-          <div className="lg:col-span-7 bg-[#F7FAF7] rounded-2xl border border-[#E2E8E4] p-4 sm:p-6 flex flex-col justify-between text-left">
-            <div>
-              {/* Console Header */}
-              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#E2E8E4] pb-3 mb-4">
+                {/* Main content */}
                 <div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-[#166534] animate-pulse" />
-                    <h3 className="text-sm font-bold text-[#17201A]">
-                      Officer Review Console • Dhapewada Panchayat
-                    </h3>
+                  <h3 className="text-base sm:text-xl font-black text-[#111814] leading-snug">{detail.title}</h3>
+                  <p className="text-sm text-[#66736B] mt-1.5 leading-relaxed">{detail.body}</p>
+                </div>
+
+                {/* Visual node indicator */}
+                {activeNode === 1 && (
+                  <div className="rounded-xl bg-[#EFF6FF] border border-blue-100 p-3.5 flex items-center gap-3">
+                    <Cpu size={22} className="text-[#3B82F6] shrink-0" />
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <p className="text-xs font-bold text-[#1E40AF]">Draft Advisory Ready</p>
+                        <span className="text-[9px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 font-mono font-semibold">Stage 1</span>
+                      </div>
+                      <p className="text-[11px] text-[#66736B] mt-0.5">30m DEM downscaled · Awaiting extension officer review</p>
+                    </div>
                   </div>
-                  <p className="text-[11px] text-[#647067] mt-0.5">
-                    Kalmeshwar Block, Nagpur • Advisory ID: ADV-2026-0920-DH
-                  </p>
+                )}
+                {activeNode === 2 && (
+                  <div className="rounded-xl bg-[#FFFBEB] border border-amber-200 p-3.5 flex items-center gap-3">
+                    <FileCheck size={22} className="text-[#D97706] shrink-0" />
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <p className="text-xs font-bold text-[#92400E]">Officer Console Active</p>
+                        <span className="text-[9px] px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 font-mono font-semibold">Stage 2</span>
+                      </div>
+                      <p className="text-[11px] text-[#66736B] mt-0.5">Evaluating soil telemetry & adjusting pesticide timing</p>
+                    </div>
+                  </div>
+                )}
+                {activeNode === 3 && (
+                  <div className="rounded-xl bg-[#EAF5EC] border border-[#126B3A]/30 p-3.5 flex items-center gap-3">
+                    <ShieldCheck size={22} className="text-[#126B3A] shrink-0" />
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <p className="text-xs font-bold text-[#126B3A]">Digitally Signed & Verified</p>
+                        <span className="text-[9px] px-1.5 py-0.5 rounded bg-[#126B3A] text-white font-mono font-bold">✓ VERIFIED</span>
+                      </div>
+                      <p className="text-[11px] text-[#4B6354] mt-0.5 font-mono">
+                        Signed: 09:14 IST · Officer ID: BAO-704 · Nagpur East
+                      </p>
+                    </div>
+                  </div>
+                )}
+                {activeNode === 4 && (
+                  <div className="rounded-xl bg-emerald-50 border border-emerald-200 p-3.5 flex items-center gap-3">
+                    <Send size={22} className="text-emerald-700 shrink-0" />
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <p className="text-xs font-bold text-emerald-900">Broadcast Dispatched</p>
+                        <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 font-mono font-semibold">Stage 4</span>
+                      </div>
+                      <p className="text-[11px] text-[#66736B] mt-0.5">PWA audio + SMS + WhatsApp in Marathi & Hindi</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Step nav dots */}
+                <div className="flex items-center gap-2 pt-1">
+                  {[1, 2, 3, 4].map((n) => (
+                    <button
+                      key={n}
+                      onClick={() => { setActiveNode(n); setProgress(0) }}
+                      className={`rounded-full transition-all duration-300 ${
+                        activeNode === n ? 'bg-[#126B3A] w-6 h-1.5' : 'bg-[#E2E8E4] w-1.5 h-1.5 hover:bg-[#126B3A]/40'
+                      }`}
+                      aria-label={`Stage ${n}`}
+                    />
+                  ))}
                 </div>
+              </motion.div>
+            </AnimatePresence>
 
-                <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full ${
-                  advisoryStatus === 'APPROVED'
-                    ? 'bg-[#DCFCE7] text-[#14532D]'
-                    : advisoryStatus === 'MODIFIED'
-                    ? 'bg-[#EFF6FF] text-[#1D4ED8]'
-                    : advisoryStatus === 'REJECTED'
-                    ? 'bg-[#FEF2F2] text-[#DC2626]'
-                    : 'bg-[#FEF3C7] text-[#92400E]'
-                }`}>
-                  STATUS: {advisoryStatus}
-                </span>
-              </div>
-
-              {/* Data Comparison Matrix */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 mb-4">
-                <div className="bg-white border border-[#E2E8E4] rounded-xl p-3 shadow-xs">
-                  <p className="text-[10px] text-[#647067] font-medium">Official IMD Forecast</p>
-                  <p className="text-xl font-bold text-[#17201A] mt-0.5">18.5 mm</p>
-                  <p className="text-[9px] text-[#647067]">Coarse Block Level</p>
+            {/* Key governance pillars */}
+            <div className="mt-4 grid grid-cols-3 gap-3">
+              {[
+                { icon: <UserCheck size={16} />, label: 'Human in Loop' },
+                { icon: <FileCheck size={16} />, label: 'Digital Signature' },
+                { icon: <Send size={16} />, label: 'Local Language' },
+              ].map(({ icon, label }) => (
+                <div key={label} className="bg-white rounded-xl border border-[#E2E8E4] p-3 flex flex-col items-center gap-1.5 text-center shadow-2xs">
+                  <div className="text-[#126B3A]">{icon}</div>
+                  <span className="text-[10px] font-semibold text-[#66736B]">{label}</span>
                 </div>
-
-                <div className="bg-[#F0FDF4] border border-[#BBF7D0] rounded-xl p-3 shadow-xs">
-                  <p className="text-[10px] text-[#14532D] font-medium">MausamSetu Refined</p>
-                  <p className="text-xl font-bold text-[#166534] mt-0.5">22.1 mm</p>
-                  <p className="text-[9px] text-[#166534]">Topographic Bias: +3.6mm</p>
-                </div>
-
-                <div className="bg-white border border-[#E2E8E4] rounded-xl p-3 shadow-xs">
-                  <p className="text-[10px] text-[#647067] font-medium">Uncertainty Bounds</p>
-                  <p className="text-xl font-bold text-[#17201A] mt-0.5">±1.4 mm</p>
-                  <p className="text-[9px] text-[#166534] font-semibold">HIGH RELIABILITY</p>
-                </div>
-              </div>
-
-              {/* Recommended Advisory Text Box */}
-              <div className="bg-white border border-[#E2E8E4] rounded-xl p-3.5 shadow-xs mb-4">
-                <div className="flex items-center justify-between mb-1.5">
-                  <label className="text-xs font-bold text-[#17201A] flex items-center gap-1.5">
-                    <FileText size={13} className="text-[#166534]" />
-                    <span>Proposed Advisory Text for Farmers</span>
-                  </label>
-                  <span className="text-[10px] text-[#647067]">Bilingual (Hindi + Marathi + English)</span>
-                </div>
-                <textarea
-                  value={officerNote}
-                  onChange={(e) => setOfficerNote(e.target.value)}
-                  rows={2}
-                  className="w-full text-xs text-[#17201A] bg-[#F8FAFC] border border-[#E2E8E4] rounded-lg p-2 focus:outline-none focus:ring-1 focus:ring-[#166534]"
-                />
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex flex-wrap items-center gap-2.5">
-                <button
-                  onClick={() => handleAction('APPROVED')}
-                  className={`px-4 py-2 rounded-xl font-semibold text-xs transition-all flex items-center gap-1.5 ${
-                    advisoryStatus === 'APPROVED'
-                      ? 'bg-[#166534] text-white shadow-xs'
-                      : 'bg-[#166534] text-white hover:bg-[#14532D]'
-                  }`}
-                >
-                  <CheckCircle2 size={14} />
-                  <span>Approve & Dispatch</span>
-                </button>
-
-                <button
-                  onClick={() => handleAction('MODIFIED')}
-                  className="px-4 py-2 rounded-xl font-semibold text-xs border border-[#3B82F6] text-[#1D4ED8] bg-white hover:bg-[#EFF6FF] transition-all flex items-center gap-1.5"
-                >
-                  <RefreshCw size={13} />
-                  <span>Modify Advisory</span>
-                </button>
-
-                <button
-                  onClick={() => handleAction('REJECTED')}
-                  className="px-4 py-2 rounded-xl font-semibold text-xs border border-[#EF4444] text-[#DC2626] bg-white hover:bg-[#FEF2F2] transition-all flex items-center gap-1.5"
-                >
-                  <AlertCircle size={13} />
-                  <span>Reject (Fallback)</span>
-                </button>
-              </div>
-
-              {/* Dispatch Feedback Message */}
-              {advisoryStatus !== 'PENDING' && (
-                <div className="mt-3 p-2.5 rounded-lg bg-[#DCFCE7] border border-[#BBF7D0] text-xs text-[#14532D] font-medium flex items-center justify-between">
-                  <span>✓ Action recorded. Farmers in Dhapewada notified via PWA & SMS.</span>
-                  <button onClick={() => setAdvisoryStatus('PENDING')} className="text-[#166534] underline text-[10px]">
-                    Reset
-                  </button>
-                </div>
-              )}
+              ))}
             </div>
-
-            {/* Officer Assurance */}
-            <div className="mt-4 pt-3 border-t border-[#E2E8E4] text-[10px] text-[#647067]">
-              * If an officer does not approve within 60 minutes, the system automatically falls back to the baseline official IMD forecast to ensure uninterrupted farmer safety.
-            </div>
-          </div>
+          </SectionReveal>
         </div>
       </div>
     </section>

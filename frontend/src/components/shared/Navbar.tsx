@@ -5,6 +5,7 @@ import { Button } from './Button'
 
 export const Navbar: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false)
+  const [scrollProgress, setScrollProgress] = useState(0)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [activeSection, setActiveSection] = useState<string>('')
   const location = useLocation()
@@ -14,27 +15,38 @@ export const Navbar: React.FC = () => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 20)
 
-      // Active section detection for on-page sections
-      const sections = ['downscaling', 'decision-intelligence', 'verification', 'experience']
-      const scrollPosition = window.scrollY + 200
+      // Scroll progress
+      const totalHeight = document.documentElement.scrollHeight - window.innerHeight
+      if (totalHeight > 0) {
+        setScrollProgress(Math.min(100, Math.max(0, (window.scrollY / totalHeight) * 100)))
+      }
 
+      // Robust viewport-based active section detection
+      const sections = ['downscaling', 'decision-intelligence', 'verification', 'experience']
+      const navThreshold = 180
+
+      let currentFound = ''
       for (const sectionId of sections) {
-        const element = document.getElementById(sectionId)
-        if (element) {
-          const top = element.offsetTop
-          const height = element.offsetHeight
-          if (scrollPosition >= top && scrollPosition < top + height) {
-            setActiveSection(sectionId)
-            return
+        const el = document.getElementById(sectionId)
+        if (el) {
+          const rect = el.getBoundingClientRect()
+          // Check if top of section is near viewport top or currently spanning viewport
+          if (rect.top <= navThreshold && rect.bottom > navThreshold) {
+            currentFound = sectionId
+            break
           }
         }
       }
-      if (window.scrollY < 300) {
+
+      if (window.scrollY < 250) {
         setActiveSection('')
+      } else if (currentFound) {
+        setActiveSection(currentFound)
       }
     }
 
     window.addEventListener('scroll', handleScroll, { passive: true })
+    handleScroll() // initial check
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
@@ -44,10 +56,10 @@ export const Navbar: React.FC = () => {
   }, [location.pathname])
 
   const navLinks = [
-    { name: 'Downscaling', id: 'downscaling' },
-    { name: 'Decision Engine', id: 'decision-intelligence' },
+    { name: 'How It Works', id: 'downscaling' },
+    { name: 'Crop Intelligence', id: 'decision-intelligence' },
     { name: 'Verification', id: 'verification' },
-    { name: 'Experience', id: 'experience' },
+    { name: 'Platform', id: 'experience' },
   ]
 
   const handleNavClick = (id: string, e: React.MouseEvent) => {
@@ -58,40 +70,56 @@ export const Navbar: React.FC = () => {
     } else {
       const element = document.getElementById(id)
       if (element) {
-        element.scrollIntoView({ behavior: 'smooth' })
+        const navOffset = 80
+        const elementPosition = element.getBoundingClientRect().top + window.pageYOffset
+        const offsetPosition = elementPosition - navOffset
+
+        window.scrollTo({
+          top: offsetPosition,
+          behavior: 'smooth',
+        })
       }
     }
   }
 
   return (
     <header
-      className={`sticky top-0 z-50 w-full transition-all duration-200 ${
+      className={`sticky top-0 z-50 w-full transition-all duration-300 ${
         isScrolled
-          ? 'bg-white/95 backdrop-blur-md border-b border-[#E2E8E4] shadow-sm'
+          ? 'bg-white/95 backdrop-blur-md border-b border-[#E2E8E4] shadow-xs'
           : 'bg-white/80 backdrop-blur-sm border-b border-transparent'
       }`}
     >
+      {/* Scroll Progress Bar */}
+      <div
+        className="absolute top-0 left-0 h-[2.5px] bg-gradient-to-r from-[#166534] via-[#22C55E] to-[#86EFAC] transition-all duration-75"
+        style={{ width: `${scrollProgress}%` }}
+      />
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 sm:h-20">
-          {/* Brand Logo & Subtitle (SIH 2026 removed) */}
-          <Link to="/" className="flex items-center gap-3 group focus:outline-none">
-            <div className="w-10 h-10 rounded-xl bg-[#166534] text-white flex items-center justify-center font-bold text-xl shadow-sm transition-transform group-hover:scale-105">
-              M
+          {/* Brand Logo & Name */}
+          <Link to="/" className="flex items-center gap-2.5 group focus:outline-none" aria-label="MausamSetu home">
+            {/* Geometric Mark: M + bridge arch + rain-drop negative space */}
+            <div className="w-9 h-9 rounded-xl bg-[#126B3A] flex items-center justify-center shadow-sm transition-all duration-200 group-hover:bg-[#0B4F2A]">
+              <svg viewBox="0 0 32 32" width="22" height="22" fill="none" aria-hidden="true">
+                {/* Bridge arch */}
+                <path d="M5 22 Q5 10 16 10 Q27 10 27 22" stroke="white" strokeWidth="2.2" strokeLinecap="round" fill="none" />
+                {/* M letterform uprights */}
+                <path d="M5 22 L5 27" stroke="white" strokeWidth="2.2" strokeLinecap="round" />
+                <path d="M27 22 L27 27" stroke="white" strokeWidth="2.2" strokeLinecap="round" />
+                {/* Rain drop */}
+                <circle cx="16" cy="17" r="2" fill="#86EFAC" />
+                <path d="M16 19 L16 26" stroke="#86EFAC" strokeWidth="1.5" strokeLinecap="round" strokeDasharray="2 2" />
+              </svg>
             </div>
-            <div>
-              <div className="flex items-center gap-1.5">
-                <span className="font-bold text-lg sm:text-xl text-[#17201A] tracking-tight">
-                  Mausam<span className="text-[#166534]">Setu</span>
-                </span>
-              </div>
-              <p className="text-[11px] text-[#647067] font-medium hidden sm:block">
-                पंचायत स्तरीय कृषि मौसम निर्णय सेवा
-              </p>
-            </div>
+            <span className="font-bold text-[1.1rem] text-[#111814] tracking-tight">
+              Mausam<span className="text-[#126B3A]">Setu</span>
+            </span>
           </Link>
 
-          {/* Desktop Navigation Links directly connected to each narrative section */}
-          <nav className="hidden lg:flex items-center gap-1 lg:gap-2">
+          {/* Desktop Navigation Links */}
+          <nav className="hidden lg:flex items-center gap-1.5">
             {navLinks.map((link) => {
               const isActive = activeSection === link.id
               return (
@@ -99,13 +127,16 @@ export const Navbar: React.FC = () => {
                   key={link.id}
                   href={`#${link.id}`}
                   onClick={(e) => handleNavClick(link.id, e)}
-                  className={`px-3.5 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  className={`relative px-3.5 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
                     isActive
-                      ? 'text-[#166534] bg-[#DCFCE7]/60 font-semibold'
-                      : 'text-[#17201A] hover:text-[#166534] hover:bg-[#F7FAF7]'
+                      ? 'text-[#166534] bg-emerald-50 font-bold shadow-xs'
+                      : 'text-[#3D4A41] hover:text-[#166534] hover:bg-[#F0FDF4]'
                   }`}
                 >
                   {link.name}
+                  {isActive && (
+                    <span className="absolute bottom-1 left-1/2 -translate-x-1/2 w-4 h-0.5 rounded-full bg-[#166534] transition-all" />
+                  )}
                 </a>
               )
             })}
@@ -115,7 +146,7 @@ export const Navbar: React.FC = () => {
           <div className="hidden lg:flex items-center gap-3">
             <Link to="/login">
               <Button variant="ghost" size="md">
-                Login
+                Sign In
               </Button>
             </Link>
             <Link to="/signup">
@@ -129,12 +160,12 @@ export const Navbar: React.FC = () => {
           <div className="flex lg:hidden items-center gap-2">
             <Link to="/login">
               <Button variant="ghost" size="sm">
-                Login
+                Sign In
               </Button>
             </Link>
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 rounded-lg text-[#17201A] hover:bg-[#F7FAF7] focus:outline-none"
+              className="p-2 rounded-lg text-[#17201A] hover:bg-[#F0FDF4] focus:outline-none transition-colors"
               aria-label="Toggle Navigation Menu"
             >
               {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
@@ -145,10 +176,7 @@ export const Navbar: React.FC = () => {
 
       {/* Mobile/Tablet Menu Drawer */}
       {mobileMenuOpen && (
-        <div className="lg:hidden border-b border-[#E2E8E4] bg-white px-4 pt-2 pb-6 space-y-3 shadow-lg">
-          <p className="text-xs text-[#647067] font-medium px-3 pt-2">
-            पंचायत स्तरीय कृषि मौसम निर्णय सेवा
-          </p>
+        <div className="lg:hidden border-b border-[#E2E8E4] bg-white/95 backdrop-blur-md px-4 pt-2 pb-6 space-y-3 shadow-lg animate-in fade-in slide-in-from-top-2 duration-200">
           <div className="flex flex-col space-y-1">
             {navLinks.map((link) => {
               const isActive = activeSection === link.id
@@ -157,9 +185,9 @@ export const Navbar: React.FC = () => {
                   key={link.id}
                   href={`#${link.id}`}
                   onClick={(e) => handleNavClick(link.id, e)}
-                  className={`px-3 py-2.5 rounded-xl text-base font-medium ${
+                  className={`px-3 py-2.5 rounded-xl text-base font-medium transition-colors ${
                     isActive
-                      ? 'text-[#166534] bg-[#DCFCE7]/60 font-semibold'
+                      ? 'text-[#166534] bg-emerald-50 font-bold'
                       : 'text-[#17201A] hover:bg-[#F7FAF7]'
                   }`}
                 >
@@ -176,7 +204,7 @@ export const Navbar: React.FC = () => {
             </Link>
             <Link to="/login" className="w-full">
               <Button variant="outline" size="lg" className="w-full">
-                Login to Portal
+                Sign In to Portal
               </Button>
             </Link>
           </div>

@@ -1,240 +1,634 @@
-import React, { useState } from 'react'
-import { motion } from 'framer-motion'
-import { Smartphone, Monitor, Mic, Volume2, CloudRain, Radio } from 'lucide-react'
+import React, { useState, useEffect, useRef } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import {
+  Smartphone,
+  Monitor,
+  Mic,
+  Volume2,
+  ArrowRight,
+  Check,
+  Play,
+  Pause,
+} from 'lucide-react'
 import { Link } from 'react-router-dom'
+import { SectionReveal } from '../shared/SectionReveal'
 import { Button } from '../shared/Button'
 
+type PhoneStep = 'weather' | 'advisory' | 'voice_question' | 'voice_answer' | 'offline'
+
 export const ExperienceSection: React.FC = () => {
-  const [activeLang, setActiveLang] = useState<'hi' | 'mr' | 'en'>('hi')
-  const [voiceQueryActive, setVoiceQueryActive] = useState(false)
+  const [activeTab, setActiveTab] = useState<'farmer' | 'officer'>('farmer')
+  const [phoneTab, setPhoneTab] = useState<PhoneStep>('weather')
+  const [officerTab, setOfficerTab] = useState<'queue' | 'alerts'>('queue')
+  const [isOfficerApproved, setIsOfficerApproved] = useState<boolean>(false)
+  const [isPaused, setIsPaused] = useState<boolean>(false)
+  const [isPlayingAudio, setIsPlayingAudio] = useState<boolean>(false)
+  const [progress, setProgress] = useState<number>(0)
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const progressTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
-  const content = {
-    hi: {
-      title: 'आज का मौसम',
-      temp: '28°C',
-      rainChance: 'हल्की बारिश (4.2 mm)',
-      advisoryTitle: 'सोयाबीन फसल सलाह',
-      advisoryText: 'आज सिंचाई टालना उचित है। शाम के समय हल्की वर्षा हो सकती है।',
-      voicePrompt: '🎙 बोलकर पूछें: "कल बारिश होगी?"',
-      voiceResponse: '"कल दोपहर 2 बजे हल्की बूंदाबांदी का अनुमान है। कीटनाशक छिड़काव स्थगित रखें।"',
-      badge: 'अधिकारी द्वारा सत्यापित',
-    },
-    mr: {
-      title: 'आजचे हवामान',
-      temp: '28°C',
-      rainChance: 'हलका पाऊस (4.2 mm)',
-      advisoryTitle: 'सोयाबीन पीक सल्ला',
-      advisoryText: 'आज पाणी देणे टाळावे. संध्याकाळी हलक्या पावसाची शक्यता आहे.',
-      voicePrompt: '🎙 विचारण्यासाठी बोला: "उद्या पाऊस पडेल का?"',
-      voiceResponse: '"उद्या दुपारी हलक्या पावसाचा अंदाज आहे. फवारणी पुढे ढकला."',
-      badge: 'कृषी अधिकाऱ्यांनी प्रमाणित',
-    },
-    en: {
-      title: "Today's Weather",
-      temp: '28°C',
-      rainChance: 'Light Showers (4.2 mm)',
-      advisoryTitle: 'Soybean Crop Advisory',
-      advisoryText: 'Delay irrigation for 24 hours. Light evening rain anticipated.',
-      voicePrompt: '🎙 Ask by Voice: "Will it rain tomorrow?"',
-      voiceResponse: '"Light rain expected tomorrow afternoon. Postpone chemical spray."',
-      badge: 'Officer Verified',
-    },
-  }
+  const TAB_DURATION = 6500 // 6.5 seconds per tab
 
-  const c = content[activeLang]
+  // Auto-animate between Farmer & Officer tabs
+  useEffect(() => {
+    if (isPaused) return
+
+    setProgress(0)
+    const startTime = Date.now()
+
+    progressTimerRef.current = setInterval(() => {
+      const elapsed = Date.now() - startTime
+      const pct = Math.min(100, (elapsed / TAB_DURATION) * 100)
+      setProgress(pct)
+    }, 50)
+
+    timerRef.current = setTimeout(() => {
+      setActiveTab((prev) => (prev === 'farmer' ? 'officer' : 'farmer'))
+    }, TAB_DURATION)
+
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current)
+      if (progressTimerRef.current) clearInterval(progressTimerRef.current)
+    }
+  }, [activeTab, isPaused])
 
   return (
     <section
       id="experience"
-      className="snap-section relative w-full bg-[#F7FAF7] border-b border-[#E2E8E4] flex flex-col justify-center overflow-hidden"
+      className="relative scroll-mt-20 min-h-[calc(100vh-5rem)] w-full bg-[#F6F9F5] border-b border-[#E2E8E4] flex flex-col justify-center overflow-hidden py-12 lg:py-10"
     >
-      {/* Floating Telemetry Icon 1: 2G SMS Failover */}
-      <div className="hidden xl:flex absolute top-6 right-24 z-20 items-center gap-2 px-3 py-1.5 rounded-full bg-white/95 border border-[#BBF7D0] shadow-xs text-xs font-semibold text-[#14532D] animate-float-slow backdrop-blur-sm">
-        <Radio size={13} className="text-[#166534]" />
-        <span>SMS & IVR Failover: Active on 2G Networks</span>
-      </div>
+      {/* Subtle topographic background */}
+      <div className="absolute inset-0 bg-topo-grid opacity-15 pointer-events-none" aria-hidden="true" />
+      <div className="absolute top-[10%] right-[20%] w-[420px] h-[420px] rounded-full bg-[#EAF5EC]/40 blur-3xl pointer-events-none" />
 
-      {/* Floating Telemetry Icon 2: Voice Waveform */}
-      <div className="hidden xl:flex absolute bottom-8 right-16 z-20 items-center gap-2 px-3 py-1.5 rounded-full bg-white/95 border border-[#E2E8E4] shadow-xs text-xs font-semibold text-[#17201A] animate-float-drift backdrop-blur-sm">
-        <Volume2 size={13} className="text-[#166534]" />
-        <span>Speech-to-Speech: Hindi • Marathi • English</span>
-      </div>
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full py-4 sm:py-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full my-auto">
         {/* Section Header */}
-        <div className="max-w-3xl mb-4 sm:mb-6 text-left">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#DCFCE7] text-[#14532D] text-xs font-semibold uppercase tracking-wider mb-2">
+        <SectionReveal variant="default" className="max-w-3xl mb-5 sm:mb-7 text-left">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#EAF5EC] border border-[#126B3A]/20 text-[#126B3A] text-xs font-mono font-semibold uppercase tracking-wider mb-2">
             <Smartphone size={13} />
-            <span>04 • Farmer & Officer Experience</span>
+            <span>Deployment &middot; Section 04</span>
           </div>
-          <h2 className="text-2xl sm:text-4xl xl:text-5xl font-black text-[#17201A] tracking-tight leading-tight">
-            Built for the field. <br />
-            <span className="text-[#166534]">Proven on desktop & mobile.</span>
+          <h2 className="text-2xl sm:text-4xl xl:text-5xl font-black text-[#111814] tracking-tight leading-[1.08]">
+            From Field Farmers to{' '}
+            <span className="text-[#126B3A]">District Officers</span>
           </h2>
-          <p className="text-xs sm:text-sm text-[#647067] mt-1.5 leading-relaxed font-normal">
-            Farmers access hyper-local weather, voice-assisted advisories, and offline SMS in their native language. Agricultural officers manage hundreds of Panchayats from an executive control console.
+          <p className="text-sm sm:text-base text-[#66736B] mt-1.5 leading-relaxed">
+            Tailored interfaces for both audiences: a voice-first, offline-capable PWA for rural farmers, and a comprehensive oversight portal for agricultural officers.
           </p>
-        </div>
 
-        {/* Split Screen Experience Showcase */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-8 items-center">
-          {/* Left: Mobile Phone Mockup */}
-          <div className="lg:col-span-5 flex justify-center">
-            {/* Phone Frame */}
-            <div className="w-full max-w-[310px] bg-[#17201A] rounded-[36px] p-2.5 shadow-xl border-4 border-[#17201A] relative">
-              {/* Speaker Notch */}
-              <div className="w-20 h-3.5 bg-[#17201A] rounded-full mx-auto mb-1.5 relative z-30 flex items-center justify-center">
-                <div className="w-6 h-1 bg-[#374151] rounded-full" />
-              </div>
-
-              {/* Inner Screen */}
-              <div className="bg-[#F7FAF7] rounded-[28px] overflow-hidden p-3.5 space-y-2.5 text-left border border-[#E2E8E4]">
-                {/* Language Switcher */}
-                <div className="flex items-center justify-between border-b border-[#E2E8E4] pb-1.5">
-                  <span className="text-xs font-bold text-[#17201A]">MausamSetu</span>
-                  <div className="flex items-center gap-1 bg-white p-0.5 rounded-lg border border-[#E2E8E4]">
-                    {(['hi', 'mr', 'en'] as const).map((lang) => (
-                      <button
-                        key={lang}
-                        onClick={() => setActiveLang(lang)}
-                        className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${
-                          activeLang === lang ? 'bg-[#166534] text-white' : 'text-[#647067]'
-                        }`}
-                      >
-                        {lang === 'hi' ? 'हिन्दी' : lang === 'mr' ? 'मराठी' : 'EN'}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Weather Card */}
-                <div className="bg-white rounded-xl border border-[#E2E8E4] p-3 shadow-xs">
-                  <div className="flex items-center justify-between text-[11px] text-[#647067]">
-                    <span>Dhapewada, Kalmeshwar</span>
-                    <span className="text-[#166534] font-semibold text-[9px]">✓ {c.badge}</span>
-                  </div>
-                  <div className="flex items-center justify-between mt-1">
-                    <div>
-                      <div className="text-2xl font-black text-[#17201A]">{c.temp}</div>
-                      <p className="text-[11px] text-[#166534] font-semibold">{c.rainChance}</p>
-                    </div>
-                    <div className="w-10 h-10 rounded-xl bg-[#EFF6FF] text-[#2563EB] flex items-center justify-center">
-                      <CloudRain size={22} />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Advisory Card */}
-                <div className="bg-[#F0FDF4] border border-[#BBF7D0] rounded-xl p-2.5 space-y-0.5">
-                  <p className="text-[11px] font-bold text-[#14532D]">🌱 {c.advisoryTitle}</p>
-                  <p className="text-[11px] text-[#166534] leading-snug">{c.advisoryText}</p>
-                </div>
-
-                {/* Voice Assistant Interaction */}
-                <div className="bg-white rounded-xl border border-[#E2E8E4] p-2.5 space-y-1.5">
-                  <button
-                    onClick={() => setVoiceQueryActive(!voiceQueryActive)}
-                    className="w-full py-2 px-2.5 rounded-lg bg-[#166534] text-white text-[11px] font-semibold flex items-center justify-center gap-1.5 shadow-xs transition-all hover:bg-[#14532D]"
-                  >
-                    <Mic size={13} className="animate-pulse" />
-                    <span>{c.voicePrompt}</span>
-                  </button>
-
-                  <div className="p-2 rounded-lg bg-[#F8FAFC] border border-[#E2E8E4] text-[10px] text-[#17201A] flex items-start gap-1.5">
-                    <Volume2 size={12} className="text-[#166534] shrink-0 mt-0.5" />
-                    <p className="italic leading-tight">{c.voiceResponse}</p>
-                  </div>
-                </div>
-              </div>
-            </div>
+          {/* Auto-Play Control Pill */}
+          <div className="flex items-center gap-3 mt-2.5">
+            <button
+              onClick={() => setIsPaused(!isPaused)}
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-white border border-[#E2E8E4] text-[#166534] shadow-2xs hover:bg-[#F8FAFC] transition-colors"
+              aria-label={isPaused ? 'Resume auto-animation' : 'Pause auto-animation'}
+            >
+              {isPaused ? <Play size={11} className="fill-current" /> : <Pause size={11} className="fill-current" />}
+              <span>{isPaused ? 'Tab Cycling Paused' : 'Auto-alternating Views'}</span>
+            </button>
+            <span className="text-xs text-[#94A3B8]">
+              Switching tabs every 6.5s • Click to lock view
+            </span>
           </div>
+        </SectionReveal>
 
-          {/* Right: Officer Dashboard Console Preview */}
-          <div className="lg:col-span-7 bg-white rounded-2xl border border-[#E2E8E4] p-5 sm:p-6 shadow-xs text-left">
-            <div className="flex items-center justify-between border-b border-[#E2E8E4] pb-3 mb-4">
-              <div>
-                <div className="flex items-center gap-1.5">
-                  <Monitor size={15} className="text-[#166534]" />
-                  <h3 className="text-base font-bold text-[#17201A]">
-                    Officer Multi-Panchayat Management
-                  </h3>
-                </div>
-                <p className="text-[11px] text-[#647067] mt-0.5">
-                  Real-time approval stream for 84 Panchayats in Kalmeshwar Block
-                </p>
-              </div>
-
-              <Link to="/app/officer">
-                <Button variant="outline" size="sm">
-                  Open Console
-                </Button>
-              </Link>
-            </div>
-
-            {/* Micro Dashboard Table */}
-            <div className="space-y-2 mb-4">
-              {[
-                { panchayat: 'Dhapewada', rain: '4.2 mm', conf: 'HIGH (±0.11)', status: 'APPROVED', action: 'Broadcasted' },
-                { panchayat: 'Kalamna', rain: '6.8 mm', conf: 'HIGH (±0.14)', status: 'PENDING', action: 'Needs Review' },
-                { panchayat: 'Mohpa', rain: '1.5 mm', conf: 'HIGH (±0.09)', status: 'APPROVED', action: 'Broadcasted' },
-                { panchayat: 'Savner Rural', rain: '11.4 mm', conf: 'MODERATE', status: 'IN_REVIEW', action: 'Hold Advisory' },
-              ].map((row, idx) => (
+        {/* Tab Switcher (Pill Style with Active Progress) */}
+        <SectionReveal variant="stagger" className="flex items-center justify-start gap-2 mb-5">
+          <div className="bg-white p-1.5 rounded-2xl border border-[#E2E8E4] shadow-xs flex items-center gap-2">
+            <button
+              onClick={() => {
+                setActiveTab('farmer')
+                setProgress(0)
+              }}
+              className={`relative overflow-hidden flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all duration-300 ${
+                activeTab === 'farmer'
+                  ? 'bg-[#126B3A] text-white shadow-sm'
+                  : 'text-[#66736B] hover:text-[#111814] hover:bg-[#F6F9F5]'
+              }`}
+            >
+              {activeTab === 'farmer' && (
                 <div
-                  key={idx}
-                  className="p-2.5 rounded-xl border border-[#E2E8E4] bg-[#F7FAF7] flex flex-wrap items-center justify-between gap-2 text-xs"
-                >
-                  <div className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-[#166534]" />
-                    <span className="font-bold text-[#17201A]">{row.panchayat}</span>
-                  </div>
-                  <div className="text-[#647067]">
-                    Rain: <strong className="text-[#17201A]">{row.rain}</strong>
-                  </div>
-                  <span className="font-mono text-[10px] text-[#166534] bg-[#DCFCE7] px-2 py-0.5 rounded">
-                    {row.conf}
-                  </span>
-                  <span className={`font-semibold px-2 py-0.5 rounded text-[10px] ${
-                    row.status === 'APPROVED' ? 'bg-[#DCFCE7] text-[#14532D]' : 'bg-[#FEF3C7] text-[#92400E]'
-                  }`}>
-                    {row.action}
-                  </span>
-                </div>
-              ))}
-            </div>
+                  className="absolute bottom-0 left-0 h-[2.5px] bg-[#86EFAC] transition-all duration-75"
+                  style={{ width: `${progress}%` }}
+                />
+              )}
+              <Smartphone size={15} />
+              <span>For Farmers (Mobile PWA)</span>
+            </button>
 
-            {/* Feature Highlights Grid */}
-            <div className="grid grid-cols-3 gap-2.5 pt-1">
-              <div className="p-2.5 rounded-xl border border-[#E2E8E4] bg-white text-center">
-                <p className="text-lg font-bold text-[#166534]">1-Click</p>
-                <p className="text-[10px] text-[#647067] font-medium">Batch Sanctioning</p>
-              </div>
-              <div className="p-2.5 rounded-xl border border-[#E2E8E4] bg-white text-center">
-                <p className="text-lg font-bold text-[#166534]">100%</p>
-                <p className="text-[10px] text-[#647067] font-medium">Human Verified</p>
-              </div>
-              <div className="p-2.5 rounded-xl border border-[#E2E8E4] bg-white text-center">
-                <p className="text-lg font-bold text-[#166534]">SMS & PWA</p>
-                <p className="text-[10px] text-[#647067] font-medium">Dual Dispatch</p>
-              </div>
-            </div>
-
-            {/* Enter portals CTA */}
-            <div className="mt-4 pt-3 border-t border-[#E2E8E4] flex flex-wrap items-center justify-between gap-2">
-              <span className="text-[11px] text-[#647067]">Ready to test the live applications?</span>
-              <div className="flex items-center gap-2">
-                <Link to="/app/farmer">
-                  <Button variant="outline" size="sm">
-                    Farmer PWA
-                  </Button>
-                </Link>
-                <Link to="/app/officer">
-                  <Button variant="primary" size="sm">
-                    Officer Portal
-                  </Button>
-                </Link>
-              </div>
-            </div>
+            <button
+              onClick={() => {
+                setActiveTab('officer')
+                setProgress(0)
+              }}
+              className={`relative overflow-hidden flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all duration-300 ${
+                activeTab === 'officer'
+                  ? 'bg-[#126B3A] text-white shadow-sm'
+                  : 'text-[#66736B] hover:text-[#111814] hover:bg-[#F6F9F5]'
+              }`}
+            >
+              {activeTab === 'officer' && (
+                <div
+                  className="absolute bottom-0 left-0 h-[2.5px] bg-[#86EFAC] transition-all duration-75"
+                  style={{ width: `${progress}%` }}
+                />
+              )}
+              <Monitor size={15} />
+              <span>For Agricultural Officers</span>
+            </button>
           </div>
+        </SectionReveal>
+
+        {/* Tab Content Display */}
+        <div
+          onMouseEnter={() => setIsPaused(true)}
+          onMouseLeave={() => setIsPaused(false)}
+        >
+          <AnimatePresence mode="wait">
+            {activeTab === 'farmer' ? (
+              <motion.div
+                key="farmer-view"
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -12 }}
+                transition={{ duration: 0.3 }}
+                className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center"
+              >
+                {/* Left Column: Feature Highlights */}
+                <div className="lg:col-span-6 space-y-4 text-left">
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold">
+                    <span>📱 Progressive Web App (PWA)</span>
+                  </div>
+                  <h3 className="text-xl sm:text-2xl font-extrabold text-[#0F172A]">
+                    Zero-Friction Mobile App Designed for Rural India
+                  </h3>
+                  <p className="text-xs sm:text-sm text-[#475569] leading-relaxed">
+                    No complex app stores or heavy downloads required. Works instantly in any mobile browser, installs with one tap to the home screen, and functions even with unstable 2G or zero connectivity.
+                  </p>
+
+                  <div className="space-y-2.5 pt-1">
+                    <div className="flex items-start gap-2.5">
+                      <div className="p-1 rounded-full bg-emerald-100 text-[#166534] mt-0.5">
+                        <Check size={13} />
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold text-[#0F172A]">Native Vernacular Support</p>
+                        <p className="text-[11px] text-[#64748B]">Read advisories in Hindi, Marathi, Telugu, Tamil, and English.</p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-start gap-2.5">
+                      <div className="p-1 rounded-full bg-emerald-100 text-[#166534] mt-0.5">
+                        <Check size={13} />
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold text-[#0F172A]">Voice Query & Audio Playback</p>
+                        <p className="text-[11px] text-[#64748B]">Ask questions by voice and listen to spoken advice directly in the field.</p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-start gap-2.5">
+                      <div className="p-1 rounded-full bg-emerald-100 text-[#166534] mt-0.5">
+                        <Check size={13} />
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold text-[#0F172A]">Offline-First Syncing</p>
+                        <p className="text-[11px] text-[#64748B]">Caches latest forecasts automatically for access when away from cellular towers.</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="pt-1">
+                    <Link to="/app/farmer">
+                      <Button variant="primary" size="sm" rightIcon={<ArrowRight size={15} />}>
+                        Open Farmer Portal
+                      </Button>
+                    </Link>
+                  </div>
+                </div>
+
+                {/* Right Column: Interactive Mobile Phone Mockup */}
+                <div className="lg:col-span-6 flex flex-col items-center">
+                  {/* Phone State Step Pills */}
+                  <div className="flex flex-wrap items-center justify-center gap-1.5 mb-3.5 max-w-sm">
+                    {[
+                      { id: 'weather', label: '1. Weather' },
+                      { id: 'advisory', label: '2. Advisory' },
+                      { id: 'voice_question', label: '3. Voice Ask' },
+                      { id: 'voice_answer', label: '4. Spoken Reply' },
+                      { id: 'offline', label: '5. Offline Cache' },
+                    ].map((step) => {
+                      const isActive = phoneTab === step.id
+                      return (
+                        <button
+                          key={step.id}
+                          onClick={() => setPhoneTab(step.id as any)}
+                          className={`text-[10px] font-bold px-2.5 py-1 rounded-full transition-all ${
+                            isActive
+                              ? 'bg-[#126B3A] text-white shadow-xs'
+                              : 'bg-white border border-[#E2E8E4] text-[#66736B] hover:text-[#111814]'
+                          }`}
+                        >
+                          {step.label}
+                        </button>
+                      )
+                    })}
+                  </div>
+
+                  <div className="w-full max-w-[330px] rounded-[40px] bg-[#0F172A] p-3 shadow-2xl border-4 border-[#1E293B] relative">
+                    {/* Phone Notch */}
+                    <div className="w-20 h-4 bg-[#1E293B] rounded-full mx-auto mb-2.5" />
+
+                    {/* Screen Content */}
+                    <div className="rounded-[28px] bg-white overflow-hidden p-3.5 space-y-2.5 text-left border border-[#E2E8F0] min-h-[360px] flex flex-col justify-between">
+                      {/* Phone Status Bar */}
+                      <div>
+                        <div className="flex items-center justify-between text-[9px] text-slate-400 font-mono px-0.5 pb-1 border-b border-[#F8FAFC]">
+                          <span>09:41</span>
+                          <div className="flex items-center gap-1.5">
+                            <span className={phoneTab === 'offline' ? 'text-amber-500 font-bold' : ''}>
+                              {phoneTab === 'offline' ? 'No Service' : '5G'}
+                            </span>
+                            <div className="w-3.5 h-1.5 rounded-xs border border-slate-400 p-0.5 flex items-center">
+                              <div className="w-full h-full bg-slate-400 rounded-2xs" />
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between border-b border-[#F1F5F9] pt-1.5 pb-1.5">
+                          <span className="font-bold text-xs text-[#126B3A]">MausamSetu PWA</span>
+                          <span className={`text-[9px] px-2 py-0.5 rounded-full font-bold flex items-center gap-1 ${
+                            phoneTab === 'offline'
+                              ? 'bg-amber-100 text-amber-800'
+                              : 'bg-emerald-100 text-emerald-800'
+                          }`}>
+                            <span className={`w-1.5 h-1.5 rounded-full ${phoneTab === 'offline' ? 'bg-amber-600' : 'bg-emerald-600 animate-pulse'}`} />
+                            {phoneTab === 'offline' ? 'Offline Storage' : 'Live Sync'}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Animated Phone Screen States */}
+                      <div className="flex-1 py-1">
+                        <AnimatePresence mode="wait">
+                          {/* State 1: Weather */}
+                          {phoneTab === 'weather' && (
+                            <motion.div
+                              key="state-weather"
+                              initial={{ opacity: 0, y: 6 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, y: -6 }}
+                              transition={{ duration: 0.2 }}
+                              className="space-y-2"
+                            >
+                              <div className="p-3 rounded-2xl bg-gradient-to-br from-[#126B3A] to-[#0B4F2A] text-white shadow-sm">
+                                <span className="text-[9px] uppercase font-bold text-emerald-200">
+                                  आज का मौसम • Dhapewada
+                                </span>
+                                <p className="text-2xl font-black mt-0.5">27°C • हल्की वर्षा</p>
+                                <p className="text-[10px] text-emerald-100 mt-0.5">4.2 mm वर्षा अनुमान • आर्द्रता 74%</p>
+                              </div>
+                              <div className="grid grid-cols-3 gap-1.5 text-center">
+                                <div className="p-1.5 rounded-lg bg-[#F8FAFC] border border-[#E2E8E4]">
+                                  <span className="text-[9px] text-[#66736B] block">दोपहर 12:00</span>
+                                  <span className="text-xs font-bold text-[#111814]">28°C</span>
+                                </div>
+                                <div className="p-1.5 rounded-lg bg-[#EAF5EC] border border-[#126B3A]/30">
+                                  <span className="text-[9px] text-[#126B3A] block">दोपहर 03:00</span>
+                                  <span className="text-xs font-bold text-[#126B3A]">वर्षा 3mm</span>
+                                </div>
+                                <div className="p-1.5 rounded-lg bg-[#F8FAFC] border border-[#E2E8E4]">
+                                  <span className="text-[9px] text-[#66736B] block">शाम 06:00</span>
+                                  <span className="text-xs font-bold text-[#111814]">25°C</span>
+                                </div>
+                              </div>
+                            </motion.div>
+                          )}
+
+                          {/* State 2: Crop Advisory */}
+                          {phoneTab === 'advisory' && (
+                            <motion.div
+                              key="state-advisory"
+                              initial={{ opacity: 0, y: 6 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, y: -6 }}
+                              transition={{ duration: 0.2 }}
+                              className="space-y-2"
+                            >
+                              <div className="p-3 rounded-2xl bg-white border border-[#126B3A]/30 shadow-xs space-y-1.5">
+                                <div className="flex items-center justify-between">
+                                  <span className="text-xs font-bold text-[#111814]">सोयाबीन फसल सलाह</span>
+                                  <span className="text-[8.5px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                                    ✓ अधिकारी सत्यापित
+                                  </span>
+                                </div>
+                                <p className="text-sm font-black text-[#126B3A]">सिंचाई 24 घंटे टालें</p>
+                                <p className="text-[10.5px] text-[#66736B] leading-relaxed">
+                                  आगामी वर्षा से मिट्टी में नमी बनी रहेगी। जलभराव रोकने के लिए जल निकासी नाली साफ रखें।
+                                </p>
+                                <div className="pt-1 text-[9px] font-mono text-[#94A3B8] border-t border-[#F1F5F9]">
+                                  सत्यापित: 09:14 IST · ब्लॉक कृषि अधिकारी
+                                </div>
+                              </div>
+                            </motion.div>
+                          )}
+
+                          {/* State 3: Voice Question */}
+                          {phoneTab === 'voice_question' && (
+                            <motion.div
+                              key="state-question"
+                              initial={{ opacity: 0, y: 6 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, y: -6 }}
+                              transition={{ duration: 0.2 }}
+                              className="space-y-3 py-2 text-center"
+                            >
+                              <div className="w-12 h-12 rounded-full bg-emerald-100 text-[#126B3A] flex items-center justify-center mx-auto animate-pulse">
+                                <Mic size={24} />
+                              </div>
+                              <div className="space-y-1">
+                                <span className="text-[9px] uppercase font-bold tracking-wider text-emerald-700">
+                                  ध्वनि प्रश्न (Voice Query)
+                                </span>
+                                <p className="text-xs font-bold text-[#111814] px-2">
+                                  &ldquo;क्या कल कपास में पानी देना ठीक रहेगा?&rdquo;
+                                </p>
+                              </div>
+                              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-800 text-[10px] font-bold border border-emerald-200">
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-ping" />
+                                <span>आवाज़ पहचानी गई (Recognised)</span>
+                              </div>
+                            </motion.div>
+                          )}
+
+                          {/* State 4: Voice Answer */}
+                          {phoneTab === 'voice_answer' && (
+                            <motion.div
+                              key="state-answer"
+                              initial={{ opacity: 0, y: 6 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, y: -6 }}
+                              transition={{ duration: 0.2 }}
+                              className="space-y-2.5 py-1"
+                            >
+                              <div className="p-3 rounded-2xl bg-[#EAF5EC] border border-[#126B3A]/30 space-y-2">
+                                <div className="flex items-center justify-between">
+                                  <span className="text-[10px] font-bold text-[#126B3A] flex items-center gap-1">
+                                    <Volume2 size={13} className="text-[#126B3A]" />
+                                    <span>बोलकर उत्तर (Spoken Reply)</span>
+                                  </span>
+                                  <span className="text-[8.5px] font-mono bg-white px-1.5 py-0.5 rounded text-[#126B3A]">
+                                    Marathi / Hindi
+                                  </span>
+                                </div>
+                                <p className="text-xs font-semibold text-[#111814] leading-relaxed">
+                                  &ldquo;नाही, उद्या हलका पाऊस अपेक्षित आहे. कपाशीला सध्या पाणी देऊ नका.&rdquo;
+                                </p>
+                                {/* Soundwave bars */}
+                                <div className="flex items-center justify-center gap-1 py-1 h-5">
+                                  {[12, 18, 22, 14, 20, 16, 24, 12, 18, 10].map((h, i) => (
+                                    <span
+                                      key={i}
+                                      className="w-1 bg-[#126B3A] rounded-full animate-pulse"
+                                      style={{ height: `${h}px`, animationDelay: `${i * 120}ms` }}
+                                    />
+                                  ))}
+                                </div>
+                              </div>
+                            </motion.div>
+                          )}
+
+                          {/* State 5: Offline State */}
+                          {phoneTab === 'offline' && (
+                            <motion.div
+                              key="state-offline"
+                              initial={{ opacity: 0, y: 6 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, y: -6 }}
+                              transition={{ duration: 0.2 }}
+                              className="space-y-2.5 py-1"
+                            >
+                              <div className="p-3 rounded-2xl bg-[#FFFBEB] border border-amber-200 text-left space-y-1.5">
+                                <div className="flex items-center gap-1.5 text-amber-800 text-xs font-bold">
+                                  <span>⚡ ऑफलाइन मोड सक्रिय (Offline Active)</span>
+                                </div>
+                                <p className="text-[10.5px] text-amber-900 leading-relaxed">
+                                  मोबाइल नेटवर्क उपलब्ध नाही. कॅश केलेला डेटा उपलब्ध आहे.
+                                </p>
+                                <div className="p-2 rounded-xl bg-white border border-amber-200 text-[10px] text-[#66736B]">
+                                  <span className="font-bold text-[#111814] block">अंतिम अद्यतन (Cached):</span>
+                                  <span>आज सकाळी 08:30 वाजता • 4.2mm पाऊस अंदाज</span>
+                                </div>
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
+
+                      {/* Bottom App Navigation */}
+                      <div className="pt-2 border-t border-[#F1F5F9] grid grid-cols-5 gap-1 text-center text-[8px] text-[#64748B]">
+                        {[
+                          { id: 'weather', label: 'मौसम' },
+                          { id: 'advisory', label: 'सलाह' },
+                          { id: 'voice_question', label: 'प्रश्न' },
+                          { id: 'voice_answer', label: 'ऑडियो' },
+                          { id: 'offline', label: 'ऑफलाइन' },
+                        ].map((btn) => (
+                          <button
+                            key={btn.id}
+                            onClick={() => setPhoneTab(btn.id as any)}
+                            className={`py-1 rounded-md transition-colors ${
+                              phoneTab === btn.id
+                                ? 'text-[#126B3A] font-bold bg-[#EAF5EC]'
+                                : 'hover:text-[#111814]'
+                            }`}
+                          >
+                            {btn.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="officer-view"
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -12 }}
+                transition={{ duration: 0.3 }}
+                className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center"
+              >
+                {/* Left Column: Feature Highlights */}
+                <div className="lg:col-span-6 space-y-4 text-left">
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-bold">
+                    <span>🖥️ District & Block Console</span>
+                  </div>
+                  <h3 className="text-xl sm:text-2xl font-extrabold text-[#0F172A]">
+                    Command Center for Agricultural Extension Officers
+                  </h3>
+                  <p className="text-xs sm:text-sm text-[#475569] leading-relaxed">
+                    Manage hundreds of Panchayats with real-time discrepancy alerts. Review AI proposals, edit advice for local pest outbreaks, and broadcast verified notices in seconds.
+                  </p>
+
+                  <div className="space-y-2.5 pt-1">
+                    <div className="flex items-start gap-2.5">
+                      <div className="p-1 rounded-full bg-blue-100 text-blue-700 mt-0.5">
+                        <Check size={13} />
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold text-[#0F172A]">Cluster-Wide Review Queue</p>
+                        <p className="text-[11px] text-[#64748B]">Batch approve or fine-tune advisories across blocks with one click.</p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-start gap-2.5">
+                      <div className="p-1 rounded-full bg-blue-100 text-blue-700 mt-0.5">
+                        <Check size={13} />
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold text-[#0F172A]">Automated Discrepancy Flagging</p>
+                        <p className="text-[11px] text-[#64748B]">Highlighted alerts whenever local sensors deviate from regional forecast models.</p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-start gap-2.5">
+                      <div className="p-1 rounded-full bg-blue-100 text-blue-700 mt-0.5">
+                        <Check size={13} />
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold text-[#0F172A]">Broadcast & Impact Telemetry</p>
+                        <p className="text-[11px] text-[#64748B]">Monitor delivery rates across SMS, WhatsApp, voice call, and PWA notifications.</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="pt-1">
+                    <Link to="/app/officer">
+                      <Button variant="primary" size="sm" rightIcon={<ArrowRight size={15} />}>
+                        Open Officer Portal
+                      </Button>
+                    </Link>
+                  </div>
+                </div>
+
+                {/* Right Column: Desktop Dashboard Mockup */}
+                <div className="lg:col-span-6">
+                  <div className="rounded-3xl bg-[#0F172A] p-4 shadow-2xl border border-[#334155] text-left text-white space-y-3">
+                    <div className="flex items-center justify-between border-b border-[#1E293B] pb-2.5">
+                      <div className="flex items-center gap-2">
+                        <span className="w-2.5 h-2.5 rounded-full bg-red-500" />
+                        <span className="w-2.5 h-2.5 rounded-full bg-yellow-500" />
+                        <span className="w-2.5 h-2.5 rounded-full bg-green-500" />
+                        <span className="text-xs text-slate-400 font-mono ml-2">MausamSetu Officer Console</span>
+                      </div>
+                      <span className="text-[10px] font-mono text-emerald-400 bg-emerald-950 px-2 py-0.5 rounded-full border border-emerald-800 flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+                        84 Panchayats Live
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-2.5">
+                      <div className="p-2.5 rounded-xl bg-[#1E293B] border border-[#334155]">
+                        <span className="text-[9px] uppercase text-slate-400 font-semibold">Pending Review</span>
+                        <p className="text-lg font-black text-amber-400 mt-0.5">
+                          {isOfficerApproved ? '2' : '3'} Advisories
+                        </p>
+                      </div>
+                      <div className="p-2.5 rounded-xl bg-[#1E293B] border border-[#334155]">
+                        <span className="text-[9px] uppercase text-slate-400 font-semibold">Dispatched Today</span>
+                        <p className="text-lg font-black text-emerald-400 mt-0.5">
+                          {isOfficerApproved ? '82' : '81'} Verified
+                        </p>
+                      </div>
+                      <div className="p-2.5 rounded-xl bg-[#1E293B] border border-[#334155]">
+                        <span className="text-[9px] uppercase text-slate-400 font-semibold">Farmers Reached</span>
+                        <p className="text-lg font-black text-white mt-0.5">
+                          {isOfficerApproved ? '15,700' : '14,280'}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Officer Sub-tabs: Advisory Queue vs Discrepancy Alerts */}
+                    <div className="p-3 rounded-xl bg-[#1E293B] border border-[#334155] space-y-2">
+                      <div className="flex items-center justify-between text-xs pb-1 border-b border-[#334155]/60">
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => setOfficerTab('queue')}
+                            className={`text-[11px] font-bold px-2 py-0.5 rounded transition-colors ${
+                              officerTab === 'queue' ? 'bg-[#0F172A] text-emerald-400 border border-[#334155]' : 'text-slate-400 hover:text-white'
+                            }`}
+                          >
+                            Advisory Queue ({isOfficerApproved ? 2 : 3})
+                          </button>
+                          <button
+                            onClick={() => setOfficerTab('alerts')}
+                            className={`text-[11px] font-bold px-2 py-0.5 rounded transition-colors ${
+                              officerTab === 'alerts' ? 'bg-[#0F172A] text-amber-400 border border-[#334155]' : 'text-slate-400 hover:text-white'
+                            }`}
+                          >
+                            Discrepancy Flags (1)
+                          </button>
+                        </div>
+                        <span className="text-emerald-400 text-[10px] font-semibold">Live System</span>
+                      </div>
+
+                      {officerTab === 'queue' ? (
+                        <div className="p-2 rounded-lg bg-[#0F172A] border border-[#334155] flex items-center justify-between text-xs">
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <p className="font-semibold text-slate-200 text-[11px]">Soybean • Valley Cluster</p>
+                              {isOfficerApproved && (
+                                <span className="text-[9px] text-emerald-400 font-bold bg-emerald-950 px-1.5 py-0.2 rounded border border-emerald-800">
+                                  ✓ Signed
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-[10px] text-slate-400">
+                              {isOfficerApproved
+                                ? 'Signed by BAO-704 · Dispatched to 1,420 farmers'
+                                : 'Recommendation: Hold irrigation 24h'}
+                            </p>
+                          </div>
+                          {isOfficerApproved ? (
+                            <button
+                              onClick={() => setIsOfficerApproved(false)}
+                              className="px-2 py-1 rounded-md bg-[#1E293B] text-slate-300 hover:text-white font-mono text-[9px] transition-colors"
+                            >
+                              Reset
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => setIsOfficerApproved(true)}
+                              className="px-2.5 py-1 rounded-md bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[10px] transition-colors cursor-pointer shadow-xs active:scale-95"
+                            >
+                              Approve
+                            </button>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="p-2 rounded-lg bg-[#0F172A] border border-amber-900/50 flex items-center justify-between text-xs">
+                          <div>
+                            <div className="flex items-center gap-1.5">
+                              <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping" />
+                              <p className="font-semibold text-amber-300 text-[11px]">Sensor Deviation Detected</p>
+                            </div>
+                            <p className="text-[10px] text-slate-400 mt-0.5">
+                              Valley AWS recorded 12.4mm vs 3.8mm NWP model. Auto-calibrated.
+                            </p>
+                          </div>
+                          <span className="text-[9px] font-mono text-emerald-400 bg-emerald-950 px-2 py-0.5 rounded border border-emerald-800 shrink-0">
+                            Auto-Calibrated
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
     </section>
