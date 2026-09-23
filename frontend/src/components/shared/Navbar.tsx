@@ -8,6 +8,7 @@ export const Navbar: React.FC = () => {
   const [scrollProgress, setScrollProgress] = useState(0)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [activeSection, setActiveSection] = useState<string>('')
+  const [currentLang, setCurrentLang] = useState<'EN' | 'HI' | 'MR'>('EN')
   const location = useLocation()
   const navigate = useNavigate()
 
@@ -144,6 +145,24 @@ export const Navbar: React.FC = () => {
 
           {/* Right Action Buttons */}
           <div className="hidden lg:flex items-center gap-3">
+            {/* Minimal Language Switcher */}
+            <div className="flex items-center bg-black/5 rounded-full p-0.5 border border-black/5">
+              {(['EN', 'HI', 'MR'] as const).map((lang) => (
+                <button
+                  key={lang}
+                  type="button"
+                  onClick={() => setCurrentLang(lang)}
+                  className={`px-2 py-0.5 rounded-full text-[11px] font-semibold transition-all ${
+                    currentLang === lang
+                      ? 'bg-white text-[#126B3A] shadow-2xs font-bold'
+                      : 'text-[#66736B] hover:text-[#111814]'
+                  }`}
+                >
+                  {lang === 'HI' ? 'हिन्दी' : lang === 'MR' ? 'मराठी' : 'EN'}
+                </button>
+              ))}
+            </div>
+
             <Link to="/login">
               <Button variant="ghost" size="md">
                 Sign In
