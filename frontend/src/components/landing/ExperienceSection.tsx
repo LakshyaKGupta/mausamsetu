@@ -235,7 +235,11 @@ export const ExperienceSection: React.FC = () => {
                     })}
                   </div>
 
-                  <div className="w-full max-w-[330px] rounded-[40px] bg-[#0F172A] p-3 shadow-2xl border-4 border-[#1E293B] relative">
+                  <motion.div
+                    animate={{ y: [-5, 5, -5] }}
+                    transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
+                    className="w-full max-w-[330px] rounded-[40px] bg-[#0F172A] p-3 shadow-2xl border-4 border-[#1E293B] relative will-change-transform"
+                  >
                     {/* Phone Notch */}
                     <div className="w-20 h-4 bg-[#1E293B] rounded-full mx-auto mb-2.5" />
 
@@ -448,7 +452,7 @@ export const ExperienceSection: React.FC = () => {
                         ))}
                       </div>
                     </div>
-                  </div>
+                  </motion.div>
                 </div>
               </motion.div>
             ) : (
@@ -515,7 +519,11 @@ export const ExperienceSection: React.FC = () => {
 
                 {/* Right Column: Desktop Dashboard Mockup */}
                 <div className="lg:col-span-6">
-                  <div className="rounded-3xl bg-[#0F172A] p-4 shadow-2xl border border-[#334155] text-left text-white space-y-3">
+                  <motion.div
+                    whileHover={{ y: -4, scale: 1.01 }}
+                    transition={{ duration: 0.3 }}
+                    className="rounded-3xl bg-[#0F172A] p-4 shadow-2xl border border-[#334155] text-left text-white space-y-3 cursor-default"
+                  >
                     <div className="flex items-center justify-between border-b border-[#1E293B] pb-2.5">
                       <div className="flex items-center gap-2">
                         <span className="w-2.5 h-2.5 rounded-full bg-red-500" />
@@ -624,7 +632,7 @@ export const ExperienceSection: React.FC = () => {
                         </div>
                       )}
                     </div>
-                  </div>
+                  </motion.div>
                 </div>
               </motion.div>
             )}

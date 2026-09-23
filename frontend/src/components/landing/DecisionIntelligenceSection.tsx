@@ -165,34 +165,50 @@ export const DecisionIntelligenceSection: React.FC = () => {
                   { icon: <Droplets size={14} className="text-teal-500" />, label: 'Humidity', value: active.weather.humidity },
                   { icon: <Sprout size={14} className="text-[#126B3A]" />, label: 'Soil Moisture', value: active.weather.soilMoisture },
                 ].map(({ icon, label, value }) => (
-                  <div key={label} className="p-3 rounded-xl bg-[#F6F9F5] border border-[#E2E8E4]">
-                    <div className="flex items-center gap-1.5 text-xs font-medium text-[#66736B]">
+                  <motion.div
+                    key={label}
+                    whileHover={{ scale: 1.03, y: -2 }}
+                    transition={{ duration: 0.2 }}
+                    className="p-3 rounded-xl bg-[#F6F9F5] border border-[#E2E8E4] hover:border-[#126B3A]/30 hover:bg-white hover:shadow-xs transition-colors cursor-default"
+                  >
+                    <div className="flex items-center gap-1.5 text-xs font-semibold text-[#66736B]">
                       {icon}<span>{label}</span>
                     </div>
                     <p className="text-lg font-black text-[#111814] mt-0.5 font-mono count-up">{value}</p>
-                  </div>
+                  </motion.div>
                 ))}
               </motion.div>
             </AnimatePresence>
           </SectionReveal>
 
-          {/* Animated flow bridge */}
-          <div className="lg:col-span-2 flex flex-col items-center justify-center my-1 lg:my-0">
-            <motion.div
-              animate={{ x: [0, 4, 0] }}
-              transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
-              className="w-10 h-10 rounded-full bg-[#126B3A] text-white flex items-center justify-center shadow-md lg:rotate-0 rotate-90"
-            >
-              <ArrowRight size={18} />
-            </motion.div>
-            <span className="text-[10px] font-bold uppercase tracking-wider text-[#126B3A] mt-1 hidden lg:block font-mono">
-              Translates To
+          {/* Animated flow bridge with flowing pulse particles */}
+          <div className="lg:col-span-2 flex flex-col items-center justify-center my-2 lg:my-0 relative">
+            <div className="relative flex items-center justify-center">
+              {/* Outer pulsing ring */}
+              <motion.div
+                animate={{ scale: [1, 1.45, 1], opacity: [0.6, 0, 0.6] }}
+                transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
+                className="absolute w-12 h-12 rounded-full border-2 border-[#126B3A]/40"
+              />
+              <motion.div
+                animate={{ x: [0, 6, 0] }}
+                transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
+                className="w-11 h-11 rounded-full bg-[#126B3A] text-white flex items-center justify-center shadow-md lg:rotate-0 rotate-90 relative z-10 hover:scale-105 transition-transform"
+              >
+                <ArrowRight size={19} className="stroke-[2.5]" />
+              </motion.div>
+            </div>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-[#126B3A] mt-2 hidden lg:block font-mono bg-[#EAF5EC] px-2.5 py-0.5 rounded-full border border-[#126B3A]/20">
+              AI Translates
             </span>
           </div>
 
           {/* Card 2: Advisory Output */}
           <SectionReveal variant="scale" className="lg:col-span-5 bg-[#0B1E13] rounded-2xl border border-emerald-900/40 p-5 sm:p-6 text-white shadow-xl text-left relative overflow-hidden">
-            <div className="flex items-center justify-between pb-3 border-b border-emerald-800/30">
+            {/* Ambient emerald backlight glow */}
+            <div className="absolute -top-12 -right-12 w-48 h-48 rounded-full bg-emerald-500/15 blur-2xl pointer-events-none" />
+
+            <div className="flex items-center justify-between pb-3 border-b border-emerald-800/30 relative z-10">
               <span className="text-xs font-bold uppercase tracking-wider text-emerald-300">Advisory Output</span>
               <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full border ${active.decision.tagColor}`}>
                 {active.decision.urgency}

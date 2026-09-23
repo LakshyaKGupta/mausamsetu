@@ -1,7 +1,7 @@
 import React from 'react'
 import { motion } from 'framer-motion'
 
-type RevealVariant = 'default' | 'stagger' | 'left' | 'scale'
+type RevealVariant = 'default' | 'stagger' | 'left' | 'right' | 'scale'
 
 interface SectionRevealProps extends React.HTMLAttributes<HTMLDivElement> {
   variant?: RevealVariant
@@ -11,19 +11,23 @@ interface SectionRevealProps extends React.HTMLAttributes<HTMLDivElement> {
 
 const variantsMap = {
   default: {
-    initial: { opacity: 0, y: 24 },
+    initial: { opacity: 0, y: 28 },
     animate: { opacity: 1, y: 0 },
   },
   stagger: {
-    initial: { opacity: 0, y: 18 },
+    initial: { opacity: 0, y: 20 },
     animate: { opacity: 1, y: 0 },
   },
   left: {
-    initial: { opacity: 0, x: -24 },
+    initial: { opacity: 0, x: -28 },
+    animate: { opacity: 1, x: 0 },
+  },
+  right: {
+    initial: { opacity: 0, x: 28 },
     animate: { opacity: 1, x: 0 },
   },
   scale: {
-    initial: { opacity: 0, scale: 0.96, y: 14 },
+    initial: { opacity: 0, scale: 0.95, y: 16 },
     animate: { opacity: 1, scale: 1, y: 0 },
   },
 }

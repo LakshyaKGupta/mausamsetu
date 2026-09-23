@@ -8,6 +8,18 @@ import { HumanVerificationSection } from '../../components/landing/HumanVerifica
 import { ExperienceSection } from '../../components/landing/ExperienceSection'
 import { CTASection } from '../../components/landing/CTASection'
 
+const sectionScrollVariant = {
+  hidden: { opacity: 0, y: 35 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.75,
+      ease: [0.16, 1, 0.3, 1],
+    },
+  },
+}
+
 export const Home: React.FC = () => {
   const location = useLocation()
 
@@ -32,64 +44,76 @@ export const Home: React.FC = () => {
   }, [location.hash])
 
   return (
-    <div className="w-full relative selection:bg-emerald-200 selection:text-emerald-900">
-      {/* 0. Hero Section: Animated atmospheric weather background, editorial typography, pan-India resolution engine */}
+    <div className="w-full relative selection:bg-emerald-200 selection:text-emerald-900 overflow-x-hidden">
+      {/* 0. Hero Section: Cinematic weather drone backdrop, interactive cursor spotlight, kinetic text parallax */}
       <Hero />
 
-      {/* 1. How It Works: Geographic Downscaling & Weather Refinement */}
+      {/* 1. How It Works: Geographic Downscaling & 360° Doppler Meteorological Radar */}
       <motion.div
-        initial={{ opacity: 0.92, y: 12 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: '-60px' }}
-        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+        variants={sectionScrollVariant}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.08 }}
+        className="w-full relative z-10"
       >
         <DownscalingSection />
       </motion.div>
 
-      {/* Smooth Transition Divider: Downscaling -> Decision Intelligence */}
-      <div className="w-full h-8 bg-gradient-to-b from-[#FFFFFF] to-[#F8FAF8] pointer-events-none" />
+      {/* Seamless Transition Divider: Downscaling (White) -> Decision Intelligence (#F6F9F5) */}
+      <div className="w-full h-12 bg-gradient-to-b from-white via-[#F8FAF7] to-[#F6F9F5] pointer-events-none relative z-10" />
 
       {/* 2. Crop Decision Intelligence: Weather to Field Actions */}
       <motion.div
-        initial={{ opacity: 0.92, y: 12 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: '-60px' }}
-        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+        variants={sectionScrollVariant}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.08 }}
+        className="w-full relative z-10"
       >
         <DecisionIntelligenceSection />
       </motion.div>
 
-      {/* Smooth Transition Divider: Decision Intelligence -> Verification */}
-      <div className="w-full h-8 bg-gradient-to-b from-[#F8FAF8] to-[#FFFFFF] pointer-events-none" />
+      {/* Seamless Transition Divider: Decision Intelligence (#F6F9F5) -> Verification (White) */}
+      <div className="w-full h-12 bg-gradient-to-b from-[#F6F9F5] via-[#F8FAF7] to-white pointer-events-none relative z-10" />
 
       {/* 3. Human-in-the-Loop Verification: Officer Review & Digital Sign-off */}
       <motion.div
-        initial={{ opacity: 0.92, y: 12 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: '-60px' }}
-        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+        variants={sectionScrollVariant}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.08 }}
+        className="w-full relative z-10"
       >
         <HumanVerificationSection />
       </motion.div>
 
-      {/* Smooth Transition Divider: Verification -> Experience */}
-      <div className="w-full h-8 bg-gradient-to-b from-[#FFFFFF] to-[#F8FAF8] pointer-events-none" />
+      {/* Seamless Transition Divider: Verification (White) -> Experience (#F6F9F5) */}
+      <div className="w-full h-12 bg-gradient-to-b from-white via-[#F8FAF7] to-[#F6F9F5] pointer-events-none relative z-10" />
 
-      {/* 4. Farmer & Officer Portal Experience: Mobile PWA & Command Console */}
+      {/* 4. Farmer & Officer Portal Experience: Floating Mobile PWA & Command Console */}
       <motion.div
-        initial={{ opacity: 0.92, y: 12 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: '-60px' }}
-        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+        variants={sectionScrollVariant}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.08 }}
+        className="w-full relative z-10"
       >
         <ExperienceSection />
       </motion.div>
 
-      {/* Smooth Transition Divider: Experience -> CTA */}
-      <div className="w-full h-12 bg-gradient-to-b from-[#F8FAF8] to-[#166534] pointer-events-none" />
+      {/* Atmospheric Transition Divider: Experience (#F6F9F5) -> CTA (#0B4F2A Deep Emerald) */}
+      <div className="w-full h-16 bg-gradient-to-b from-[#F6F9F5] via-[#103D23]/60 to-[#0B4F2A] pointer-events-none relative z-10" />
 
-      {/* 5. Closing CTA Section */}
-      <CTASection />
+      {/* 5. Closing CTA Section with Aurora Glow */}
+      <motion.div
+        variants={sectionScrollVariant}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.08 }}
+        className="w-full relative z-10"
+      >
+        <CTASection />
+      </motion.div>
     </div>
   )
 }
