@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Sprout, ArrowRight, CloudRain, Droplets, Thermometer,
-  ShieldCheck, Languages, Volume2, WifiOff, Play, Pause, Sparkles,
+  ShieldCheck, Languages, Volume2, WifiOff, Play, Pause,
 } from 'lucide-react'
 import { SectionReveal } from '../shared/SectionReveal'
 
@@ -193,10 +193,7 @@ export const DecisionIntelligenceSection: React.FC = () => {
           {/* Card 2: Advisory Output */}
           <SectionReveal variant="scale" className="lg:col-span-5 bg-[#0B1E13] rounded-2xl border border-emerald-900/40 p-5 sm:p-6 text-white shadow-xl text-left relative overflow-hidden">
             <div className="flex items-center justify-between pb-3 border-b border-emerald-800/30">
-              <div className="flex items-center gap-2">
-                <Sparkles size={14} className="text-[#86EFAC]" />
-                <span className="text-xs font-bold uppercase tracking-wider text-emerald-300">Advisory Output</span>
-              </div>
+              <span className="text-xs font-bold uppercase tracking-wider text-emerald-300">Advisory Output</span>
               <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full border ${active.decision.tagColor}`}>
                 {active.decision.urgency}
               </span>
