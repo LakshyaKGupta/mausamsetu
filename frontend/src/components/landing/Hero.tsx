@@ -112,15 +112,15 @@ export const Hero: React.FC = () => {
         {/* Ambient base lighting */}
         <div className="absolute inset-0 bg-gradient-to-b from-[#F6F9F5]/30 via-transparent to-[#F6F9F5]/80" />
 
-        {/* Interactive Cursor Spotlight with Video Glow */}
+        {/* Interactive Cursor Spotlight with Video Glow (Compact & Subtle) */}
         <motion.div
-          className="absolute inset-0 pointer-events-none transition-opacity duration-500"
+          className="absolute inset-0 pointer-events-none transition-opacity duration-300"
           style={{
-            opacity: isHovered ? 1 : 0.6,
+            opacity: isHovered ? 0.75 : 0.25,
             background: useTransform(
               [spotlightX, spotlightY],
               ([x, y]) =>
-                `radial-gradient(600px circle at ${x} ${y}, rgba(255, 255, 255, 0.45) 0%, rgba(18, 107, 58, 0.08) 40%, transparent 75%)`
+                `radial-gradient(260px circle at ${x} ${y}, rgba(255, 255, 255, 0.35) 0%, rgba(18, 107, 58, 0.05) 50%, transparent 80%)`
             ),
           }}
         />
@@ -235,8 +235,8 @@ export const Hero: React.FC = () => {
 
       {/* ── Main Centered Content with Interactive Kinetic Typography ── */}
       <div className="flex-1 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 w-full relative z-10 flex flex-col items-center justify-center text-center my-auto py-8 sm:py-12">
-        {/* Soft, subtle radial backdrop localized behind text */}
-        <div className="absolute inset-0 max-w-3xl mx-auto rounded-3xl bg-radial from-white/70 via-white/25 to-transparent blur-xl pointer-events-none -z-10" />
+        {/* Soft, compact radial backdrop localized directly behind headline */}
+        <div className="absolute inset-0 max-w-xl mx-auto rounded-3xl bg-radial from-white/55 via-white/15 to-transparent blur-md pointer-events-none -z-10" />
 
         {/* Main Headline with Parallax Cursor Movement & Ambient Pulse */}
         <motion.h1
