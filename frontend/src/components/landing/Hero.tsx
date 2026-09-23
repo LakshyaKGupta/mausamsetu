@@ -87,7 +87,7 @@ export const Hero: React.FC = () => {
         mouseX.set(0.5)
         mouseY.set(0.5)
       }}
-      className="relative w-full min-h-screen flex flex-col justify-between overflow-hidden bg-[#F6F9F5]"
+      className="relative w-full min-h-screen flex flex-col justify-between overflow-hidden bg-[#0D2416]"
     >
       {/* ── Cinematic Video Background (Clean 12 Mbps Sharp Drone Master) ── */}
       <div className="absolute inset-0 pointer-events-none select-none overflow-hidden" aria-hidden="true">
@@ -109,28 +109,24 @@ export const Hero: React.FC = () => {
           <source src="/videos/hero-farm-bg.webm" type="video/webm" />
         </video>
 
-        {/* Ambient base lighting — very subtle to let the video shine through */}
+        {/* Ambient base lighting — very subtle to let the video shine through with rich clarity */}
         <div className="absolute inset-0 bg-gradient-to-b from-black/5 via-transparent to-black/10" />
 
         {/* Interactive Cursor Spotlight with Video Glow (Compact & Subtle) */}
         <motion.div
           className="absolute inset-0 pointer-events-none transition-opacity duration-300"
           style={{
-            opacity: isHovered ? 0.75 : 0.25,
+            opacity: isHovered ? 0.7 : 0.2,
             background: useTransform(
               [spotlightX, spotlightY],
               ([x, y]) =>
-                `radial-gradient(260px circle at ${x} ${y}, rgba(255, 255, 255, 0.35) 0%, rgba(18, 107, 58, 0.05) 50%, transparent 80%)`
+                `radial-gradient(240px circle at ${x} ${y}, rgba(255, 255, 255, 0.22) 0%, rgba(18, 107, 58, 0.04) 50%, transparent 80%)`
             ),
           }}
         />
 
-        {/* Minimal edge connection to Navbar & Downscaling section without cloudy white wash */}
-        <div className="absolute top-0 inset-x-0 h-14 bg-gradient-to-b from-[#F6F9F5]/40 to-transparent" />
-        <div className="absolute bottom-0 inset-x-0 h-16 bg-gradient-to-t from-[#F6F9F5]/50 to-transparent" />
-
         {/* Subtle static film grain */}
-        <div className="absolute inset-0 bg-grain opacity-15 mix-blend-overlay" />
+        <div className="absolute inset-0 bg-grain opacity-10 mix-blend-overlay" />
       </div>
 
       {/* Spacer for navbar clearance */}
@@ -236,7 +232,7 @@ export const Hero: React.FC = () => {
       {/* ── Main Centered Content with Interactive Kinetic Typography ── */}
       <div className="flex-1 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 w-full relative z-10 flex flex-col items-center justify-center text-center my-auto py-8 sm:py-12">
         {/* Soft, compact radial backdrop localized directly behind headline */}
-        <div className="absolute inset-0 max-w-xl mx-auto rounded-3xl bg-radial from-white/55 via-white/15 to-transparent blur-md pointer-events-none -z-10" />
+        <div className="absolute inset-0 max-w-lg mx-auto rounded-3xl bg-radial from-white/30 via-white/5 to-transparent blur-xs pointer-events-none -z-10" />
 
         {/* Main Headline with Parallax Cursor Movement & Ambient Pulse */}
         <motion.h1

@@ -87,7 +87,7 @@ export const Navbar: React.FC = () => {
       className={`sticky top-0 z-50 w-full transition-all duration-300 ${
         isScrolled
           ? 'bg-white/95 backdrop-blur-md border-b border-[#E2E8E4] shadow-xs'
-          : 'bg-white/80 backdrop-blur-sm border-b border-transparent'
+          : 'bg-white/30 backdrop-blur-md border-b border-white/20'
       }`}
     >
       {/* Scroll Progress Bar */}
