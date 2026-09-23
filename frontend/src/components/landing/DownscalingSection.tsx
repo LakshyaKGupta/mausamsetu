@@ -95,10 +95,10 @@ export const DownscalingSection: React.FC = () => {
           </div>
         </SectionReveal>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-center">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
           {/* Left: Steps */}
           <div
-            className="lg:col-span-7 space-y-3"
+            className="lg:col-span-6 space-y-3"
             onMouseEnter={() => setIsPaused(true)}
             onMouseLeave={() => setIsPaused(false)}
           >
@@ -146,73 +146,65 @@ export const DownscalingSection: React.FC = () => {
           </div>
 
           {/* Right: Spatial scientific visualization */}
-          <div className="lg:col-span-5">
+          <div className="lg:col-span-6">
             <SectionReveal variant="scale">
-              <div className="rounded-2xl bg-[#0B1120] border border-white/10 overflow-hidden shadow-xl">
-                <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
-                  <span className="text-[10px] uppercase tracking-widest font-bold text-white/60">Spatial Visualization</span>
-                  <span className="text-[10px] font-mono bg-white/10 text-white/70 px-2 py-0.5 rounded">Step {activeStep}/3</span>
+              <div className="rounded-2xl bg-[#070D18] border border-white/10 overflow-hidden shadow-2xl">
+                {/* Console Header with Step Tabs */}
+                <div className="flex flex-wrap items-center justify-between px-4 py-3 border-b border-white/10 bg-[#0B1526]/90 gap-2">
+                  <div className="flex items-center gap-2">
+                    <span className="flex h-2 w-2 relative">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+                    </span>
+                    <span className="text-[11px] uppercase tracking-widest font-black text-white/90 font-mono">
+                      Spatial Radar Engine
+                    </span>
+                  </div>
+
+                  {/* 3 Step Quick Selector Tabs */}
+                  <div className="flex items-center bg-white/10 p-0.5 rounded-lg text-[10px] font-mono font-semibold">
+                    {[
+                      { step: 1, label: '1. Regional 40km' },
+                      { step: 2, label: '2. 30m DEM Physics' },
+                      { step: 3, label: '3. Field Precision' },
+                    ].map((s) => (
+                      <button
+                        key={s.step}
+                        onClick={() => {
+                          setActiveStep(s.step)
+                          setProgress(0)
+                        }}
+                        className={`px-2.5 py-1 rounded-md transition-all duration-200 ${
+                          activeStep === s.step
+                            ? 'bg-[#126B3A] text-white shadow-xs font-bold'
+                            : 'text-white/60 hover:text-white'
+                        }`}
+                      >
+                        {s.label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
-                <div className="relative px-2 py-2">
+                {/* WeatherField Interactive Visualization */}
+                <div className="relative">
                   <AnimatePresence mode="wait">
                     <motion.div
                       key={activeStep}
-                      initial={{ opacity: 0, scale: 0.97 }}
+                      initial={{ opacity: 0, scale: 0.98 }}
                       animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.97 }}
-                      transition={{ duration: 0.35 }}
+                      exit={{ opacity: 0, scale: 0.98 }}
+                      transition={{ duration: 0.3 }}
                     >
                       <WeatherField
                         phase={activeStep === 1 ? 'regional' : activeStep === 2 ? 'resolving' : 'panchayat'}
                         activeNodeId={activeStep === 3 ? 'dhapewada' : undefined}
                         showWind={activeStep >= 2}
                         showContours={true}
-                        height={240}
+                        height={340}
                       />
                     </motion.div>
                   </AnimatePresence>
-                </div>
-
-                <div className="px-4 py-3 border-t border-white/10">
-                  <AnimatePresence mode="wait">
-                    <motion.div
-                      key={activeStep + 'ins'}
-                      initial={{ opacity: 0, y: 4 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0 }}
-                      transition={{ duration: 0.25 }}
-                    >
-                      {activeStep === 1 && (
-                        <p className="text-[11px] text-amber-300 font-mono">
-                          Uniform regional forecast — terrain elevation ignored
-                        </p>
-                      )}
-                      {activeStep === 2 && (
-                        <p className="text-[11px] text-blue-300 font-mono">
-                          Integrating terrain data + station telemetry...
-                        </p>
-                      )}
-                      {activeStep === 3 && (
-                        <p className="text-[11px] text-[#86EFAC] font-mono">
-                          Dhapewada: 4.2mm — Advisory: Hold irrigation 24h
-                        </p>
-                      )}
-                    </motion.div>
-                  </AnimatePresence>
-                </div>
-
-                <div className="flex items-center justify-center gap-2 pb-3">
-                  {[1, 2, 3].map((step) => (
-                    <button
-                      key={step}
-                      onClick={() => { setActiveStep(step); setProgress(0) }}
-                      className={`rounded-full transition-all duration-300 ${
-                        activeStep === step ? 'bg-[#126B3A] w-5 h-1.5' : 'bg-white/20 w-1.5 h-1.5 hover:bg-white/40'
-                      }`}
-                      aria-label={`Step ${step}`}
-                    />
-                  ))}
                 </div>
               </div>
             </SectionReveal>
