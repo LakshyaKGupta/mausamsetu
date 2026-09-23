@@ -54,6 +54,8 @@ dist-ssr/
 # Project specific
 *.png
 *.webp
+!frontend/public/**/*.png
+!frontend/public/**/*.webp
 *.log
 *.db
 *.sqlite

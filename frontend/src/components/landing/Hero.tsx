@@ -62,21 +62,43 @@ export const Hero: React.FC = () => {
       id="hero"
       className="relative w-full min-h-screen flex flex-col overflow-hidden bg-[#F6F9F5]"
     >
-      {/* ── Atmospheric Background ─────────────────────────────── */}
-      <div className="absolute inset-0 pointer-events-none select-none" aria-hidden="true">
-        {/* Moving topographic grid */}
-        <div className="absolute inset-0 bg-topo-animated opacity-100" />
-        {/* Grain texture */}
-        <div className="absolute inset-0 bg-grain opacity-60" />
-        {/* Ambient radial glow — top right */}
+      {/* ── Cinematic Video Background (Continuous 5s Loop) ───────── */}
+      <div className="absolute inset-0 pointer-events-none select-none overflow-hidden" aria-hidden="true">
+        {/* Full-bleed high-definition video */}
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          preload="auto"
+          poster="/images/hero-farm-poster.webp"
+          className="absolute inset-0 w-full h-full object-cover scale-[1.01] brightness-[0.97] contrast-[1.02]"
+        >
+          <source src="/videos/hero-farm-bg.webm" type="video/webm" />
+          <source src="/videos/hero-farm-bg.mp4" type="video/mp4" />
+        </video>
+
+        {/* 1. Directional gradient scrim: guarantees high editorial text contrast on left while revealing landscape on right */}
+        <div className="absolute inset-0 bg-gradient-to-r from-[#F6F9F5]/95 via-[#F6F9F5]/88 sm:via-[#F6F9F5]/78 to-[#F6F9F5]/40" />
+
+        {/* 2. Seamless edge vignettes connecting to Navbar and Downscaling Section */}
+        <div className="absolute top-0 inset-x-0 h-32 bg-gradient-to-b from-[#F6F9F5] via-[#F6F9F5]/80 to-transparent" />
+        <div className="absolute bottom-0 inset-x-0 h-44 bg-gradient-to-t from-[#F6F9F5] via-[#F6F9F5]/85 to-transparent" />
+
+        {/* 3. Subtle animated topographic contour lines superimposed on the landscape */}
+        <div className="absolute inset-0 bg-topo-animated opacity-25 mix-blend-multiply" />
+
+        {/* 4. Film grain texture for tactile authenticity */}
+        <div className="absolute inset-0 bg-grain opacity-35 mix-blend-overlay" />
+
+        {/* 5. Ambient emerald radial glow matching #126B3A / #0B4F2A palette */}
         <div
-          className="absolute top-[-12%] right-[-8%] w-[680px] h-[680px] rounded-full pointer-events-none animate-atmosphere"
-          style={{ background: 'radial-gradient(circle, rgba(18,107,58,0.09) 0%, transparent 70%)' }}
+          className="absolute top-[-10%] right-[-5%] w-[680px] h-[680px] rounded-full pointer-events-none animate-atmosphere"
+          style={{ background: 'radial-gradient(circle, rgba(18,107,58,0.14) 0%, transparent 70%)' }}
         />
-        {/* Ambient radial glow — bottom left */}
         <div
           className="absolute bottom-[-10%] left-[-5%] w-[500px] h-[500px] rounded-full pointer-events-none"
-          style={{ background: 'radial-gradient(circle, rgba(59,130,246,0.05) 0%, transparent 70%)', animationDelay: '9s' }}
+          style={{ background: 'radial-gradient(circle, rgba(59,130,246,0.06) 0%, transparent 70%)', animationDelay: '9s' }}
         />
       </div>
 
