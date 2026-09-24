@@ -1,8 +1,16 @@
 import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Layers, Database, Cpu, MapPin } from 'lucide-react'
+import {
+  Layers,
+  Database,
+  Cpu,
+  MapPin,
+  AlertTriangle,
+  Mountain,
+  Wind,
+  CheckCircle2,
+} from 'lucide-react'
 import { SectionReveal } from '../shared/SectionReveal'
-import { WeatherField } from '../shared/WeatherField'
 
 export const DownscalingSection: React.FC = () => {
   const [activeStep, setActiveStep] = useState<number>(1)
@@ -71,7 +79,7 @@ export const DownscalingSection: React.FC = () => {
           </p>
         </SectionReveal>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-center">
           {/* Left: Steps */}
           <div className="lg:col-span-6 space-y-3">
             {steps.map((s, idx) => {
@@ -121,66 +129,230 @@ export const DownscalingSection: React.FC = () => {
             })}
           </div>
 
-          {/* Right: Spatial scientific visualization */}
-          <div className="lg:col-span-6">
-            <SectionReveal variant="scale">
-              <div className="rounded-2xl bg-[#070D18] border border-white/10 overflow-hidden shadow-2xl">
-                {/* Console Header with Step Tabs */}
-                <div className="flex flex-wrap items-center justify-between px-4 py-3 border-b border-white/10 bg-[#0B1526]/90 gap-2">
-                  <div className="flex items-center gap-2">
-                    <span className="flex h-2 w-2 relative">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
-                    </span>
-                    <span className="text-[11px] uppercase tracking-widest font-black text-white/90 font-mono">
-                      Spatial Radar Engine
-                    </span>
+          {/* Right Column: Interactive Mobile Phone Mockup Matching Site Colors */}
+          <div className="lg:col-span-6 flex flex-col items-center justify-center">
+            {/* Quick Step Selector Pills */}
+            <div className="flex flex-wrap items-center justify-center gap-1.5 mb-3.5 max-w-sm">
+              {[
+                { step: 1, label: '1. Regional 40km' },
+                { step: 2, label: '2. 30m DEM Physics' },
+                { step: 3, label: '3. Field Precision' },
+              ].map((s) => (
+                <button
+                  key={s.step}
+                  onClick={() => setActiveStep(s.step)}
+                  className={`text-[10px] font-bold px-3 py-1 rounded-full transition-all duration-200 cursor-pointer ${
+                    activeStep === s.step
+                      ? 'bg-[#126B3A] text-white shadow-xs'
+                      : 'bg-white border border-[#E2E8E4] text-[#66736B] hover:text-[#111814]'
+                  }`}
+                >
+                  {s.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Mobile Phone Mockup */}
+            <motion.div
+              animate={{ y: [-5, 5, -5] }}
+              transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
+              className="w-full max-w-[340px] rounded-[42px] bg-[#0F172A] p-3 shadow-2xl border-4 border-[#1E293B] relative will-change-transform"
+            >
+              {/* Dynamic Island / Notch */}
+              <div className="w-20 h-4 bg-[#1E293B] rounded-full mx-auto mb-2" />
+
+              {/* Phone Screen Container matching brand design system */}
+              <div className="rounded-[28px] bg-[#F6F9F5] overflow-hidden p-3.5 space-y-2.5 text-left border border-[#E2E8E4] min-h-[380px] flex flex-col justify-between">
+                {/* Phone Top Bar */}
+                <div>
+                  <div className="flex items-center justify-between text-[9px] text-slate-400 font-mono px-0.5 pb-1 border-b border-[#E2E8E4]">
+                    <span>09:41</span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[#126B3A] font-bold">5G</span>
+                      <div className="w-3.5 h-1.5 rounded-xs border border-slate-400 p-0.5 flex items-center">
+                        <div className="w-full h-full bg-[#126B3A] rounded-2xs" />
+                      </div>
+                    </div>
                   </div>
 
-                  {/* 3 Step Quick Selector Tabs */}
-                  <div className="flex items-center bg-white/10 p-0.5 rounded-lg text-[10px] font-mono font-semibold">
-                    {[
-                      { step: 1, label: '1. Regional 40km' },
-                      { step: 2, label: '2. 30m DEM Physics' },
-                      { step: 3, label: '3. Field Precision' },
-                    ].map((s) => (
-                      <button
-                        key={s.step}
-                        onClick={() => setActiveStep(s.step)}
-                        className={`px-2.5 py-1 rounded-md transition-all duration-200 ${
-                          activeStep === s.step
-                            ? 'bg-[#126B3A] text-white shadow-xs font-bold'
-                            : 'text-white/60 hover:text-white'
-                        }`}
-                      >
-                        {s.label}
-                      </button>
-                    ))}
+                  <div className="flex items-center justify-between pt-1.5 pb-1 border-b border-[#E2E8E4]/60">
+                    <span className="font-bold text-xs text-[#126B3A] flex items-center gap-1">
+                      <MapPin size={12} className="text-[#126B3A]" />
+                      MausamSetu
+                    </span>
+                    <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border ${
+                      activeStep === 1
+                        ? 'bg-blue-50 text-blue-700 border-blue-200'
+                        : activeStep === 2
+                        ? 'bg-amber-50 text-amber-700 border-amber-200'
+                        : 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                    }`}>
+                      {activeStep === 1 ? 'Regional 40km' : activeStep === 2 ? '30m DEM Physics' : 'Hyperlocal Live'}
+                    </span>
                   </div>
                 </div>
 
-                {/* WeatherField Interactive Visualization */}
-                <div className="relative">
+                {/* Animated Screen Content */}
+                <div className="flex-1 py-1">
                   <AnimatePresence mode="wait">
-                    <motion.div
-                      key={activeStep}
-                      initial={{ opacity: 0, scale: 0.98 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.98 }}
-                      transition={{ duration: 0.3 }}
-                    >
-                      <WeatherField
-                        phase={activeStep === 1 ? 'regional' : activeStep === 2 ? 'resolving' : 'panchayat'}
-                        activeNodeId={activeStep === 3 ? 'dhapewada' : undefined}
-                        showWind={activeStep >= 2}
-                        showContours={true}
-                        height={340}
-                      />
-                    </motion.div>
+                    {/* Screen Step 1: Coarse Regional Forecast */}
+                    {activeStep === 1 && (
+                      <motion.div
+                        key="screen-step-1"
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -8 }}
+                        transition={{ duration: 0.25 }}
+                        className="space-y-2.5"
+                      >
+                        <div className="p-3 rounded-2xl bg-white border border-[#E2E8E4] shadow-xs">
+                          <div className="flex items-center justify-between text-[9px] font-mono text-[#66736B]">
+                            <span>Nagpur District Grid</span>
+                            <span className="px-1.5 py-0.5 rounded bg-slate-100 text-slate-600">40×40 km Block</span>
+                          </div>
+                          <div className="mt-1 flex items-baseline justify-between">
+                            <span className="text-2xl font-black text-[#111814]">28°C</span>
+                            <span className="text-xs font-bold text-[#3B82F6]">15-40 mm Rain</span>
+                          </div>
+                          <p className="text-[10px] text-[#66736B] mt-0.5">District-wide coarse average</p>
+                        </div>
+
+                        {/* Coarse limitation note */}
+                        <div className="p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 space-y-1">
+                          <div className="flex items-center gap-1.5 text-[10px] font-bold">
+                            <AlertTriangle size={12} className="text-amber-600 shrink-0" />
+                            <span>Unadjusted Regional Block</span>
+                          </div>
+                          <p className="text-[9.5px] leading-relaxed text-amber-800">
+                            All 780 Panchayats receive the same generic number. Ignores ridge elevation, valley runoff, and local rain shadows.
+                          </p>
+                        </div>
+
+                        {/* Uniform Panchayats */}
+                        <div className="space-y-1 pt-0.5">
+                          <span className="text-[9px] font-bold uppercase tracking-wider text-[#66736B]">Uniform Output Across Villages</span>
+                          <div className="grid grid-cols-3 gap-1 text-center">
+                            {['Dhapewada', 'Mohpa', 'Kalmeshwar'].map((name) => (
+                              <div key={name} className="p-1 rounded-lg bg-white border border-[#E2E8E4] text-[9.5px]">
+                                <span className="block text-[#66736B] truncate">{name}</span>
+                                <span className="font-bold text-slate-700">28mm (Flat)</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+
+                    {/* Screen Step 2: 30m DEM Physics & Sensor Calibration */}
+                    {activeStep === 2 && (
+                      <motion.div
+                        key="screen-step-2"
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -8 }}
+                        transition={{ duration: 0.25 }}
+                        className="space-y-2.5"
+                      >
+                        <div className="p-3 rounded-2xl bg-gradient-to-br from-[#0B4F2A] to-[#126B3A] text-white shadow-sm">
+                          <div className="flex items-center justify-between text-[9px] font-mono text-emerald-200">
+                            <span>Terrain Mesh</span>
+                            <span className="px-1.5 py-0.5 rounded bg-white/20 text-white font-bold">30m DEM Resolution</span>
+                          </div>
+                          <p className="text-lg font-black mt-1">Orographic Lift Analysis</p>
+                          <p className="text-[10px] text-emerald-100 mt-0.5">Elevation gradient: 295m ➔ 375m</p>
+                        </div>
+
+                        {/* Physics Calibration Metrics */}
+                        <div className="grid grid-cols-2 gap-1.5">
+                          <div className="p-2 rounded-xl bg-white border border-[#E2E8E4]">
+                            <div className="flex items-center gap-1 text-[9px] text-[#66736B] font-semibold">
+                              <Mountain size={11} className="text-[#126B3A]" />
+                              <span>Slope Gradient</span>
+                            </div>
+                            <p className="text-xs font-bold text-[#111814] mt-0.5">14° Windward Aspect</p>
+                          </div>
+                          <div className="p-2 rounded-xl bg-white border border-[#E2E8E4]">
+                            <div className="flex items-center gap-1 text-[9px] text-[#66736B] font-semibold">
+                              <Wind size={11} className="text-blue-500" />
+                              <span>Ridge Vector</span>
+                            </div>
+                            <p className="text-xs font-bold text-[#111814] mt-0.5">18 km/h SW Flow</p>
+                          </div>
+                        </div>
+
+                        {/* Ground Telemetry Match */}
+                        <div className="p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900">
+                          <div className="flex items-center gap-1.5 text-[10px] font-bold">
+                            <Cpu size={12} className="text-[#126B3A]" />
+                            <span>Ground Station Calibration</span>
+                          </div>
+                          <p className="text-[9.5px] text-[#126B3A] mt-0.5 leading-relaxed">
+                            Rain-shadow leeward dissipation factored into numerical model in real time.
+                          </p>
+                        </div>
+                      </motion.div>
+                    )}
+
+                    {/* Screen Step 3: Panchayat Precision Dispatched */}
+                    {activeStep === 3 && (
+                      <motion.div
+                        key="screen-step-3"
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -8 }}
+                        transition={{ duration: 0.25 }}
+                        className="space-y-2.5"
+                      >
+                        <div className="p-3 rounded-2xl bg-gradient-to-br from-[#126B3A] to-[#0B4F2A] text-white shadow-sm">
+                          <div className="flex items-center justify-between text-[9px] font-mono text-emerald-200">
+                            <span>Dhapewada Gram Panchayat</span>
+                            <span className="px-1.5 py-0.5 rounded bg-white/20 text-white font-bold">Verified Hyperlocal</span>
+                          </div>
+                          <div className="mt-1 flex items-baseline justify-between">
+                            <span className="text-2xl font-black">4.2 mm</span>
+                            <span className="text-xs font-semibold text-emerald-200">27°C • 348m Ridge</span>
+                          </div>
+                          <div className="mt-1.5 pt-1.5 border-t border-white/20 flex items-center justify-between text-[9.5px]">
+                            <span className="font-bold text-emerald-100">Advisory: Hold irrigation 24h</span>
+                            <CheckCircle2 size={12} className="text-[#86EFAC]" />
+                          </div>
+                        </div>
+
+                        {/* Distinct Local Contrast */}
+                        <div className="space-y-1">
+                          <span className="text-[9px] font-bold uppercase tracking-wider text-[#66736B]">Neighbouring Panchayat Contrast</span>
+                          <div className="space-y-1">
+                            <div className="p-1.5 rounded-lg bg-white border border-[#126B3A]/30 flex items-center justify-between text-[9.5px]">
+                              <span className="font-bold text-[#126B3A]">Dhapewada (348m)</span>
+                              <span className="font-bold text-[#111814]">4.2mm • Hold Drip</span>
+                            </div>
+                            <div className="p-1.5 rounded-lg bg-white border border-[#E2E8E4] flex items-center justify-between text-[9.5px]">
+                              <span className="text-[#66736B]">Mohpa (320m)</span>
+                              <span className="font-bold text-amber-700">7.1mm • Spray Delay</span>
+                            </div>
+                            <div className="p-1.5 rounded-lg bg-white border border-[#E2E8E4] flex items-center justify-between text-[9.5px]">
+                              <span className="text-[#66736B]">Kalmeshwar (305m)</span>
+                              <span className="font-bold text-blue-700">2.8mm • Normal Drip</span>
+                            </div>
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
                   </AnimatePresence>
                 </div>
+
+                {/* Bottom App Bar */}
+                <div className="pt-1 border-t border-[#E2E8E4]">
+                  <div className="flex items-center justify-between text-[8.5px] text-[#66736B] font-semibold px-1">
+                    <span className="flex items-center gap-1 text-[#126B3A] font-bold">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#126B3A] animate-pulse" />
+                      Live Panchayat Telemetry
+                    </span>
+                    <span>Nagpur East</span>
+                  </div>
+                </div>
               </div>
-            </SectionReveal>
+            </motion.div>
           </div>
         </div>
       </div>
