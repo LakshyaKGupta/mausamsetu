@@ -84,6 +84,47 @@ export const CTASection: React.FC = () => {
           </div>
         </SectionReveal>
       </div>
+
+      {/* ── Atmospheric Rolling Cloud Mist at Section Ending (Transition into Footer) ── */}
+      <div className="absolute bottom-0 inset-x-0 h-24 sm:h-32 pointer-events-none overflow-hidden select-none z-5" aria-hidden="true">
+        {/* Tier 1: Soft Emerald Mist Cloud */}
+        <motion.div
+          animate={{ x: [-40, 40, -40], y: [0, -6, 0] }}
+          transition={{ duration: 18, repeat: Infinity, ease: 'easeInOut' }}
+          className="absolute -bottom-6 -left-[10%] w-[120%] h-24 opacity-35 will-change-transform"
+        >
+          <svg viewBox="0 0 1440 120" fill="none" className="w-full h-full" preserveAspectRatio="none">
+            <path
+              d="M0,60 C240,90 480,30 720,70 C960,110 1200,40 1440,60 L1440,120 L0,120 Z"
+              fill="url(#ctaMistGrad1)"
+            />
+            <defs>
+              <linearGradient id="ctaMistGrad1" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#86EFAC" stopOpacity="0" />
+                <stop offset="60%" stopColor="#126B3A" stopOpacity="0.4" />
+                <stop offset="100%" stopColor="#17201A" stopOpacity="0.8" />
+              </linearGradient>
+            </defs>
+          </svg>
+        </motion.div>
+
+        {/* Tier 2: Rolling Billow Wave */}
+        <motion.div
+          animate={{ x: [35, -35, 35], y: [-4, 5, -4] }}
+          transition={{ duration: 14, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}
+          className="absolute -bottom-2 -left-[8%] w-[116%] h-20 opacity-40 will-change-transform"
+        >
+          <svg viewBox="0 0 1440 100" fill="none" className="w-full h-full" preserveAspectRatio="none">
+            <path
+              d="M0,45 C200,75 420,20 660,55 C900,90 1140,25 1440,50 L1440,100 L0,100 Z"
+              fill="#17201A"
+            />
+          </svg>
+        </motion.div>
+
+        {/* Grounding Scrim into Dark Footer */}
+        <div className="absolute bottom-0 inset-x-0 h-10 bg-gradient-to-t from-[#17201A] to-transparent" />
+      </div>
     </section>
   )
 }
