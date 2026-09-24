@@ -1,34 +1,21 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { UserCheck, Cpu, CheckCircle2, ShieldCheck, FileCheck, Send, Play, Pause } from 'lucide-react'
+import { UserCheck, Cpu, CheckCircle2, ShieldCheck, FileCheck, Send } from 'lucide-react'
 import { SectionReveal } from '../shared/SectionReveal'
 import { DataFlow } from '../shared/DataFlow'
 
 export const HumanVerificationSection: React.FC = () => {
   const [activeNode, setActiveNode] = useState<number>(1) // 1: AI, 2: Officer, 3: Farmer
-  const [isPaused, setIsPaused] = useState<boolean>(false)
-  const [progress, setProgress] = useState<number>(0)
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const progressTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const NODE_DURATION = 4000
 
+  // Continuous auto-advancing through the verification workflow
   useEffect(() => {
-    if (isPaused) return
-    setProgress(0)
-    const startTime = Date.now()
-    progressTimerRef.current = setInterval(() => {
-      const elapsed = Date.now() - startTime
-      setProgress(Math.min(100, (elapsed / NODE_DURATION) * 100))
-    }, 50)
-    timerRef.current = setTimeout(() => {
+    const timer = setInterval(() => {
       setActiveNode((prev) => (prev >= 4 ? 1 : prev + 1))
     }, NODE_DURATION)
-    return () => {
-      if (timerRef.current) clearTimeout(timerRef.current)
-      if (progressTimerRef.current) clearInterval(progressTimerRef.current)
-    }
-  }, [activeNode, isPaused])
+    return () => clearInterval(timer)
+  }, [])
 
   const pipelineStages = [
     {
@@ -108,25 +95,10 @@ export const HumanVerificationSection: React.FC = () => {
             No machine learning advisory is ever sent directly to a farmer without human oversight.
             Block Agricultural Officers review, customise, and digitally sign every recommendation.
           </p>
-          <div className="flex items-center gap-3 mt-3">
-            <button
-              onClick={() => setIsPaused(!isPaused)}
-              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-white border border-[#E2E8E4] text-[#126B3A] hover:bg-[#F6F9F5] transition-colors"
-              aria-label={isPaused ? 'Resume' : 'Pause'}
-            >
-              {isPaused ? <Play size={11} className="fill-current" /> : <Pause size={11} className="fill-current" />}
-              <span>{isPaused ? 'Resume' : 'Auto-animating'}</span>
-            </button>
-            <span className="text-xs text-[#66736B]">Pipeline advances every 4s</span>
-          </div>
         </SectionReveal>
 
         {/* 2-Column: Pipeline left, Detail right */}
-        <div
-          className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start"
-          onMouseEnter={() => setIsPaused(true)}
-          onMouseLeave={() => setIsPaused(false)}
-        >
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           {/* Left: DataFlow pipeline */}
           <SectionReveal variant="left" className="lg:col-span-6">
             <div className="bg-white rounded-2xl border border-[#E2E8E4] p-5 shadow-sm">
@@ -141,15 +113,19 @@ export const HumanVerificationSection: React.FC = () => {
               />
               {/* Progress bar at bottom */}
               <div className="mt-5 pt-3 border-t border-[#F1F5F9]">
-                <div className="h-1 bg-[#F1F5F9] rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-[#126B3A] rounded-full transition-all duration-75"
-                    style={{ width: `${progress}%` }}
+                <div className="h-1.5 bg-[#F1F5F9] rounded-full overflow-hidden">
+                  <motion.div
+                    key={`pipeline-progress-${activeNode}`}
+                    initial={{ scaleX: 0 }}
+                    animate={{ scaleX: 1 }}
+                    transition={{ duration: 4, ease: 'linear' }}
+                    style={{ originX: 0 }}
+                    className="h-full bg-[#126B3A] rounded-full will-change-transform"
                   />
                 </div>
                 <div className="flex justify-between mt-1.5 text-[10px] text-[#66736B]">
                   <span>Stage {pipelineActive + 1} of {pipelineStages.length}</span>
-                  <span>{Math.round(progress)}%</span>
+                  <span className="font-mono font-semibold text-[#126B3A]">Auto-advancing</span>
                 </div>
               </div>
             </div>
@@ -237,7 +213,7 @@ export const HumanVerificationSection: React.FC = () => {
                   {[1, 2, 3, 4].map((n) => (
                     <button
                       key={n}
-                      onClick={() => { setActiveNode(n); setProgress(0) }}
+                      onClick={() => setActiveNode(n)}
                       className={`rounded-full transition-all duration-300 ${
                         activeNode === n ? 'bg-[#126B3A] w-6 h-1.5' : 'bg-[#E2E8E4] w-1.5 h-1.5 hover:bg-[#126B3A]/40'
                       }`}

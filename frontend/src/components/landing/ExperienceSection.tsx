@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Smartphone,
@@ -7,8 +7,6 @@ import {
   Volume2,
   ArrowRight,
   Check,
-  Play,
-  Pause,
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { SectionReveal } from '../shared/SectionReveal'
@@ -21,36 +19,29 @@ export const ExperienceSection: React.FC = () => {
   const [phoneTab, setPhoneTab] = useState<PhoneStep>('weather')
   const [officerTab, setOfficerTab] = useState<'queue' | 'alerts'>('queue')
   const [isOfficerApproved, setIsOfficerApproved] = useState<boolean>(false)
-  const [isPaused, setIsPaused] = useState<boolean>(false)
   const [isPlayingAudio, setIsPlayingAudio] = useState<boolean>(false)
-  const [progress, setProgress] = useState<number>(0)
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const progressTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const TAB_DURATION = 6500 // 6.5 seconds per tab
 
-  // Auto-animate between Farmer & Officer tabs
+  // Butter-smooth auto-animation between Farmer & Officer tabs
   useEffect(() => {
-    if (isPaused) return
-
-    setProgress(0)
-    const startTime = Date.now()
-
-    progressTimerRef.current = setInterval(() => {
-      const elapsed = Date.now() - startTime
-      const pct = Math.min(100, (elapsed / TAB_DURATION) * 100)
-      setProgress(pct)
-    }, 50)
-
-    timerRef.current = setTimeout(() => {
+    const timer = setInterval(() => {
       setActiveTab((prev) => (prev === 'farmer' ? 'officer' : 'farmer'))
     }, TAB_DURATION)
+    return () => clearInterval(timer)
+  }, [])
 
-    return () => {
-      if (timerRef.current) clearTimeout(timerRef.current)
-      if (progressTimerRef.current) clearInterval(progressTimerRef.current)
-    }
-  }, [activeTab, isPaused])
+  // Auto-animate the phone screen workflow while in farmer view
+  useEffect(() => {
+    if (activeTab !== 'farmer') return
+    const phoneSteps: PhoneStep[] = ['weather', 'advisory', 'voice_answer']
+    let stepIndex = 0
+    const phoneTimer = setInterval(() => {
+      stepIndex = (stepIndex + 1) % phoneSteps.length
+      setPhoneTab(phoneSteps[stepIndex])
+    }, 3200)
+    return () => clearInterval(phoneTimer)
+  }, [activeTab])
 
   return (
     <section
@@ -75,31 +66,13 @@ export const ExperienceSection: React.FC = () => {
           <p className="text-sm sm:text-base text-[#66736B] mt-1.5 leading-relaxed">
             Tailored interfaces for both audiences: a voice-first, offline-capable PWA for rural farmers, and a comprehensive oversight portal for agricultural officers.
           </p>
-
-          {/* Auto-Play Control Pill */}
-          <div className="flex items-center gap-3 mt-2.5">
-            <button
-              onClick={() => setIsPaused(!isPaused)}
-              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-white border border-[#E2E8E4] text-[#166534] shadow-2xs hover:bg-[#F8FAFC] transition-colors"
-              aria-label={isPaused ? 'Resume auto-animation' : 'Pause auto-animation'}
-            >
-              {isPaused ? <Play size={11} className="fill-current" /> : <Pause size={11} className="fill-current" />}
-              <span>{isPaused ? 'Tab Cycling Paused' : 'Auto-alternating Views'}</span>
-            </button>
-            <span className="text-xs text-[#94A3B8]">
-              Switching tabs every 6.5s • Click to lock view
-            </span>
-          </div>
         </SectionReveal>
 
         {/* Tab Switcher (Pill Style with Active Progress) */}
         <SectionReveal variant="stagger" className="flex items-center justify-start gap-2 mb-5">
           <div className="bg-white p-1.5 rounded-2xl border border-[#E2E8E4] shadow-xs flex items-center gap-2">
             <button
-              onClick={() => {
-                setActiveTab('farmer')
-                setProgress(0)
-              }}
+              onClick={() => setActiveTab('farmer')}
               className={`relative overflow-hidden flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all duration-300 ${
                 activeTab === 'farmer'
                   ? 'bg-[#126B3A] text-white shadow-sm'
@@ -107,9 +80,13 @@ export const ExperienceSection: React.FC = () => {
               }`}
             >
               {activeTab === 'farmer' && (
-                <div
-                  className="absolute bottom-0 left-0 h-[2.5px] bg-[#86EFAC] transition-all duration-75"
-                  style={{ width: `${progress}%` }}
+                <motion.div
+                  key="farmer-tab-progress"
+                  initial={{ scaleX: 0 }}
+                  animate={{ scaleX: 1 }}
+                  transition={{ duration: 6.5, ease: 'linear' }}
+                  style={{ originX: 0 }}
+                  className="absolute bottom-0 left-0 right-0 h-[2.5px] bg-[#86EFAC] will-change-transform pointer-events-none"
                 />
               )}
               <Smartphone size={15} />
@@ -117,10 +94,7 @@ export const ExperienceSection: React.FC = () => {
             </button>
 
             <button
-              onClick={() => {
-                setActiveTab('officer')
-                setProgress(0)
-              }}
+              onClick={() => setActiveTab('officer')}
               className={`relative overflow-hidden flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all duration-300 ${
                 activeTab === 'officer'
                   ? 'bg-[#126B3A] text-white shadow-sm'
@@ -128,9 +102,13 @@ export const ExperienceSection: React.FC = () => {
               }`}
             >
               {activeTab === 'officer' && (
-                <div
-                  className="absolute bottom-0 left-0 h-[2.5px] bg-[#86EFAC] transition-all duration-75"
-                  style={{ width: `${progress}%` }}
+                <motion.div
+                  key="officer-tab-progress"
+                  initial={{ scaleX: 0 }}
+                  animate={{ scaleX: 1 }}
+                  transition={{ duration: 6.5, ease: 'linear' }}
+                  style={{ originX: 0 }}
+                  className="absolute bottom-0 left-0 right-0 h-[2.5px] bg-[#86EFAC] will-change-transform pointer-events-none"
                 />
               )}
               <Monitor size={15} />
@@ -140,10 +118,7 @@ export const ExperienceSection: React.FC = () => {
         </SectionReveal>
 
         {/* Tab Content Display */}
-        <div
-          onMouseEnter={() => setIsPaused(true)}
-          onMouseLeave={() => setIsPaused(false)}
-        >
+        <div>
           <AnimatePresence mode="wait">
             {activeTab === 'farmer' ? (
               <motion.div

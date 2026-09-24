@@ -1,34 +1,21 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Layers, Database, Cpu, MapPin, Play, Pause } from 'lucide-react'
+import { Layers, Database, Cpu, MapPin } from 'lucide-react'
 import { SectionReveal } from '../shared/SectionReveal'
 import { WeatherField } from '../shared/WeatherField'
 
 export const DownscalingSection: React.FC = () => {
   const [activeStep, setActiveStep] = useState<number>(1)
-  const [isPaused, setIsPaused] = useState<boolean>(false)
-  const [progress, setProgress] = useState<number>(0)
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const progressTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
-  const STEP_DURATION = 5000
+  const STEP_DURATION = 4500
 
+  // Butter-smooth auto-animation cycling through steps without React interval lag
   useEffect(() => {
-    if (isPaused) return
-    setProgress(0)
-    const startTime = Date.now()
-    progressTimerRef.current = setInterval(() => {
-      const elapsed = Date.now() - startTime
-      setProgress(Math.min(100, (elapsed / STEP_DURATION) * 100))
-    }, 50)
-    timerRef.current = setTimeout(() => {
+    const timer = setInterval(() => {
       setActiveStep((prev) => (prev >= 3 ? 1 : prev + 1))
     }, STEP_DURATION)
-    return () => {
-      if (timerRef.current) clearTimeout(timerRef.current)
-      if (progressTimerRef.current) clearInterval(progressTimerRef.current)
-    }
-  }, [activeStep, isPaused])
+    return () => clearInterval(timer)
+  }, [])
 
   const steps = [
     {
@@ -82,26 +69,11 @@ export const DownscalingSection: React.FC = () => {
             Standard weather forecasts treat entire districts as flat, uniform zones. In reality,
             elevation and terrain gradients dramatically alter weather between neighbouring Panchayats.
           </p>
-          <div className="flex items-center gap-3 mt-3">
-            <button
-              onClick={() => setIsPaused(!isPaused)}
-              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-white border border-[#E2E8E4] text-[#126B3A] hover:bg-[#F6F9F5] transition-colors"
-              aria-label={isPaused ? 'Resume' : 'Pause'}
-            >
-              {isPaused ? <Play size={11} className="fill-current" /> : <Pause size={11} className="fill-current" />}
-              <span>{isPaused ? 'Resume' : 'Auto-animating'}</span>
-            </button>
-            <span className="text-xs text-[#66736B]">Steps advance every 5s &middot; Click to inspect</span>
-          </div>
         </SectionReveal>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
           {/* Left: Steps */}
-          <div
-            className="lg:col-span-6 space-y-3"
-            onMouseEnter={() => setIsPaused(true)}
-            onMouseLeave={() => setIsPaused(false)}
-          >
+          <div className="lg:col-span-6 space-y-3">
             {steps.map((s, idx) => {
               const Icon = s.icon
               const isSelected = activeStep === s.step
@@ -109,23 +81,27 @@ export const DownscalingSection: React.FC = () => {
                 <SectionReveal
                   key={s.step}
                   variant="stagger"
-                  delay={idx * 100}
+                  delay={idx * 80}
                   className={`relative overflow-hidden p-4 sm:p-5 rounded-2xl border transition-all duration-300 cursor-pointer text-left ${
                     isSelected
                       ? 'bg-[#EAF5EC]/70 border-[#126B3A] shadow-sm ring-1 ring-[#126B3A]/30'
                       : 'bg-white border-[#E2E8E4] hover:border-[#126B3A]/30 hover:bg-[#F6F9F5]'
                   }`}
-                  onClick={() => { setActiveStep(s.step); setProgress(0) }}
+                  onClick={() => setActiveStep(s.step)}
                 >
                   {isSelected && (
-                    <div
-                      className="absolute bottom-0 left-0 h-[2px] bg-[#126B3A] transition-all duration-75"
-                      style={{ width: `${progress}%` }}
+                    <motion.div
+                      key={`downscale-progress-${activeStep}`}
+                      initial={{ scaleX: 0 }}
+                      animate={{ scaleX: 1 }}
+                      transition={{ duration: 4.5, ease: 'linear' }}
+                      style={{ originX: 0 }}
+                      className="absolute bottom-0 left-0 right-0 h-[2.5px] bg-[#126B3A] will-change-transform pointer-events-none"
                     />
                   )}
                   <div className="flex items-start gap-3.5">
                     <div className={`p-2.5 rounded-xl shrink-0 transition-all duration-200 ${
-                      isSelected ? 'bg-[#126B3A] text-white' : 'bg-[#F1F5F9] text-[#66736B]'
+                      isSelected ? 'bg-[#126B3A] text-white shadow-xs' : 'bg-[#F1F5F9] text-[#66736B]'
                     }`}>
                       <Icon size={20} />
                     </div>
@@ -170,10 +146,7 @@ export const DownscalingSection: React.FC = () => {
                     ].map((s) => (
                       <button
                         key={s.step}
-                        onClick={() => {
-                          setActiveStep(s.step)
-                          setProgress(0)
-                        }}
+                        onClick={() => setActiveStep(s.step)}
                         className={`px-2.5 py-1 rounded-md transition-all duration-200 ${
                           activeStep === s.step
                             ? 'bg-[#126B3A] text-white shadow-xs font-bold'

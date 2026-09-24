@@ -1,40 +1,27 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Sprout, ArrowRight, CloudRain, Droplets, Thermometer,
-  ShieldCheck, Languages, Volume2, WifiOff, Play, Pause,
+  ShieldCheck, Languages, Volume2, WifiOff,
 } from 'lucide-react'
 import { SectionReveal } from '../shared/SectionReveal'
 
 export const DecisionIntelligenceSection: React.FC = () => {
   const [selectedCrop, setSelectedCrop] = useState<'soybean' | 'cotton' | 'wheat'>('soybean')
-  const [isPaused, setIsPaused] = useState<boolean>(false)
-  const [progress, setProgress] = useState<number>(0)
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const progressTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
-  const CROP_DURATION = 5500
+  const CROP_DURATION = 4500
   const crops: ('soybean' | 'cotton' | 'wheat')[] = ['soybean', 'cotton', 'wheat']
 
+  // Butter-smooth auto-cycling without laggy 50ms React state updates
   useEffect(() => {
-    if (isPaused) return
-    setProgress(0)
-    const startTime = Date.now()
-    progressTimerRef.current = setInterval(() => {
-      const elapsed = Date.now() - startTime
-      setProgress(Math.min(100, (elapsed / CROP_DURATION) * 100))
-    }, 50)
-    timerRef.current = setTimeout(() => {
+    const timer = setInterval(() => {
       setSelectedCrop((prev) => {
         const nextIdx = (crops.indexOf(prev) + 1) % crops.length
         return crops[nextIdx]
       })
     }, CROP_DURATION)
-    return () => {
-      if (timerRef.current) clearTimeout(timerRef.current)
-      if (progressTimerRef.current) clearInterval(progressTimerRef.current)
-    }
-  }, [selectedCrop, isPaused])
+    return () => clearInterval(timer)
+  }, [])
 
   const cropData = {
     soybean: {
@@ -96,17 +83,6 @@ export const DecisionIntelligenceSection: React.FC = () => {
             Farmers do not ask for millimetres of precipitation. They ask: &ldquo;Should I irrigate today?&rdquo;
             MausamSetu bridges weather science with actual field practice.
           </p>
-          <div className="flex items-center gap-3 mt-2.5">
-            <button
-              onClick={() => setIsPaused(!isPaused)}
-              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-white border border-[#E2E8E4] text-[#126B3A] hover:bg-[#F6F9F5] transition-colors"
-              aria-label={isPaused ? 'Resume' : 'Pause'}
-            >
-              {isPaused ? <Play size={11} className="fill-current" /> : <Pause size={11} className="fill-current" />}
-              <span>{isPaused ? 'Resume' : 'Auto-animating Crops'}</span>
-            </button>
-            <span className="text-xs text-[#66736B]">Cycling crops every 5.5s</span>
-          </div>
         </SectionReveal>
 
         {/* Crop Selector */}
@@ -116,7 +92,7 @@ export const DecisionIntelligenceSection: React.FC = () => {
             return (
               <button
                 key={crop}
-                onClick={() => { setSelectedCrop(crop); setProgress(0) }}
+                onClick={() => setSelectedCrop(crop)}
                 className={`relative overflow-hidden px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all duration-300 ${
                   isSelected
                     ? 'bg-[#126B3A] text-white shadow-sm ring-2 ring-[#126B3A]/30'
@@ -124,7 +100,14 @@ export const DecisionIntelligenceSection: React.FC = () => {
                 }`}
               >
                 {isSelected && (
-                  <div className="absolute bottom-0 left-0 h-[2px] bg-[#86EFAC] transition-all duration-75" style={{ width: `${progress}%` }} />
+                  <motion.div
+                    key={`crop-progress-${crop}`}
+                    initial={{ scaleX: 0 }}
+                    animate={{ scaleX: 1 }}
+                    transition={{ duration: 4.5, ease: 'linear' }}
+                    style={{ originX: 0 }}
+                    className="absolute bottom-0 left-0 right-0 h-[2.5px] bg-[#86EFAC] will-change-transform pointer-events-none"
+                  />
                 )}
                 <span>{cropData[crop].name} ({cropData[crop].nameHindi})</span>
               </button>
@@ -133,11 +116,7 @@ export const DecisionIntelligenceSection: React.FC = () => {
         </SectionReveal>
 
         {/* Translation Visual: Input → Flow → Advisory */}
-        <div
-          className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-center"
-          onMouseEnter={() => setIsPaused(true)}
-          onMouseLeave={() => setIsPaused(false)}
-        >
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-center">
           {/* Card 1: Weather Input */}
           <SectionReveal variant="left" className="lg:col-span-5 bg-white rounded-2xl border border-[#E2E8E4] p-5 sm:p-6 shadow-sm text-left relative overflow-hidden">
             <div className="flex items-center justify-between pb-3 border-b border-[#F1F5F9]">

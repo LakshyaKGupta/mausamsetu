@@ -106,21 +106,16 @@ export const Hero: React.FC = () => {
         {/* Ambient base lighting — very subtle to let the video shine through with rich clarity */}
         <div className="absolute inset-0 bg-gradient-to-b from-black/5 via-transparent to-black/10" />
 
-        {/* Interactive Cursor Spotlight with Video Glow (Compact & Subtle) */}
+        {/* Interactive Cursor Spotlight with Video Glow (GPU-Accelerated & Silky Smooth) */}
         <motion.div
-          className="absolute inset-0 pointer-events-none transition-opacity duration-300"
+          className="absolute -top-32 -left-32 w-72 h-72 rounded-full pointer-events-none blur-2xl transition-opacity duration-300 will-change-transform"
           style={{
-            opacity: isHovered ? 0.7 : 0.2,
-            background: useTransform(
-              [spotlightX, spotlightY],
-              ([x, y]) =>
-                `radial-gradient(240px circle at ${x} ${y}, rgba(255, 255, 255, 0.22) 0%, rgba(18, 107, 58, 0.04) 50%, transparent 80%)`
-            ),
+            left: spotlightX,
+            top: spotlightY,
+            opacity: isHovered ? 0.35 : 0.12,
+            background: 'radial-gradient(circle, rgba(255, 255, 255, 0.35) 0%, rgba(18, 107, 58, 0.08) 50%, transparent 80%)',
           }}
         />
-
-        {/* Subtle static film grain */}
-        <div className="absolute inset-0 bg-grain opacity-10 mix-blend-overlay" />
       </div>
 
       {/* Spacer for navbar clearance */}
