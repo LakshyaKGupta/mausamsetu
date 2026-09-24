@@ -190,8 +190,68 @@ export const Hero: React.FC = () => {
         </motion.div>
       </div>
 
+      {/* ── Atmospheric Drifting Cloud / Mist at Hero Bottom ── */}
+      <div className="absolute bottom-0 inset-x-0 h-24 sm:h-32 pointer-events-none overflow-hidden select-none z-10" aria-hidden="true">
+        {/* Layer 1: Back Cloud Mist Wave (Gentle, slow drift) */}
+        <motion.div
+          animate={{ x: [-35, 35, -35], y: [0, -6, 0] }}
+          transition={{ duration: 18, repeat: Infinity, ease: 'easeInOut' }}
+          className="absolute -bottom-4 -left-[15%] w-[130%] h-28 opacity-65 will-change-transform"
+        >
+          <svg viewBox="0 0 1440 160" fill="none" className="w-full h-full" preserveAspectRatio="none">
+            <path
+              d="M0,90 C180,50 320,120 500,75 C680,30 840,105 1020,65 C1200,30 1340,90 1440,70 L1440,160 L0,160 Z"
+              fill="url(#cloudGradBack)"
+            />
+            <defs>
+              <linearGradient id="cloudGradBack" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0" />
+                <stop offset="40%" stopColor="#FFFFFF" stopOpacity="0.5" />
+                <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0.95" />
+              </linearGradient>
+            </defs>
+          </svg>
+        </motion.div>
+
+        {/* Layer 2: Front Cloud Mist Wave (Counter drift) */}
+        <motion.div
+          animate={{ x: [30, -30, 30], y: [-4, 4, -4] }}
+          transition={{ duration: 14, repeat: Infinity, ease: 'easeInOut' }}
+          className="absolute -bottom-1 -left-[10%] w-[125%] h-24 opacity-80 will-change-transform"
+        >
+          <svg viewBox="0 0 1440 140" fill="none" className="w-full h-full" preserveAspectRatio="none">
+            <path
+              d="M0,65 C220,105 380,35 600,80 C820,125 980,45 1200,75 C1320,95 1390,55 1440,70 L1440,140 L0,140 Z"
+              fill="url(#cloudGradFront)"
+            />
+            <defs>
+              <linearGradient id="cloudGradFront" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0" />
+                <stop offset="45%" stopColor="#FFFFFF" stopOpacity="0.75" />
+                <stop offset="100%" stopColor="#FFFFFF" stopOpacity="1" />
+              </linearGradient>
+            </defs>
+          </svg>
+        </motion.div>
+
+        {/* Layer 3: Fluffy soft ambient cloud vapor puffs */}
+        <motion.div
+          animate={{ x: [-20, 20, -20], scale: [1, 1.06, 1] }}
+          transition={{ duration: 9, repeat: Infinity, ease: 'easeInOut' }}
+          className="absolute -bottom-8 left-[18%] w-80 h-24 rounded-full bg-white/50 blur-xl will-change-transform"
+        />
+        <motion.div
+          animate={{ x: [25, -25, 25], scale: [1.04, 0.96, 1.04] }}
+          transition={{ duration: 11, repeat: Infinity, ease: 'easeInOut', delay: 0.8 }}
+          className="absolute -bottom-8 right-[20%] w-96 h-24 rounded-full bg-white/60 blur-xl will-change-transform"
+        />
+
+        {/* Soft base transition line blending into Section 1 */}
+        <div className="absolute bottom-0 inset-x-0 h-6 bg-gradient-to-t from-white to-transparent" />
+      </div>
+
       {/* ── Bottom Scroll Cue ─────────────────────────── */}
-      <div className="relative z-10 pb-6 flex items-center justify-center w-full px-6">
+      <div className="relative z-20 pb-6 flex items-center justify-center w-full px-6">
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -207,7 +267,7 @@ export const Hero: React.FC = () => {
             <motion.div
               animate={{ y: [0, 4, 0] }}
               transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-              className="w-7 h-7 rounded-full bg-white/90 backdrop-blur-md border border-[#D1D5DB] flex items-center justify-center group-hover:border-[#126B3A] shadow-xs"
+              className="w-7 h-7 rounded-full bg-white/95 backdrop-blur-md border border-[#D1D5DB] flex items-center justify-center group-hover:border-[#126B3A] shadow-xs"
             >
               <ArrowDown size={14} />
             </motion.div>
