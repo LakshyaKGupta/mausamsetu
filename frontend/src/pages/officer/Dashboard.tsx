@@ -52,18 +52,18 @@ export default function OfficerDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex">
+    <div className="min-h-[calc(100vh-4rem)] bg-slate-50 flex">
       {/* Sidebar */}
-      <aside className="w-64 bg-white border-r border-slate-100 fixed h-full flex flex-col">
-        {/* Logo */}
-        <div className="p-6 border-b border-slate-100">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-gradient-to-br from-brand-500 to-brand-700 rounded-xl flex items-center justify-center shadow-glow-green">
-              <span className="text-white text-lg">🌦</span>
+      <aside className="w-64 bg-white border-r border-slate-100 sticky top-16 h-[calc(100vh-4rem)] flex flex-col flex-shrink-0">
+        {/* Sidebar Header */}
+        <div className="p-5 border-b border-slate-100">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 bg-emerald-100 text-emerald-800 rounded-lg flex items-center justify-center font-bold text-sm">
+              <Leaf size={16} />
             </div>
             <div>
-              <h1 className="font-display font-bold text-slate-900 text-base leading-tight">MausamSetu</h1>
-              <p className="text-xs text-slate-400 font-medium">Officer Portal</p>
+              <h2 className="font-bold text-slate-900 text-sm leading-tight">Field Officer Portal</h2>
+              <p className="text-[11px] text-slate-500 font-medium">Verification Console</p>
             </div>
           </div>
         </div>
@@ -98,18 +98,18 @@ export default function OfficerDashboard() {
         <div className="p-4 border-t border-slate-100">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 bg-brand-100 rounded-full flex items-center justify-center">
-              <span className="text-brand-700 text-sm font-bold">RK</span>
+              <span className="text-brand-700 text-sm font-bold">RS</span>
             </div>
             <div>
               <p className="text-sm font-semibold text-slate-800">Rajesh Sharma</p>
-              <p className="text-xs text-slate-400">Nagpur Rural Block</p>
+              <p className="text-xs text-slate-400">Kalmeshwar Block</p>
             </div>
           </div>
         </div>
       </aside>
 
       {/* Main */}
-      <main className="ml-64 flex-1 p-8">
+      <main className="flex-1 p-6 sm:p-8 overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>

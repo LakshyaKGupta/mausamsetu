@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { FarmerHeader } from '@/components/farmer/FarmerHeader'
+import { useOutletContext } from 'react-router-dom'
 import { LocationBar } from '@/components/farmer/LocationBar'
 import { TodayWeatherCard } from '@/components/farmer/TodayWeatherCard'
 import { TomorrowForecastCard } from '@/components/farmer/TomorrowForecastCard'
@@ -8,10 +8,33 @@ import { VoiceAssistantCard } from '@/components/farmer/VoiceAssistantCard'
 import { weatherApi, advisoryApi, chatbotApi } from '@/api/client'
 import type { Language, WeatherSummary, Advisory, ChatbotMessage } from '@/types'
 
+export interface AppOutletContext {
+  lang: Language
+  setLang: (lang: Language) => void
+  panchayatName?: string
+  districtName?: string
+  userName?: string
+}
+
 const DEFAULT_PANCHAYAT_ID = 1
 
 export default function FarmerHome() {
-  const [lang, setLang] = useState<Language>('hi')
+  const outlet = useOutletContext<AppOutletContext | undefined>()
+  const [internalLang, setInternalLang] = useState<Language>(() => {
+    return (localStorage.getItem('mausamsetu_lang') as Language) || 'hi'
+  })
+
+  // Synchronize with outlet or custom event
+  useEffect(() => {
+    const handleLangEvent = (e: any) => {
+      if (e.detail) setInternalLang(e.detail)
+    }
+    window.addEventListener('mausamsetu_lang_change', handleLangEvent)
+    return () => window.removeEventListener('mausamsetu_lang_change', handleLangEvent)
+  }, [])
+
+  const lang = outlet?.lang || internalLang
+  const setLang = outlet?.setLang || setInternalLang
   const [weather, setWeather] = useState<WeatherSummary | null>(null)
   const [advisories, setAdvisories] = useState<Advisory[]>([])
   const [loading, setLoading] = useState(true)
@@ -101,17 +124,8 @@ export default function FarmerHome() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
-      
-      {/* 1. Header (Government / Public-service style) */}
-      <FarmerHeader
-        currentLang={lang}
-        onLanguageChange={setLang}
-        panchayatName={weather?.panchayat_name || 'धापेवाड़ा'}
-        districtName="नागपुर"
-      />
-
-      {/* 2. Responsive Application Shell */}
+    <div className="flex-1 bg-slate-50 text-slate-900 flex flex-col font-sans">
+      {/* Responsive Application Shell */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-7">
         
         {/* Responsive Grid: Single-column on mobile, Two-column on desktop */}
