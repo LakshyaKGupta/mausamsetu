@@ -76,11 +76,6 @@ export const Footer: React.FC = () => {
                 </Link>
               </li>
               <li>
-                <Link to="/login?role=officer" className="hover:text-white transition-colors">
-                  Agricultural Officer Portal
-                </Link>
-              </li>
-              <li>
                 <Link to="/login?role=admin" className="hover:text-white transition-colors">
                   District Admin Console
                 </Link>

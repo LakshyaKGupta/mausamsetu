@@ -43,7 +43,7 @@ export const CTASection: React.FC = () => {
 
           <p className="max-w-xl mx-auto text-base sm:text-lg text-white/80 leading-relaxed font-normal">
             Local weather intelligence for every Panchayat.
-            Explore localized micro-forecasts or access the officer verification portal.
+            Explore localized micro-forecasts or access the district administrative console.
           </p>
 
           <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-4">

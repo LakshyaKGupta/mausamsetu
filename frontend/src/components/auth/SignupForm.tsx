@@ -5,7 +5,7 @@ import { Button } from '../shared/Button'
 import { OTPVerification } from './OTPVerification'
 
 export const SignupForm: React.FC = () => {
-  const [role, setRole] = useState<'farmer' | 'officer' | 'admin'>('farmer')
+  const [role, setRole] = useState<'farmer' | 'admin'>('farmer')
   const [step, setStep] = useState<number>(1) // 1: Phone, 2: OTP, 3: Profile
 
   // Form Fields
@@ -69,7 +69,7 @@ export const SignupForm: React.FC = () => {
       localStorage.setItem('mausamsetu_farmer', JSON.stringify(farmerData))
       localStorage.setItem('mausamsetu_role', 'farmer')
       navigate('/app/farmer')
-    } else if (role === 'admin') {
+    } else {
       const adminData = {
         name,
         phone,
@@ -80,18 +80,6 @@ export const SignupForm: React.FC = () => {
       localStorage.setItem('mausamsetu_admin', JSON.stringify(adminData))
       localStorage.setItem('mausamsetu_role', 'admin')
       navigate('/app/admin')
-    } else {
-      const officerData = {
-        name,
-        phone,
-        designation: 'Agricultural Extension Officer',
-        district: 'Nagpur',
-        block,
-      }
-      localStorage.setItem('mausamsetu_officer', JSON.stringify(officerData))
-      localStorage.setItem('mausamsetu_role', 'officer')
-      localStorage.setItem('mausamsetu_token', 'demo-token-' + Date.now())
-      navigate('/app/officer')
     }
   }
 
@@ -103,34 +91,34 @@ export const SignupForm: React.FC = () => {
         <p className="text-xs text-[#66736B] mt-1">
           {step === 1 && 'Select your role and enter mobile number.'}
           {step === 2 && 'Verify code sent to your mobile.'}
-          {step === 3 && 'Setup your farm location & details.'}
+          {step === 3 && 'Setup your details to continue.'}
         </p>
       </div>
 
       {step === 1 && (
         <form onSubmit={handlePhoneSubmit} className="space-y-4">
-          {/* Minimal Role Switcher */}
+          {/* Role Switcher: Farmer & Admin */}
           <div>
             <label className="text-xs font-semibold text-[#111814] block mb-1.5">
               Registering As
             </label>
-            <div className="grid grid-cols-3 bg-[#F2F5F2] p-1 rounded-xl gap-1">
-              {(['farmer', 'officer', 'admin'] as const).map((r) => {
+            <div className="grid grid-cols-2 bg-[#F2F5F2] p-1 rounded-xl gap-1">
+              {(['farmer', 'admin'] as const).map((r) => {
                 const isSelected = role === r
                 return (
                   <button
                     key={r}
                     type="button"
                     onClick={() => setRole(r)}
-                    className={`py-1.5 px-2 rounded-lg text-xs font-semibold capitalize transition-all ${
+                    className={`py-2 px-3 rounded-lg text-xs font-bold capitalize transition-all cursor-pointer ${
                       isSelected
                         ? r === 'admin'
-                          ? 'bg-white text-purple-700 shadow-2xs font-bold'
-                          : 'bg-white text-[#126B3A] shadow-2xs font-bold'
+                          ? 'bg-white text-purple-700 shadow-2xs'
+                          : 'bg-white text-[#126B3A] shadow-2xs'
                         : 'text-[#66736B] hover:text-[#111814]'
                     }`}
                   >
-                    {r}
+                    {r === 'farmer' ? '🌾 Farmer' : '🏛️ District Admin'}
                   </button>
                 )
               })}

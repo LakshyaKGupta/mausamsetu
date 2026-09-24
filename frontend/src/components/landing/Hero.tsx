@@ -179,7 +179,7 @@ export const Hero: React.FC = () => {
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.65, delay: 0.16, ease: [0.16, 1, 0.3, 1] }}
-          className="text-base sm:text-lg md:text-xl text-[#142018] leading-relaxed max-w-2xl mx-auto font-medium mt-6 mb-8 will-change-transform bg-white/75 backdrop-blur-md px-6 py-3 rounded-2xl border border-white/80 shadow-xs"
+          className="text-base sm:text-lg md:text-xl text-[#111814] leading-relaxed max-w-2xl mx-auto font-medium mt-6 mb-8 will-change-transform drop-shadow-[0_1px_3px_rgba(255,255,255,0.7)]"
         >
           Localized weather intelligence for Panchayats and agricultural decisions.
           Coarse regional forecasts refined to local terrain, then verified by officers
@@ -212,160 +212,64 @@ export const Hero: React.FC = () => {
         </motion.div>
       </div>
 
-      {/* ── Expansive Multi-Tiered Atmospheric Rolling Cloud Sea at Hero Bottom / Ending ── */}
-      <div className="absolute bottom-0 inset-x-0 h-64 sm:h-80 lg:h-96 pointer-events-none overflow-hidden select-none z-10" aria-hidden="true">
-        {/* Tier 1: Deep Mountain Cloud Bank with Majestic Cumulus Lobes */}
+      {/* ── Minimized Subtle Atmospheric Mist at Hero Bottom ── */}
+      <div className="absolute bottom-0 inset-x-0 h-20 sm:h-28 pointer-events-none overflow-hidden select-none z-10" aria-hidden="true">
+        {/* Soft Background Mist Wave */}
         <motion.div
-          animate={{ x: [-90, 90, -90], y: [-16, 12, -16], scaleY: [1, 1.08, 1] }}
-          transition={{ duration: 24, repeat: Infinity, ease: 'easeInOut' }}
-          className="absolute -bottom-14 -left-[20%] w-[140%] h-64 sm:h-80 opacity-70 will-change-transform"
+          animate={{ x: [-35, 35, -35], y: [-4, 4, -4] }}
+          transition={{ duration: 16, repeat: Infinity, ease: 'easeInOut' }}
+          className="absolute -bottom-4 -left-[10%] w-[120%] h-20 sm:h-28 opacity-45 will-change-transform"
         >
-          <svg viewBox="0 0 1440 260" fill="none" className="w-full h-full" preserveAspectRatio="none">
+          <svg viewBox="0 0 1440 120" fill="none" className="w-full h-full" preserveAspectRatio="none">
             <path
-              d="M0,140 Q90,75 180,115 Q270,60 380,95 Q490,45 610,90 Q730,40 850,85 Q970,35 1100,80 Q1230,50 1340,105 Q1390,75 1440,100 L1440,260 L0,260 Z"
-              fill="url(#cloudGradDeepV3)"
+              d="M0,60 Q180,20 360,50 Q540,15 720,45 Q900,10 1080,40 Q1260,20 1440,50 L1440,120 L0,120 Z"
+              fill="url(#cloudGradSubtle1)"
             />
             <defs>
-              <linearGradient id="cloudGradDeepV3" x1="0" y1="0" x2="0" y2="1">
+              <linearGradient id="cloudGradSubtle1" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0" />
-                <stop offset="22%" stopColor="#FFFFFF" stopOpacity="0.55" />
-                <stop offset="65%" stopColor="#FFFFFF" stopOpacity="0.88" />
+                <stop offset="40%" stopColor="#FFFFFF" stopOpacity="0.45" />
+                <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0.85" />
+              </linearGradient>
+            </defs>
+          </svg>
+        </motion.div>
+
+        {/* Foreground Gentle Vapor Flow */}
+        <motion.div
+          animate={{ x: [25, -25, 25], y: [3, -3, 3] }}
+          transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}
+          className="absolute bottom-0 -left-[5%] w-[110%] h-14 sm:h-18 opacity-55 will-change-transform"
+        >
+          <svg viewBox="0 0 1440 90" fill="none" className="w-full h-full" preserveAspectRatio="none">
+            <path
+              d="M0,45 Q220,15 440,40 Q660,10 880,35 Q1100,15 1320,38 L1440,30 L1440,90 L0,90 Z"
+              fill="url(#cloudGradSubtle2)"
+            />
+            <defs>
+              <linearGradient id="cloudGradSubtle2" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0" />
+                <stop offset="30%" stopColor="#FFFFFF" stopOpacity="0.5" />
                 <stop offset="100%" stopColor="#FFFFFF" stopOpacity="1" />
               </linearGradient>
             </defs>
           </svg>
         </motion.div>
 
-        {/* Tier 2: Mid-Level Billowing Cumulus Waves (Opposing lateral drift & breathing) */}
+        {/* Subtle Low Fog Highlights */}
         <motion.div
-          animate={{ x: [85, -85, 85], y: [14, -15, 14], scale: [1.03, 0.97, 1.03] }}
-          transition={{ duration: 18, repeat: Infinity, ease: 'easeInOut', delay: 0.4 }}
-          className="absolute -bottom-10 -left-[15%] w-[130%] h-56 sm:h-68 opacity-82 will-change-transform"
-        >
-          <svg viewBox="0 0 1440 240" fill="none" className="w-full h-full" preserveAspectRatio="none">
-            <path
-              d="M0,120 Q120,50 240,100 Q360,40 500,85 Q640,30 780,80 Q920,35 1060,75 Q1200,45 1320,95 Q1380,65 1440,85 L1440,240 L0,240 Z"
-              fill="url(#cloudGradMidV3)"
-            />
-            <defs>
-              <linearGradient id="cloudGradMidV3" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0" />
-                <stop offset="28%" stopColor="#FFFFFF" stopOpacity="0.75" />
-                <stop offset="75%" stopColor="#FFFFFF" stopOpacity="0.96" />
-                <stop offset="100%" stopColor="#FFFFFF" stopOpacity="1" />
-              </linearGradient>
-            </defs>
-          </svg>
-        </motion.div>
-
-        {/* Tier 3: Billowing Cumulus Ridge (Distinct cauliflower dome arcs) */}
-        <motion.div
-          animate={{ x: [-70, 70, -70], y: [-10, 12, -10] }}
-          transition={{ duration: 14, repeat: Infinity, ease: 'easeInOut', delay: 0.8 }}
-          className="absolute -bottom-6 -left-[12%] w-[125%] h-48 sm:h-56 opacity-90 will-change-transform"
-        >
-          <svg viewBox="0 0 1440 220" fill="none" className="w-full h-full" preserveAspectRatio="none">
-            <path
-              d="M0,100 Q80,50 160,85 Q240,35 340,75 Q440,25 560,70 Q680,30 800,65 Q920,25 1040,60 Q1160,35 1280,80 Q1360,45 1440,70 L1440,220 L0,220 Z"
-              fill="url(#cloudGradRidgeV3)"
-            />
-            <defs>
-              <linearGradient id="cloudGradRidgeV3" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0" />
-                <stop offset="30%" stopColor="#FFFFFF" stopOpacity="0.85" />
-                <stop offset="100%" stopColor="#FFFFFF" stopOpacity="1" />
-              </linearGradient>
-            </defs>
-          </svg>
-        </motion.div>
-
-        {/* Tier 4: Foreground Crisp Cloud Bank */}
-        <motion.div
-          animate={{ x: [55, -55, 55], y: [7, -7, 7] }}
-          transition={{ duration: 11, repeat: Infinity, ease: 'easeInOut' }}
-          className="absolute -bottom-3 -left-[8%] w-[120%] h-36 sm:h-44 opacity-98 will-change-transform"
-        >
-          <svg viewBox="0 0 1440 180" fill="none" className="w-full h-full" preserveAspectRatio="none">
-            <path
-              d="M0,80 Q100,35 210,70 Q320,25 450,65 Q580,20 720,55 Q860,20 1000,50 Q1140,25 1270,65 Q1350,35 1440,60 L1440,180 L0,180 Z"
-              fill="url(#cloudGradFrontV3)"
-            />
-            <defs>
-              <linearGradient id="cloudGradFrontV3" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0" />
-                <stop offset="35%" stopColor="#FFFFFF" stopOpacity="0.92" />
-                <stop offset="100%" stopColor="#FFFFFF" stopOpacity="1" />
-              </linearGradient>
-            </defs>
-          </svg>
-        </motion.div>
-
-        {/* Tier 5: Low Rolling Foam Bank (Solid White Anchor) */}
-        <motion.div
-          animate={{ x: [-40, 40, -40], y: [-4, 4, -4] }}
-          transition={{ duration: 8.5, repeat: Infinity, ease: 'easeInOut', delay: 0.2 }}
-          className="absolute bottom-0 -left-[5%] w-[115%] h-28 opacity-100 will-change-transform"
-        >
-          <svg viewBox="0 0 1440 130" fill="none" className="w-full h-full" preserveAspectRatio="none">
-            <path
-              d="M0,60 Q140,25 280,50 Q420,20 600,45 Q780,15 960,40 Q1140,20 1300,45 L1440,40 L1440,130 L0,130 Z"
-              fill="#FFFFFF"
-            />
-          </svg>
-        </motion.div>
-
-        {/* ── Volumetric Billowing Cumulus Vapor Puffs (Organic Cloud Spheres) ── */}
-        {/* Puff 1: Far Left Giant Rolling Mass */}
-        <motion.div
-          animate={{ x: [-45, 45, -45], y: [-15, 10, -15], scale: [1, 1.15, 1] }}
-          transition={{ duration: 11, repeat: Infinity, ease: 'easeInOut' }}
-          className="absolute -bottom-16 -left-[6%] w-[480px] h-48 rounded-full bg-white/80 blur-3xl will-change-transform"
+          animate={{ x: [-20, 20, -20], scale: [1, 1.08, 1] }}
+          transition={{ duration: 9, repeat: Infinity, ease: 'easeInOut' }}
+          className="absolute -bottom-4 left-[15%] w-72 h-14 rounded-full bg-white/35 blur-xl will-change-transform"
         />
-        {/* Puff 2: Left-Center Billowing Crest */}
         <motion.div
-          animate={{ x: [35, -35, 35], y: [12, -14, 12], scale: [1.12, 0.96, 1.12] }}
-          transition={{ duration: 9.5, repeat: Infinity, ease: 'easeInOut', delay: 0.6 }}
-          className="absolute -bottom-14 left-[14%] w-[440px] h-44 rounded-full bg-white/85 blur-2xl will-change-transform"
-        />
-        {/* Puff 3: Mid-Left Rising Cloud Bank */}
-        <motion.div
-          animate={{ x: [-30, 30, -30], y: [-12, 14, -12], scale: [0.95, 1.14, 0.95] }}
-          transition={{ duration: 12.5, repeat: Infinity, ease: 'easeInOut', delay: 1.2 }}
-          className="absolute -bottom-8 left-[30%] w-[480px] h-40 rounded-full bg-white/80 blur-2xl will-change-transform"
-        />
-        {/* Puff 4: Center Low Deep Cloud Pillow */}
-        <motion.div
-          animate={{ x: [25, -25, 25], scale: [1.02, 1.18, 1.02] }}
-          transition={{ duration: 14, repeat: Infinity, ease: 'easeInOut' }}
-          className="absolute -bottom-20 left-[22%] w-[580px] h-56 rounded-full bg-white/92 blur-3xl will-change-transform"
-        />
-        {/* Puff 5: Mid-Right High Billowing Ridge */}
-        <motion.div
-          animate={{ x: [-40, 40, -40], y: [14, -12, 14], scale: [1.1, 0.94, 1.1] }}
-          transition={{ duration: 10.5, repeat: Infinity, ease: 'easeInOut', delay: 0.8 }}
-          className="absolute -bottom-10 right-[20%] w-[500px] h-44 rounded-full bg-white/88 blur-2xl will-change-transform"
-        />
-        {/* Puff 6: Far Right Rolling Giant Mass */}
-        <motion.div
-          animate={{ x: [45, -45, 45], y: [-12, 12, -12], scale: [1, 1.16, 1] }}
-          transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut', delay: 1.5 }}
-          className="absolute -bottom-16 -right-[8%] w-[540px] h-52 rounded-full bg-white/85 blur-3xl will-change-transform"
-        />
-        {/* Puff 7: Center Rising Wispy Cloud Mass */}
-        <motion.div
-          animate={{ x: [-25, 25, -25], y: [-10, 10, -10], scale: [0.95, 1.12, 0.95] }}
-          transition={{ duration: 7.5, repeat: Infinity, ease: 'easeInOut', delay: 1.8 }}
-          className="absolute -bottom-6 left-[45%] w-88 h-32 rounded-full bg-white/75 blur-xl will-change-transform"
-        />
-        {/* Puff 8: Upper Rising Tendril */}
-        <motion.div
-          animate={{ x: [30, -30, 30], y: [8, -12, 8] }}
-          transition={{ duration: 8.5, repeat: Infinity, ease: 'easeInOut', delay: 0.3 }}
-          className="absolute -bottom-4 right-[36%] w-80 h-28 rounded-full bg-white/70 blur-lg will-change-transform"
+          animate={{ x: [20, -20, 20], scale: [1.05, 0.95, 1.05] }}
+          transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut', delay: 0.7 }}
+          className="absolute -bottom-4 right-[18%] w-80 h-16 rounded-full bg-white/35 blur-xl will-change-transform"
         />
 
-        {/* ── Seamless Grounding Base Gradient into Section 01 ── */}
-        <div className="absolute bottom-0 inset-x-0 h-16 bg-gradient-to-t from-white via-white/95 to-transparent" />
+        {/* Crisp Base Blending Line */}
+        <div className="absolute bottom-0 inset-x-0 h-8 bg-gradient-to-t from-white via-white/80 to-transparent" />
       </div>
 
       {/* ── Bottom Scroll Cue ─────────────────────────── */}

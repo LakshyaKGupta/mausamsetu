@@ -3,19 +3,13 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { ArrowRight, AlertCircle } from 'lucide-react'
 import { Button } from '../shared/Button'
 import { OTPVerification } from './OTPVerification'
-import { authApi } from '../../api/client'
 
 export const LoginForm: React.FC = () => {
   const [searchParams] = useSearchParams()
   const initialRoleParam = searchParams.get('role')
-  const initialRole =
-    initialRoleParam === 'admin'
-      ? 'admin'
-      : initialRoleParam === 'officer'
-      ? 'officer'
-      : 'farmer'
+  const initialRole = initialRoleParam === 'admin' ? 'admin' : 'farmer'
 
-  const [role, setRole] = useState<'farmer' | 'officer' | 'admin'>(initialRole)
+  const [role, setRole] = useState<'farmer' | 'admin'>(initialRole)
   const [step, setStep] = useState<'identifier' | 'otp'>('identifier')
   const [identifier, setIdentifier] = useState('')
   const [devOtp, setDevOtp] = useState<string | null>(null)
@@ -43,24 +37,6 @@ export const LoginForm: React.FC = () => {
       if (role === 'admin') {
         setDevOtp('123456')
         setStep('otp')
-      } else if (role === 'officer') {
-        const phone = cleanInput.replace(/\D/g, '')
-        if (!phone.match(/^[6-9]\d{9}$/)) {
-          setError('Enter a valid 10-digit Indian mobile number')
-          setLoading(false)
-          return
-        }
-
-        try {
-          const res = await authApi.requestOtp(phone)
-          const match = res.message.match(/\d{6}/)
-          setDevOtp(match ? match[0] : '123456')
-          setStep('otp')
-        } catch (apiErr: any) {
-          // Dev / demo fallback
-          setDevOtp('123456')
-          setStep('otp')
-        }
       } else {
         // Farmer demo OTP
         setDevOtp('123456')
@@ -92,33 +68,6 @@ export const LoginForm: React.FC = () => {
         } else {
           setError('Invalid code. Use 123456 in demo mode.')
         }
-      } else if (role === 'officer') {
-        const phone = identifier.replace(/\D/g, '')
-        try {
-          const res = await authApi.verifyOtp(phone, otpValue)
-          localStorage.setItem('mausamsetu_token', res.access_token)
-          localStorage.setItem('mausamsetu_officer', JSON.stringify(res.officer))
-          localStorage.setItem('mausamsetu_role', 'officer')
-          navigate('/app/officer')
-        } catch (apiErr: any) {
-          if (otpValue === '123456') {
-            localStorage.setItem('mausamsetu_token', 'demo_officer_token_123')
-            localStorage.setItem(
-              'mausamsetu_officer',
-              JSON.stringify({
-                id: 1,
-                name: 'Rajesh Sharma',
-                phone: phone || '9876543210',
-                block: 'Nagpur Rural',
-                district: 'Nagpur',
-              })
-            )
-            localStorage.setItem('mausamsetu_role', 'officer')
-            navigate('/app/officer')
-          } else {
-            setError(apiErr.response?.data?.detail || 'Invalid verification code')
-          }
-        }
       } else {
         // Farmer demo verification
         localStorage.setItem('mausamsetu_role', 'farmer')
@@ -139,7 +88,7 @@ export const LoginForm: React.FC = () => {
     }
   }
 
-  const handleQuickDemo = (demoRole: 'farmer' | 'officer' | 'admin') => {
+  const handleQuickDemo = (demoRole: 'farmer' | 'admin') => {
     if (demoRole === 'farmer') {
       localStorage.setItem('mausamsetu_role', 'farmer')
       localStorage.setItem(
@@ -153,20 +102,6 @@ export const LoginForm: React.FC = () => {
         })
       )
       navigate('/app/farmer')
-    } else if (demoRole === 'officer') {
-      localStorage.setItem('mausamsetu_token', 'demo_officer_token_123')
-      localStorage.setItem(
-        'mausamsetu_officer',
-        JSON.stringify({
-          id: 1,
-          name: 'Rajesh Sharma',
-          phone: '9876543210',
-          block: 'Nagpur Rural',
-          district: 'Nagpur',
-        })
-      )
-      localStorage.setItem('mausamsetu_role', 'officer')
-      navigate('/app/officer')
     } else if (demoRole === 'admin') {
       localStorage.setItem('mausamsetu_role', 'admin')
       localStorage.setItem(
@@ -192,9 +127,9 @@ export const LoginForm: React.FC = () => {
         </p>
       </div>
 
-      {/* Minimal Role Switcher */}
-      <div className="grid grid-cols-3 bg-[#F2F5F2] p-1 rounded-xl mb-5 gap-1">
-        {(['farmer', 'officer', 'admin'] as const).map((r) => {
+      {/* Role Switcher: Farmer & Admin */}
+      <div className="grid grid-cols-2 bg-[#F2F5F2] p-1 rounded-xl mb-5 gap-1">
+        {(['farmer', 'admin'] as const).map((r) => {
           const isSelected = role === r
           return (
             <button
@@ -205,15 +140,15 @@ export const LoginForm: React.FC = () => {
                 setStep('identifier')
                 setError('')
               }}
-              className={`py-1.5 px-2 rounded-lg text-xs font-semibold capitalize transition-all ${
+              className={`py-2 px-3 rounded-lg text-xs font-bold capitalize transition-all cursor-pointer ${
                 isSelected
                   ? r === 'admin'
-                    ? 'bg-white text-purple-700 shadow-2xs font-bold'
-                    : 'bg-white text-[#126B3A] shadow-2xs font-bold'
+                    ? 'bg-white text-purple-700 shadow-2xs'
+                    : 'bg-white text-[#126B3A] shadow-2xs'
                   : 'text-[#66736B] hover:text-[#111814]'
               }`}
             >
-              {r}
+              {r === 'farmer' ? '🌾 Farmer (किसान)' : '🏛️ District Admin'}
             </button>
           )
         })}
@@ -225,12 +160,10 @@ export const LoginForm: React.FC = () => {
             <label className="text-xs font-semibold text-[#111814] block mb-1">
               {role === 'admin'
                 ? 'Admin ID / Email / Phone'
-                : role === 'officer'
-                ? 'Officer Mobile Number'
                 : 'Mobile Number or Email'}
             </label>
             <input
-              type={role === 'officer' ? 'tel' : 'text'}
+              type="text"
               value={identifier}
               onChange={(e) => setIdentifier(e.target.value)}
               placeholder={
@@ -268,23 +201,15 @@ export const LoginForm: React.FC = () => {
               <button
                 type="button"
                 onClick={() => handleQuickDemo('farmer')}
-                className="text-[#126B3A] hover:underline"
+                className="text-[#126B3A] hover:underline cursor-pointer"
               >
                 Farmer
               </button>
               <span className="text-[#D1D5DB]">&bull;</span>
               <button
                 type="button"
-                onClick={() => handleQuickDemo('officer')}
-                className="text-[#126B3A] hover:underline"
-              >
-                Officer
-              </button>
-              <span className="text-[#D1D5DB]">&bull;</span>
-              <button
-                type="button"
                 onClick={() => handleQuickDemo('admin')}
-                className="text-purple-700 hover:underline"
+                className="text-purple-700 hover:underline cursor-pointer"
               >
                 Admin
               </button>

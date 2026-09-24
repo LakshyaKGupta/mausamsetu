@@ -93,7 +93,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         </Route>
 
         {/* 4. Backward Compatibility Redirects */}
-        <Route path="/officer/login" element={<Navigate to="/login?role=officer" replace />} />
+        <Route path="/officer/login" element={<Navigate to="/login?role=admin" replace />} />
         <Route path="/officer" element={<Navigate to="/app/officer" replace />} />
         <Route path="/admin" element={<Navigate to="/app/admin" replace />} />
 
