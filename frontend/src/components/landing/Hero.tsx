@@ -118,6 +118,28 @@ export const Hero: React.FC = () => {
         />
       </div>
 
+      {/* ── Floating Atmospheric Sky Clouds & Horizon Mist ── */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden select-none z-5" aria-hidden="true">
+        {/* Sky Cloud 1 (Top Left Drift) */}
+        <motion.div
+          animate={{ x: [-50, 50, -50], y: [0, -10, 0] }}
+          transition={{ duration: 26, repeat: Infinity, ease: 'easeInOut' }}
+          className="absolute top-16 -left-24 w-[560px] h-48 rounded-full bg-white/22 blur-3xl will-change-transform"
+        />
+        {/* Sky Cloud 2 (Top Right Drift) */}
+        <motion.div
+          animate={{ x: [40, -60, 40], y: [-6, 12, -6] }}
+          transition={{ duration: 30, repeat: Infinity, ease: 'easeInOut', delay: 1.5 }}
+          className="absolute top-20 -right-28 w-[620px] h-52 rounded-full bg-white/20 blur-3xl will-change-transform"
+        />
+        {/* Horizon Mountain Mist Band */}
+        <motion.div
+          animate={{ x: [-35, 35, -35], opacity: [0.2, 0.38, 0.2] }}
+          transition={{ duration: 20, repeat: Infinity, ease: 'easeInOut' }}
+          className="absolute top-[38%] inset-x-0 h-40 bg-gradient-to-r from-transparent via-white/25 to-transparent blur-2xl will-change-transform"
+        />
+      </div>
+
       {/* Spacer for navbar clearance */}
       <div className="h-16 sm:h-20 w-full" />
 
@@ -190,64 +212,90 @@ export const Hero: React.FC = () => {
         </motion.div>
       </div>
 
-      {/* ── Atmospheric Drifting Cloud / Mist at Hero Bottom ── */}
-      <div className="absolute bottom-0 inset-x-0 h-24 sm:h-32 pointer-events-none overflow-hidden select-none z-10" aria-hidden="true">
-        {/* Layer 1: Back Cloud Mist Wave (Gentle, slow drift) */}
+      {/* ── Multi-Tiered Atmospheric Cloud Mist Sea at Hero Bottom ── */}
+      <div className="absolute bottom-0 inset-x-0 h-36 sm:h-48 pointer-events-none overflow-hidden select-none z-10" aria-hidden="true">
+        {/* Tier 1: Deep Back Rolling Cloud Wave (Gentle, majestic drift) */}
         <motion.div
-          animate={{ x: [-35, 35, -35], y: [0, -6, 0] }}
-          transition={{ duration: 18, repeat: Infinity, ease: 'easeInOut' }}
-          className="absolute -bottom-4 -left-[15%] w-[130%] h-28 opacity-65 will-change-transform"
+          animate={{ x: [-45, 45, -45], y: [0, -8, 0] }}
+          transition={{ duration: 20, repeat: Infinity, ease: 'easeInOut' }}
+          className="absolute -bottom-8 -left-[15%] w-[130%] h-36 opacity-60 will-change-transform"
+        >
+          <svg viewBox="0 0 1440 180" fill="none" className="w-full h-full" preserveAspectRatio="none">
+            <path
+              d="M0,90 C180,45 320,130 500,80 C680,30 840,110 1020,70 C1200,30 1340,95 1440,75 L1440,180 L0,180 Z"
+              fill="url(#cloudGradDeep)"
+            />
+            <defs>
+              <linearGradient id="cloudGradDeep" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0" />
+                <stop offset="35%" stopColor="#FFFFFF" stopOpacity="0.45" />
+                <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0.9" />
+              </linearGradient>
+            </defs>
+          </svg>
+        </motion.div>
+
+        {/* Tier 2: Mid-Level Billowing Wave (Undulating crests) */}
+        <motion.div
+          animate={{ x: [40, -40, 40], y: [-6, 6, -6] }}
+          transition={{ duration: 16, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}
+          className="absolute -bottom-4 -left-[12%] w-[125%] h-32 opacity-75 will-change-transform"
         >
           <svg viewBox="0 0 1440 160" fill="none" className="w-full h-full" preserveAspectRatio="none">
             <path
-              d="M0,90 C180,50 320,120 500,75 C680,30 840,105 1020,65 C1200,30 1340,90 1440,70 L1440,160 L0,160 Z"
-              fill="url(#cloudGradBack)"
+              d="M0,80 C240,120 400,40 640,90 C880,140 1040,50 1260,85 C1360,105 1410,65 1440,75 L1440,160 L0,160 Z"
+              fill="url(#cloudGradMid)"
             />
             <defs>
-              <linearGradient id="cloudGradBack" x1="0" y1="0" x2="0" y2="1">
+              <linearGradient id="cloudGradMid" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0" />
-                <stop offset="40%" stopColor="#FFFFFF" stopOpacity="0.5" />
+                <stop offset="40%" stopColor="#FFFFFF" stopOpacity="0.65" />
                 <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0.95" />
               </linearGradient>
             </defs>
           </svg>
         </motion.div>
 
-        {/* Layer 2: Front Cloud Mist Wave (Counter drift) */}
+        {/* Tier 3: Front Crisp Cloud Ridge */}
         <motion.div
-          animate={{ x: [30, -30, 30], y: [-4, 4, -4] }}
-          transition={{ duration: 14, repeat: Infinity, ease: 'easeInOut' }}
-          className="absolute -bottom-1 -left-[10%] w-[125%] h-24 opacity-80 will-change-transform"
+          animate={{ x: [-30, 30, -30], y: [4, -4, 4] }}
+          transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut' }}
+          className="absolute -bottom-1 -left-[8%] w-[120%] h-28 opacity-85 will-change-transform"
         >
           <svg viewBox="0 0 1440 140" fill="none" className="w-full h-full" preserveAspectRatio="none">
             <path
-              d="M0,65 C220,105 380,35 600,80 C820,125 980,45 1200,75 C1320,95 1390,55 1440,70 L1440,140 L0,140 Z"
+              d="M0,60 C200,95 360,30 560,75 C760,120 920,40 1140,70 C1280,90 1370,50 1440,65 L1440,140 L0,140 Z"
               fill="url(#cloudGradFront)"
             />
             <defs>
               <linearGradient id="cloudGradFront" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0" />
-                <stop offset="45%" stopColor="#FFFFFF" stopOpacity="0.75" />
+                <stop offset="50%" stopColor="#FFFFFF" stopOpacity="0.8" />
                 <stop offset="100%" stopColor="#FFFFFF" stopOpacity="1" />
               </linearGradient>
             </defs>
           </svg>
         </motion.div>
 
-        {/* Layer 3: Fluffy soft ambient cloud vapor puffs */}
+        {/* Tier 4: Soft Cumulus Vapor Puffs Floating Across Base */}
         <motion.div
-          animate={{ x: [-20, 20, -20], scale: [1, 1.06, 1] }}
-          transition={{ duration: 9, repeat: Infinity, ease: 'easeInOut' }}
-          className="absolute -bottom-8 left-[18%] w-80 h-24 rounded-full bg-white/50 blur-xl will-change-transform"
+          animate={{ x: [-35, 35, -35], scale: [1, 1.08, 1] }}
+          transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
+          className="absolute -bottom-10 left-[10%] w-[420px] h-32 rounded-full bg-white/60 blur-2xl will-change-transform"
         />
         <motion.div
-          animate={{ x: [25, -25, 25], scale: [1.04, 0.96, 1.04] }}
-          transition={{ duration: 11, repeat: Infinity, ease: 'easeInOut', delay: 0.8 }}
-          className="absolute -bottom-8 right-[20%] w-96 h-24 rounded-full bg-white/60 blur-xl will-change-transform"
+          animate={{ x: [30, -30, 30], scale: [1.06, 0.95, 1.06] }}
+          transition={{ duration: 13, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
+          className="absolute -bottom-12 right-[12%] w-[480px] h-36 rounded-full bg-white/70 blur-2xl will-change-transform"
+        />
+        <motion.div
+          animate={{ x: [-20, 20, -20], y: [-5, 5, -5] }}
+          transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut', delay: 2 }}
+          className="absolute -bottom-8 left-[45%] w-72 h-24 rounded-full bg-white/55 blur-xl will-change-transform"
         />
 
-        {/* Soft base transition line blending into Section 1 */}
-        <div className="absolute bottom-0 inset-x-0 h-6 bg-gradient-to-t from-white to-transparent" />
+        {/* Seamless blend gradient into Section 01 */}
+        <div className="absolute bottom-0 inset-x-0 h-10 bg-gradient-to-t from-white via-white/80 to-transparent" />
       </div>
 
       {/* ── Bottom Scroll Cue ─────────────────────────── */}
