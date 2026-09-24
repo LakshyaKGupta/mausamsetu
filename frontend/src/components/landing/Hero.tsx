@@ -4,12 +4,6 @@ import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion'
 import {
   ArrowRight,
   ArrowDown,
-  CloudRain,
-  Sun,
-  Sprout,
-  Droplets,
-  Wind,
-  Leaf,
 } from 'lucide-react'
 import { Button } from '../shared/Button'
 
@@ -131,103 +125,6 @@ export const Hero: React.FC = () => {
 
       {/* Spacer for navbar clearance */}
       <div className="h-16 sm:h-20 w-full" />
-
-      {/* ── Floating Palette-Matched Icons (Lower Opacity, Light Glassmorphic, Animated) ── */}
-      {/* Top Left: Rain Icon */}
-      <motion.div
-        initial={{ opacity: 0, scale: 0.8 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.6, delay: 0.2 }}
-        className="hidden sm:flex absolute top-28 left-6 md:left-12 lg:left-20 xl:left-28 z-20 pointer-events-none"
-      >
-        <motion.div
-          animate={{ y: [-8, 8, -8], rotate: [-2, 2, -2] }}
-          transition={{ duration: 4.8, repeat: Infinity, ease: 'easeInOut' }}
-          className="w-11 h-11 md:w-13 md:h-13 rounded-2xl bg-white/45 backdrop-blur-md border border-[#D8E6DB]/50 shadow-xs flex items-center justify-center text-[#2563EB]/70 hover:opacity-90 transition-opacity"
-        >
-          <CloudRain size={20} className="stroke-[1.8]" />
-        </motion.div>
-      </motion.div>
-
-      {/* Mid Left: Sprout Icon */}
-      <motion.div
-        initial={{ opacity: 0, scale: 0.8 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.6, delay: 0.35 }}
-        className="hidden md:flex absolute top-1/2 -translate-y-12 left-4 md:left-8 lg:left-14 xl:left-20 z-20 pointer-events-none"
-      >
-        <motion.div
-          animate={{ y: [7, -7, 7], rotate: [2, -2, 2] }}
-          transition={{ duration: 4.2, repeat: Infinity, ease: 'easeInOut', delay: 0.4 }}
-          className="w-11 h-11 md:w-12 md:h-12 rounded-2xl bg-white/45 backdrop-blur-md border border-[#D8E6DB]/50 shadow-xs flex items-center justify-center text-[#126B3A]/70 hover:opacity-90 transition-opacity"
-        >
-          <Sprout size={20} className="stroke-[1.8]" />
-        </motion.div>
-      </motion.div>
-
-      {/* Bottom Left: Droplets Icon */}
-      <motion.div
-        initial={{ opacity: 0, scale: 0.8 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.6, delay: 0.5 }}
-        className="hidden sm:flex absolute bottom-28 left-8 md:left-14 lg:left-24 xl:left-32 z-20 pointer-events-none"
-      >
-        <motion.div
-          animate={{ y: [-6, 6, -6] }}
-          transition={{ duration: 5.2, repeat: Infinity, ease: 'easeInOut', delay: 0.8 }}
-          className="w-10 h-10 md:w-12 md:h-12 rounded-2xl bg-white/45 backdrop-blur-md border border-[#D8E6DB]/50 shadow-xs flex items-center justify-center text-[#0D9488]/70 hover:opacity-90 transition-opacity"
-        >
-          <Droplets size={18} className="stroke-[1.8]" />
-        </motion.div>
-      </motion.div>
-
-      {/* Top Right: Sun Icon */}
-      <motion.div
-        initial={{ opacity: 0, scale: 0.8 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.6, delay: 0.25 }}
-        className="hidden sm:flex absolute top-28 right-6 md:right-12 lg:right-20 xl:right-28 z-20 pointer-events-none"
-      >
-        <motion.div
-          animate={{ y: [8, -8, 8], rotate: [2, -2, 2] }}
-          transition={{ duration: 4.6, repeat: Infinity, ease: 'easeInOut', delay: 0.2 }}
-          className="w-11 h-11 md:w-13 md:h-13 rounded-2xl bg-white/45 backdrop-blur-md border border-[#D8E6DB]/50 shadow-xs flex items-center justify-center text-[#D97706]/70 hover:opacity-90 transition-opacity"
-        >
-          <Sun size={20} className="stroke-[1.8]" />
-        </motion.div>
-      </motion.div>
-
-      {/* Mid Right: Wind Icon */}
-      <motion.div
-        initial={{ opacity: 0, scale: 0.8 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.6, delay: 0.4 }}
-        className="hidden md:flex absolute top-1/2 -translate-y-12 right-4 md:right-8 lg:right-14 xl:right-20 z-20 pointer-events-none"
-      >
-        <motion.div
-          animate={{ y: [-7, 7, -7], rotate: [-2, 2, -2] }}
-          transition={{ duration: 5.0, repeat: Infinity, ease: 'easeInOut', delay: 0.6 }}
-          className="w-11 h-11 md:w-12 md:h-12 rounded-2xl bg-white/45 backdrop-blur-md border border-[#D8E6DB]/50 shadow-xs flex items-center justify-center text-[#3B82F6]/70 hover:opacity-90 transition-opacity"
-        >
-          <Wind size={20} className="stroke-[1.8]" />
-        </motion.div>
-      </motion.div>
-
-      {/* Bottom Right: Leaf Icon */}
-      <motion.div
-        initial={{ opacity: 0, scale: 0.8 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.6, delay: 0.55 }}
-        className="hidden sm:flex absolute bottom-28 right-8 md:right-14 lg:right-24 xl:right-32 z-20 pointer-events-none"
-      >
-        <motion.div
-          animate={{ y: [6, -6, 6] }}
-          transition={{ duration: 4.4, repeat: Infinity, ease: 'easeInOut', delay: 1.0 }}
-          className="w-10 h-10 md:w-12 md:h-12 rounded-2xl bg-white/45 backdrop-blur-md border border-[#D8E6DB]/50 shadow-xs flex items-center justify-center text-[#16A34A]/70 hover:opacity-90 transition-opacity"
-        >
-          <Leaf size={18} className="stroke-[1.8]" />
-        </motion.div>
-      </motion.div>
 
       {/* ── Main Centered Content with Interactive Kinetic Typography ── */}
       <div className="flex-1 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 w-full relative z-10 flex flex-col items-center justify-center text-center my-auto py-8 sm:py-12">
