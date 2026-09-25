@@ -45,8 +45,8 @@ export const HumanVerificationSection: React.FC = () => {
 
   const nodeDetails: Record<number, { title: string; body: string; state: string; stateColor: string }> = {
     1: {
-      title: '1. AI Downscaled Proposal',
-      body: 'Numerical forecast downscaled to 30m terrain resolution. Draft recommendation generated for Panchayat cluster.',
+      title: '1. Model Downscaled Proposal',
+      body: 'Numerical forecast downscaled using local topography and AWS calibration. Draft recommendation generated for Panchayat cluster.',
       state: 'Draft Proposal',
       stateColor: 'bg-[#EFF6FF] text-[#3B82F6] border-blue-200',
     },
@@ -165,7 +165,7 @@ export const HumanVerificationSection: React.FC = () => {
                         <p className="text-xs font-bold text-[#1E40AF]">Draft Advisory Ready</p>
                         <span className="text-[9px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 font-mono font-semibold">Stage 1</span>
                       </div>
-                      <p className="text-[11px] text-[#66736B] mt-0.5">30m DEM downscaled · Awaiting extension officer review</p>
+                      <p className="text-[11px] text-[#66736B] mt-0.5">Topography downscaled · Awaiting extension officer review</p>
                     </div>
                   </div>
                 )}

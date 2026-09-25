@@ -23,6 +23,10 @@ import ForgotPasswordPage from './pages/auth/ForgotPassword'
 
 // Authenticated Application Pages
 import FarmerHome from './pages/app/farmer/Home'
+import FarmerForecastPage from './pages/app/farmer/Forecast'
+import FarmerMyCropsPage from './pages/app/farmer/MyCrops'
+import FarmerAdvisoryListPage from './pages/app/farmer/AdvisoryList'
+import FarmerAskPage from './pages/app/farmer/Ask'
 import OfficerDashboard from './pages/app/officer/Dashboard'
 import AdminDashboard from './pages/app/admin/Admin'
 
@@ -68,8 +72,12 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
 
         {/* 3. Authenticated Role Applications */}
         <Route path="/app" element={<AppLayout />}>
-          {/* Farmer PWA */}
+          {/* Farmer PWA & 5-tab Workflow */}
           <Route path="farmer" element={<FarmerHome />} />
+          <Route path="farmer/forecast" element={<FarmerForecastPage />} />
+          <Route path="farmer/crops" element={<FarmerMyCropsPage />} />
+          <Route path="farmer/advisories" element={<FarmerAdvisoryListPage />} />
+          <Route path="farmer/ask" element={<FarmerAskPage />} />
 
           {/* Officer Console (Protected) */}
           <Route
@@ -103,3 +111,18 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     </BrowserRouter>
   </React.StrictMode>
 )
+
+// Register PWA Service Worker for offline capability & mobile installation
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker
+      .register('/sw.js')
+      .then((registration) => {
+        console.log('MausamSetu PWA Service Worker registered:', registration.scope)
+      })
+      .catch((error) => {
+        console.warn('MausamSetu PWA Service Worker registration failed:', error)
+      })
+  })
+}
+

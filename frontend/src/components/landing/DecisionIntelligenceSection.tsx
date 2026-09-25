@@ -178,7 +178,7 @@ export const DecisionIntelligenceSection: React.FC = () => {
               </motion.div>
             </div>
             <span className="text-[10px] font-bold uppercase tracking-wider text-[#126B3A] mt-2 hidden lg:block font-mono bg-[#EAF5EC] px-2.5 py-0.5 rounded-full border border-[#126B3A]/20">
-              AI Translates
+              Agronomic Rules & Local Physics
             </span>
           </div>
 

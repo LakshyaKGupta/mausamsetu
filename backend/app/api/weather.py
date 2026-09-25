@@ -104,6 +104,9 @@ async def get_today_weather(panchayat_id: int, db: Session = Depends(get_db)):
         model_reliability=prediction.prediction_interval.reliability_status.value,
         provenance_stage=prediction.provenance.pipeline_stage.value,
         source_name=prediction.provenance.source_name,
+        forecast_issued_at="09:00 IST",
+        data_updated_at="10:30 AM",
+        valid_until="Tomorrow 09:00 IST",
     )
 
 

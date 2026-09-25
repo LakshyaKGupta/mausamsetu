@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom'
 import { LogOut, MapPin } from 'lucide-react'
+import { PWAInstallBanner } from '../components/shared/PWAInstallBanner'
 import type { Language } from '../types'
 
 export interface AppOutletContext {
@@ -110,6 +111,9 @@ export const AppLayout: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#F7FAF7] flex flex-col font-sans">
+      {/* PWA Install Notification Banner (Dismissable, shown only if not installed) */}
+      <PWAInstallBanner lang={lang} variant="banner" />
+
       {/* ── Single Unified Navigation Bar ── */}
       <header className="bg-white/95 backdrop-blur-md border-b border-[#E2E8E4] sticky top-0 z-40 shadow-xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-3">
@@ -156,8 +160,11 @@ export const AppLayout: React.FC = () => {
             </div>
           </div>
 
-          {/* Right Controls: Language Choice Switcher & User Profile / Logout */}
+          {/* Right Controls: Install App Button, Language Choice Switcher & User Profile / Logout */}
           <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+            {/* Install PWA App Button */}
+            <PWAInstallBanner lang={lang} variant="button" />
+
             {/* Language Choice Switcher */}
             <div className="flex items-center bg-[#F2F5F2] border border-[#E2E8E4] p-1 rounded-xl shadow-2xs">
               {LANGUAGES.map(({ code, label }) => (

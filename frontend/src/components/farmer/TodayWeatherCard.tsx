@@ -108,17 +108,22 @@ export const TodayWeatherCard: React.FC<TodayWeatherCardProps> = ({
   return (
     <div className="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-sm space-y-5">
       
-      {/* Card Header */}
-      <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+      {/* Card Header with Freshness Indicator */}
+      <div className="flex items-center justify-between border-b border-slate-100 pb-3 flex-wrap gap-2">
         <div className="flex items-center gap-2">
-          <span className="w-2.5 h-2.5 rounded-full bg-blue-600" />
+          <span className="w-2.5 h-2.5 rounded-full bg-blue-600 animate-pulse" />
           <h3 className="text-base sm:text-lg font-bold text-slate-900">
             {t.title}
           </h3>
         </div>
-        <span className="text-xs font-semibold text-blue-700 bg-blue-50 border border-blue-200/60 px-2.5 py-0.5 rounded-full">
-          24h Forecast
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="text-[11px] font-medium text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
+            ● अपडेटेड {weather.data_updated_at || '10:30 AM'}
+          </span>
+          <span className="text-xs font-semibold text-blue-700 bg-blue-50 border border-blue-200/60 px-2.5 py-0.5 rounded-full">
+            24h पूर्वानुमान
+          </span>
+        </div>
       </div>
 
       {/* Main Temperature & Condition Display */}

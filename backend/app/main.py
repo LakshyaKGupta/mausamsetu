@@ -3,7 +3,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import auth, advisories, weather, panchayats, chatbot
+from app.api import auth, advisories, weather, panchayats, chatbot, geography, field_reports, officers
 from app.config import settings
 from app.db.session import Base, engine
 
@@ -29,9 +29,12 @@ app.add_middleware(
 
 # Routers
 app.include_router(auth.router)
+app.include_router(geography.router)
 app.include_router(panchayats.router)
 app.include_router(weather.router)
 app.include_router(advisories.router)
+app.include_router(officers.router)
+app.include_router(field_reports.router)
 app.include_router(chatbot.router)
 
 

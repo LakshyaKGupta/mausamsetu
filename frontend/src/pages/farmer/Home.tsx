@@ -5,6 +5,8 @@ import { TodayWeatherCard } from '@/components/farmer/TodayWeatherCard'
 import { TomorrowForecastCard } from '@/components/farmer/TomorrowForecastCard'
 import { CropAdvisoryCard } from '@/components/farmer/CropAdvisoryCard'
 import { VoiceAssistantCard } from '@/components/farmer/VoiceAssistantCard'
+import { FarmerNav } from '@/components/farmer/FarmerNav'
+import { PWAInstallBanner } from '@/components/shared/PWAInstallBanner'
 import { weatherApi, advisoryApi, chatbotApi } from '@/api/client'
 import type { Language, WeatherSummary, Advisory, ChatbotMessage } from '@/types'
 
@@ -124,10 +126,17 @@ export default function FarmerHome() {
   }
 
   return (
-    <div className="flex-1 bg-slate-50 text-slate-900 flex flex-col font-sans">
+    <div className="flex-1 bg-slate-50 text-slate-900 flex flex-col font-sans pb-20 md:pb-6">
+      <FarmerNav lang={lang} />
+
       {/* Responsive Application Shell */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-7">
         
+        {/* PWA App Install Banner Card */}
+        <div className="mb-5">
+          <PWAInstallBanner lang={lang} variant="card" />
+        </div>
+
         {/* Responsive Grid: Single-column on mobile, Two-column on desktop */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6 items-start">
           

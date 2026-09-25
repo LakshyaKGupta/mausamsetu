@@ -102,8 +102,11 @@ class Farmer(Base):
     name = Column(String(200), nullable=False)
     phone = Column(String(15), unique=True, nullable=False, index=True)
     preferred_language = Column(Enum(Language), default=Language.hi, nullable=False)
-    crops = Column(JSON, default=list)  # List of crop names: ["wheat", "cotton"]
+    crops = Column(JSON, default=list)  # List of crop names: ["soybean", "cotton"]
     land_area_acres = Column(Float, nullable=True)
+    state = Column(String(100), default="Maharashtra", nullable=True)
+    district = Column(String(200), default="Nagpur", nullable=True)
+    block = Column(String(200), default="Kalmeshwar", nullable=True)
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=func.now())
 
@@ -140,6 +143,7 @@ class Advisory(Base):
     panchayat_id = Column(Integer, ForeignKey("panchayats.id"), nullable=False, index=True)
     officer_id = Column(Integer, ForeignKey("officers.id"), nullable=True)
     crop = Column(String(100), nullable=False)
+    crop_stage = Column(String(100), default="Vegetative Stage", nullable=True)
     advisory_date = Column(DateTime, nullable=False, index=True)
 
     # Multilingual advisory content
@@ -147,8 +151,13 @@ class Advisory(Base):
     content_hi = Column(Text, nullable=False)
     content_mr = Column(Text, nullable=True)
 
-    # ML metadata
+    # ML metadata & Baseline Comparison
     confidence_score = Column(Float, nullable=False)   # 0–1
+    baseline_rainfall_mm = Column(Float, default=4.5, nullable=True)
+    predicted_rainfall_mm = Column(Float, default=3.8, nullable=True)
+    model_diff_mm = Column(Float, default=-0.7, nullable=True)
+    reliability_tier = Column(String(50), default="HIGH", nullable=True)
+    terrain_factors = Column(JSON, nullable=True)
     ml_explanation = Column(JSON, nullable=True)        # Key features + values
     weather_snapshot = Column(JSON, nullable=True)      # Weather used for generation
     is_imd_fallback = Column(Boolean, default=False)    # True if ML was low confidence
@@ -175,6 +184,7 @@ class Approval(Base):
     advisory_id = Column(Integer, ForeignKey("advisories.id"), nullable=False, index=True)
     officer_id = Column(Integer, ForeignKey("officers.id"), nullable=False)
     action = Column(Enum(ApprovalAction), nullable=False)
+    reason_category = Column(String(100), nullable=True)
     note = Column(Text, nullable=True)
     modified_content_hi = Column(Text, nullable=True)  # Officer's edited text
     modified_content_en = Column(Text, nullable=True)
@@ -199,3 +209,22 @@ class ChatbotSession(Base):
 
     # Relationships
     farmer = relationship("Farmer", back_populates="chatbot_sessions")
+
+
+class FieldReport(Base):
+    __tablename__ = "field_reports"
+
+    id = Column(Integer, primary_key=True, index=True)
+    officer_id = Column(Integer, ForeignKey("officers.id"), nullable=False, index=True)
+    panchayat_id = Column(Integer, ForeignKey("panchayats.id"), nullable=False, index=True)
+    crop = Column(String(100), nullable=False)
+    observation_type = Column(String(100), nullable=False)  # crop_stress, pest_reported, drainage_blocked, forecast_divergence, sensor_drift
+    severity = Column(String(50), default="medium", nullable=False)  # low, medium, high, critical
+    description = Column(Text, nullable=False)
+    photo_url = Column(String(500), nullable=True)
+    created_at = Column(DateTime, default=func.now(), index=True)
+
+    # Relationships
+    officer = relationship("Officer")
+    panchayat = relationship("Panchayat")
+

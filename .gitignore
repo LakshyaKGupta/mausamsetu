@@ -56,8 +56,11 @@ dist-ssr/
 *.webp
 !frontend/public/**/*.png
 !frontend/public/**/*.webp
+!frontend/public/*.png
+!frontend/public/*.webp
 *.log
 *.db
+tasks/
 *.sqlite
 *.sqlite3
 ml/data/raw/*

@@ -41,8 +41,8 @@ export const DownscalingSection: React.FC = () => {
       title: '2. Terrain & Sensor Fusion',
       subtitle: 'Local Feature Calibration',
       desc: 'Our models integrate elevation data, valley slope angles, ridge aspect vectors, and local ground-station telemetry to account for orographic lift and rain-shadow effects.',
-      metric: '30m DEM',
-      metricLabel: 'Terrain Resolution',
+      metric: 'Topographic',
+      metricLabel: 'Terrain & Elevation',
     },
     {
       step: 3,
@@ -135,7 +135,7 @@ export const DownscalingSection: React.FC = () => {
             <div className="flex flex-wrap items-center justify-center gap-1.5 mb-3.5 max-w-sm">
               {[
                 { step: 1, label: '1. Regional 40km' },
-                { step: 2, label: '2. 30m DEM Physics' },
+                { step: 2, label: '2. Terrain & Station Fusion' },
                 { step: 3, label: '3. Field Precision' },
               ].map((s) => (
                 <button
@@ -187,7 +187,7 @@ export const DownscalingSection: React.FC = () => {
                         ? 'bg-amber-50 text-amber-700 border-amber-200'
                         : 'bg-emerald-50 text-emerald-800 border-emerald-200'
                     }`}>
-                      {activeStep === 1 ? 'Regional 40km' : activeStep === 2 ? '30m DEM Physics' : 'Hyperlocal Live'}
+                      {activeStep === 1 ? 'Regional 40km' : activeStep === 2 ? 'Terrain & Station Fusion' : 'Hyperlocal Live'}
                     </span>
                   </div>
                 </div>
@@ -243,7 +243,7 @@ export const DownscalingSection: React.FC = () => {
                       </motion.div>
                     )}
 
-                    {/* Screen Step 2: 30m DEM Physics & Sensor Calibration */}
+                    {/* Screen Step 2: Terrain Physics & Sensor Calibration */}
                     {activeStep === 2 && (
                       <motion.div
                         key="screen-step-2"
@@ -256,7 +256,7 @@ export const DownscalingSection: React.FC = () => {
                         <div className="p-3 rounded-2xl bg-gradient-to-br from-[#0B4F2A] to-[#126B3A] text-white shadow-sm">
                           <div className="flex items-center justify-between text-[9px] font-mono text-emerald-200">
                             <span>Terrain Mesh</span>
-                            <span className="px-1.5 py-0.5 rounded bg-white/20 text-white font-bold">30m DEM Resolution</span>
+                            <span className="px-1.5 py-0.5 rounded bg-white/20 text-white font-bold">Topographic Calibration</span>
                           </div>
                           <p className="text-lg font-black mt-1">Orographic Lift Analysis</p>
                           <p className="text-[10px] text-emerald-100 mt-0.5">Elevation gradient: 295m ➔ 375m</p>
