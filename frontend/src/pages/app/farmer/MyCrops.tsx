@@ -19,6 +19,7 @@ import { FarmerNav } from '@/components/farmer/FarmerNav'
 import { farmerApi } from '@/api/client'
 import { cn } from '@/lib/utils'
 import type { Language } from '@/types'
+import { resolvePanchayatDetails } from '@/utils/panchayat'
 
 const CROPS_KEY = 'mausamsetu_crops'
 
@@ -205,9 +206,16 @@ export default function FarmerMyCropsPage() {
   const [newDays, setNewDays] = useState('30')
   const [newArea, setNewArea] = useState('2')
 
+  const farmerData = (() => {
+    try {
+      return JSON.parse(localStorage.getItem('mausamsetu_farmer') || '{}')
+    } catch { return {} }
+  })()
+  const gpDetails = resolvePanchayatDetails(outlet?.selectedLocation, farmerData, lang)
+
   const activeLat = outlet?.selectedLocation?.lat || 21.282
   const activeLon = outlet?.selectedLocation?.lon || 78.895
-  const locationName = outlet?.selectedLocation?.name || 'Nagpur'
+  const locationName = gpDetails.panchayatName
 
   // Fetch analysis for each crop
   const fetchAnalysis = async (crop: SavedCrop) => {
@@ -271,15 +279,18 @@ export default function FarmerMyCropsPage() {
       <FarmerNav lang={lang} />
 
       <div className="max-w-2xl mx-auto px-4 pt-4 space-y-4">
-        {/* Header */}
+        {/* Header with Gram Panchayat Highlight */}
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-lg font-bold text-slate-900">{t.title}</h1>
-            <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium">
-              <MapPin size={12} />
-              <span>{locationName}</span>
-              <span>·</span>
-              <span>{t.subtitle}</span>
+            <div className="flex flex-wrap items-center gap-1.5 text-xs mt-1">
+              <span className="font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-lg border border-emerald-200">
+                🏛️ {gpDetails.heroTitle}
+              </span>
+              <span className="text-slate-400">·</span>
+              <span className="text-slate-500 font-medium">{gpDetails.districtName}</span>
+              <span className="text-slate-400">·</span>
+              <span className="text-slate-500 font-medium">{t.subtitle}</span>
             </div>
           </div>
           <button

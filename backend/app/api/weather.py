@@ -489,15 +489,18 @@ async def reverse_geocode(
                 "state": best_p.state,
                 "distance_km": round(min_dist_km, 2),
             }
-            # If nominatim couldn't find a village name, use nearest panchayat
-            if not result.get("village") and min_dist_km < 30.0:
-                result["village"] = best_p.name
-                result["taluka"] = best_p.block
-                result["district"] = best_p.district
-                result["state"] = best_p.state
-                result["name"] = best_p.name
-                result["display_label"] = f"{best_p.name}, {best_p.block} · {best_p.district}"
-                result["source"] = "database_nearest"
+            # Set prominent top-level Gram Panchayat attributes
+            result["panchayat"] = best_p.name
+            result["panchayat_id"] = best_p.id
+            result["panchayat_block"] = best_p.block
+            result["panchayat_district"] = best_p.district
+            result["panchayat_distance_km"] = round(min_dist_km, 2)
+            result["panchayat_label"] = f"ग्राम पंचायत {best_p.name}"
+
+            if min_dist_km < 35.0:
+                result["display_label"] = f"ग्रा.पं. {best_p.name} ({result.get('name', best_p.name)}) · {best_p.district}"
+            else:
+                result["display_label"] = f"ग्रा.पं. {best_p.name} · {best_p.district}"
     except Exception:
         pass
 
@@ -512,11 +515,41 @@ async def geocode_search(
     q: str = Query(..., min_length=2, description="Search query for location"),
     db: Session = Depends(get_db),
 ):
-    """Search locations across India using Open-Meteo Geocoding API or reverse geocoding if coordinates provided."""
+    """Search Gram Panchayats and locations across India, prioritizing official Gram Panchayats."""
     import httpx
     import re
 
-    # Check if query is latitude, longitude
+    results = []
+
+    # 1. First priority: Search official database Gram Panchayats
+    try:
+        matched_panchayats = db.query(Panchayat).filter(
+            (Panchayat.name.ilike(f"%{q}%")) |
+            (Panchayat.block.ilike(f"%{q}%")) |
+            (Panchayat.district.ilike(f"%{q}%"))
+        ).limit(8).all()
+
+        for p in matched_panchayats:
+            results.append({
+                "name": f"ग्रा.पं. {p.name}",
+                "panchayat": p.name,
+                "panchayat_id": p.id,
+                "admin1": p.state or "Maharashtra",
+                "admin2": p.district or "Nagpur",
+                "admin3": p.block or "Kalmeshwar",
+                "lat": p.lat,
+                "lon": p.lng,
+                "elevation_m": p.elevation_m or 300.0,
+                "country": "India",
+                "population": None,
+                "feature_code": "PPL",
+                "is_panchayat": True,
+                "display_label": f"🏛️ ग्राम पंचायत {p.name} · {p.block}, {p.district}",
+            })
+    except Exception:
+        pass
+
+    # 2. Check if query is latitude, longitude
     coord_match = re.match(r"^([-+]?\d{1,2}(?:\.\d+)?)[,\s]+([-+]?\d{1,3}(?:\.\d+)?)$", q.strip())
     if coord_match:
         try:
@@ -526,6 +559,8 @@ async def geocode_search(
                 rev = await reverse_geocode(lat=clat, lon=clon, lang="en", db=db)
                 return [{
                     "name": rev["name"],
+                    "panchayat": rev.get("panchayat", rev["name"]),
+                    "panchayat_id": rev.get("panchayat_id"),
                     "admin1": rev["state"],
                     "admin2": rev["district"],
                     "admin3": rev["taluka"],
@@ -535,31 +570,45 @@ async def geocode_search(
                     "country": rev.get("country", "India"),
                     "population": None,
                     "feature_code": "PPL",
+                    "display_label": rev.get("display_label", f"GPS: {clat:.4f}, {clon:.4f}"),
                 }]
         except Exception:
             pass
 
-    results = []
+    # 3. Supplemental search via Open-Meteo for broader Indian geography
     try:
         async with httpx.AsyncClient(verify=False, timeout=5.0) as client:
             resp = await client.get(
                 "https://geocoding-api.open-meteo.com/v1/search",
-                params={"name": q, "count": 10, "language": "en", "country": "IN"},
+                params={"name": q, "count": 6, "language": "en", "country": "IN"},
             )
             if resp.status_code == 200:
                 data = resp.json()
                 for r in data.get("results", []):
+                    # Find nearest GP for this location if available
+                    rlat = r.get("latitude")
+                    rlon = r.get("longitude")
+                    gp_name = r.get("name")
+                    try:
+                        p_match = db.query(Panchayat).filter(Panchayat.name.ilike(f"%{gp_name}%")).first()
+                        if p_match:
+                            gp_name = p_match.name
+                    except Exception:
+                        pass
+
                     results.append({
                         "name": r.get("name", ""),
+                        "panchayat": gp_name,
                         "admin1": r.get("admin1", ""),   # state
                         "admin2": r.get("admin2", ""),   # district
                         "admin3": r.get("admin3", ""),   # block/taluka
-                        "lat": r.get("latitude"),
-                        "lon": r.get("longitude"),
+                        "lat": rlat,
+                        "lon": rlon,
                         "elevation_m": r.get("elevation"),
                         "country": r.get("country", "India"),
                         "population": r.get("population"),
                         "feature_code": r.get("feature_code", ""),
+                        "display_label": f"{r.get('name')} · {r.get('admin2')}" if r.get('admin2') else r.get('name', ''),
                     })
     except Exception:
         pass

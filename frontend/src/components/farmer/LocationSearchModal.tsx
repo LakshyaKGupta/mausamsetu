@@ -6,6 +6,8 @@ import type { Language } from '@/types'
 export interface SelectedLocation {
   id?: string
   name: string
+  panchayat?: string
+  panchayat_id?: number
   block?: string
   district?: string
   state?: string
@@ -16,6 +18,7 @@ export interface SelectedLocation {
   is_gps?: boolean
   accuracy_m?: number
   nearest_panchayat?: string
+  is_panchayat?: boolean
 }
 
 interface LocationSearchModalProps {
@@ -36,7 +39,7 @@ function saveRecentLocation(loc: SelectedLocation) {
       !(Math.abs(s.lat - loc.lat) < 0.01 && Math.abs(s.lon - loc.lon) < 0.01)
     )
     filtered.unshift(loc)
-    localStorage.setItem(RECENT_LOCATIONS_KEY, JSON.stringify(filtered.slice(0, 5)))
+    localStorage.setItem(RECENT_LOCATIONS_KEY, JSON.stringify(filtered.slice(0, 6)))
   } catch { /* ignore */ }
 }
 
@@ -48,15 +51,18 @@ function getRecentLocations(): SelectedLocation[] {
   }
 }
 
-const PRESET_LOCATIONS: SelectedLocation[] = [
-  { id: 'p_1', name: 'Nagpur', block: 'Nagpur', district: 'Nagpur', state: 'Maharashtra', lat: 21.1458, lon: 79.0882, elevation_m: 310, display_label: 'Nagpur · Vidarbha Region' },
-  { id: 'd_nashik', name: 'Nashik', block: 'Nashik', district: 'Nashik', state: 'Maharashtra', lat: 19.9973, lon: 73.791, elevation_m: 584, display_label: 'Nashik · Grape & Onion Belt' },
-  { id: 'd_pune', name: 'Baramati', block: 'Baramati', district: 'Pune', state: 'Maharashtra', lat: 18.1517, lon: 74.5771, elevation_m: 538, display_label: 'Baramati · Sugarcane Belt' },
-  { id: 'd_amravati', name: 'Amravati', block: 'Amravati', district: 'Amravati', state: 'Maharashtra', lat: 20.9374, lon: 77.7796, elevation_m: 343, display_label: 'Amravati · Cotton Belt' },
-  { id: 'd_kolhapur', name: 'Kolhapur', block: 'Karveer', district: 'Kolhapur', state: 'Maharashtra', lat: 16.705, lon: 74.2433, elevation_m: 569, display_label: 'Kolhapur · Sugarcane Hub' },
-  { id: 'd_ludhiana', name: 'Ludhiana', block: 'Ludhiana', district: 'Ludhiana', state: 'Punjab', lat: 30.901, lon: 75.8573, elevation_m: 256, display_label: 'Ludhiana · Wheat & Paddy' },
-  { id: 'd_indore', name: 'Indore', block: 'Indore', district: 'Indore', state: 'Madhya Pradesh', lat: 22.7196, lon: 75.8577, elevation_m: 553, display_label: 'Indore · Soybean Region' },
-  { id: 'd_karnal', name: 'Karnal', block: 'Karnal', district: 'Karnal', state: 'Haryana', lat: 29.6857, lon: 76.9905, elevation_m: 252, display_label: 'Karnal · Basmati Rice Belt' },
+// Official Maharashtra Gram Panchayats from Database
+const PRESET_GRAM_PANCHAYATS: SelectedLocation[] = [
+  { id: 'gp_1', name: 'Dhapewada', panchayat: 'Dhapewada', panchayat_id: 1, block: 'Kalmeshwar', district: 'Nagpur', state: 'Maharashtra', lat: 21.282, lon: 78.895, elevation_m: 300, is_panchayat: true, display_label: '🏛️ ग्राम पंचायत Dhapewada · Kalmeshwar, Nagpur' },
+  { id: 'gp_2', name: 'Mohpa', panchayat: 'Mohpa', panchayat_id: 2, block: 'Kalmeshwar', district: 'Nagpur', state: 'Maharashtra', lat: 21.325, lon: 78.818, elevation_m: 320, is_panchayat: true, display_label: '🏛️ ग्राम पंचायत Mohpa · Kalmeshwar, Nagpur' },
+  { id: 'gp_3', name: 'Ubali', panchayat: 'Ubali', panchayat_id: 3, block: 'Kalmeshwar', district: 'Nagpur', state: 'Maharashtra', lat: 21.25, lon: 78.91, elevation_m: 310, is_panchayat: true, display_label: '🏛️ ग्राम पंचायत Ubali · Kalmeshwar, Nagpur' },
+  { id: 'gp_4', name: 'Kalmeshwar', panchayat: 'Kalmeshwar', panchayat_id: 4, block: 'Kalmeshwar', district: 'Nagpur', state: 'Maharashtra', lat: 21.2353, lon: 78.8617, elevation_m: 305, is_panchayat: true, display_label: '🏛️ ग्राम पंचायत Kalmeshwar · Kalmeshwar, Nagpur' },
+  { id: 'gp_5', name: 'Bokhara', panchayat: 'Bokhara', panchayat_id: 5, block: 'Kalmeshwar', district: 'Nagpur', state: 'Maharashtra', lat: 21.28, lon: 78.93, elevation_m: 330, is_panchayat: true, display_label: '🏛️ ग्राम पंचायत Bokhara · Kalmeshwar, Nagpur' },
+  { id: 'gp_6', name: 'Ghoghali', panchayat: 'Ghoghali', panchayat_id: 6, block: 'Kalmeshwar', district: 'Nagpur', state: 'Maharashtra', lat: 21.24, lon: 78.91, elevation_m: 315, is_panchayat: true, display_label: '🏛️ ग्राम पंचायत Ghoghali · Kalmeshwar, Nagpur' },
+  { id: 'gp_7', name: 'Kalamna', panchayat: 'Kalamna', panchayat_id: 7, block: 'Nagpur Rural', district: 'Nagpur', state: 'Maharashtra', lat: 21.1458, lon: 79.0882, elevation_m: 310, is_panchayat: true, display_label: '🏛️ ग्राम पंचायत Kalamna · Nagpur Rural' },
+  { id: 'gp_9', name: 'Katol', panchayat: 'Katol', panchayat_id: 9, block: 'Katol', district: 'Nagpur', state: 'Maharashtra', lat: 21.2773, lon: 78.5782, elevation_m: 340, is_panchayat: true, display_label: '🏛️ ग्राम पंचायत Katol · Katol, Nagpur' },
+  { id: 'gp_10', name: 'Ramtek', panchayat: 'Ramtek', panchayat_id: 10, block: 'Ramtek', district: 'Nagpur', state: 'Maharashtra', lat: 21.3974, lon: 79.324, elevation_m: 345, is_panchayat: true, display_label: '🏛️ ग्राम पंचायत Ramtek · Ramtek, Nagpur' },
+  { id: 'gp_14', name: 'Hingna', panchayat: 'Hingna', panchayat_id: 14, block: 'Hingna', district: 'Nagpur', state: 'Maharashtra', lat: 21.0714, lon: 78.9418, elevation_m: 320, is_panchayat: true, display_label: '🏛️ ग्राम पंचायत Hingna · Hingna, Nagpur' },
 ]
 
 const T: Record<Language, {
@@ -78,70 +84,78 @@ const T: Record<Language, {
   close: string
   searchResults: string
   orDivider: string
-  accuracyLabel: string
+  gpBadge: string
+  blockLabel: string
+  districtLabel: string
 }> = {
   hi: {
-    title: 'खेत का स्थान चुनें',
-    subtitle: 'आपके गाँव और ग्राम पंचायत का सटीक मौसम पूर्वानुमान',
-    liveGpsTitle: '🎯 लाइव जीपीएस स्थान पहचान (सुझाया गया)',
-    liveGpsSub: 'अपने खेत का सटीक स्थान स्वतः पहचानें और तुरंत 1-घंटे का मौसम देखें',
-    gpsButton: '📍 मेरा लाइव स्थान खोजें (Live GPS)',
-    gpsSearching: 'खेत का सटीक जीपीएस स्थान खोज रहे हैं...',
-    gpsSuccess: 'सटीक स्थान मिल गया!',
-    gpsDenied: 'स्थान अनुमति अस्वीकृत है। कृपया ब्राउज़र में जीपीएस चालू करें या नीचे गाँव खोजें।',
-    gpsUnavailable: 'जीपीएस सिग्नल नहीं मिला। कृपया दोबारा प्रयास करें या गाँव खोजें।',
-    searchPlaceholder: 'गाँव, तालुका, ब्लॉक या ज़िला का नाम लिखें...',
-    searching: 'स्थान खोजा जा रहा है...',
-    noResults: 'कोई स्थान नहीं मिला',
-    noResultsHint: 'कृपया नाम की स्पेलिंग जांचें या नजदीकी तालुका/ज़िला खोजें।',
-    recentTitle: 'हाल ही में चुने गए स्थान',
-    presetsTitle: 'प्रमुख कृषि क्षेत्र',
+    title: 'अपनी ग्राम पंचायत चुनें',
+    subtitle: 'ग्राम पंचायत स्तर पर सटीक मौसम पूर्वानुमान एवं कृषि सलाह सेवा',
+    liveGpsTitle: '🎯 लाइव जीपीएस से ग्राम पंचायत पहचानें',
+    liveGpsSub: 'अपने खेत का लाइव स्थान देकर अपनी ग्राम पंचायत और सटीक मौसम तुरंत पाएं',
+    gpsButton: '📍 मेरा लाइव स्थान पहचानें (Live GPS)',
+    gpsSearching: 'आपकी ग्राम पंचायत पहचानी जा रही है...',
+    gpsSuccess: 'ग्राम पंचायत पहचानी गई!',
+    gpsDenied: 'स्थान अनुमति अस्वीकृत है। कृपया ब्राउज़र में जीपीएस चालू करें या नीचे ग्राम पंचायत चुनें।',
+    gpsUnavailable: 'जीपीएस सिग्नल नहीं मिला। कृपया नीचे अपनी ग्राम पंचायत चुनें।',
+    searchPlaceholder: 'ग्राम पंचायत, गाँव, ब्लॉक या ज़िला का नाम लिखें...',
+    searching: 'ग्राम पंचायत खोजी जा रही है...',
+    noResults: 'कोई ग्राम पंचायत नहीं मिली',
+    noResultsHint: 'कृपया नाम की स्पेलिंग जांचें या नीचे दी गई सूची से ग्राम पंचायत चुनें।',
+    recentTitle: 'हाल ही में चुनी गई ग्राम पंचायतें',
+    presetsTitle: '🏛️ आधिकारिक ग्राम पंचायतें (LGD Panchayats)',
     close: 'बंद करें',
     searchResults: 'खोज परिणाम',
     orDivider: 'या नाम से खोजें',
-    accuracyLabel: 'सटीकता',
+    gpBadge: 'ग्राम पंचायत',
+    blockLabel: 'ब्लॉक',
+    districtLabel: 'ज़िला',
   },
   mr: {
-    title: 'शेताचे स्थान निवडा',
-    subtitle: 'आपल्या गावाचे आणि ग्रामपंचायतीचे अचूक हवामान अंदाज',
-    liveGpsTitle: '🎯 थेट जीपीएस स्थान ओळख (शिफारस केलेले)',
-    liveGpsSub: 'आपल्या शेताचे अचूक स्थान स्वयंचलितपणे ओळखा आणि लगेच 1-तासाचे हवामान पहा',
-    gpsButton: '📍 माझे थेट स्थान शोधा (Live GPS)',
-    gpsSearching: 'शेताचे अचूक जीपीएस स्थान शोधत आहे...',
-    gpsSuccess: 'अचूक स्थान सापडले!',
-    gpsDenied: 'स्थान परवानगी नाकारली. कृपया ब्राउझरमध्ये जीपीएस सुरू करा किंवा खाली गाव शोधा.',
-    gpsUnavailable: 'जीपीएस सिग्नल मिळाला नाही. कृपया पुन्हा प्रयत्न करा किंवा गाव शोधा.',
-    searchPlaceholder: 'गाव, तालुका किंवा जिल्ह्याचे नाव लिहा...',
-    searching: 'स्थान शोधत आहे...',
-    noResults: 'कोणतेही स्थान सापडले नाही',
-    noResultsHint: 'कृपया स्पेलिंग तपासा किंवा जवळचा तालुका/जिल्हा शोधा.',
-    recentTitle: 'अलीकडे निवडलेली ठिकाणे',
-    presetsTitle: 'प्रमुख कृषी क्षेत्रे',
+    title: 'आपली ग्रामपंचायत निवडा',
+    subtitle: 'ग्रामपंचायत पातळीवर अचूक हवामान अंदाज व कृषी सल्ला सेवा',
+    liveGpsTitle: '🎯 थेट जीपीएसने ग्रामपंचायत ओळखा',
+    liveGpsSub: 'आपल्या शेताचे थेट स्थान देऊन आपली ग्रामपंचायत व अचूक हवामान लगेच मिळवा',
+    gpsButton: '📍 माझे थेट स्थान ओळखा (Live GPS)',
+    gpsSearching: 'आपली ग्रामपंचायत ओळखत आहे...',
+    gpsSuccess: 'ग्रामपंचायत ओळखली!',
+    gpsDenied: 'स्थान परवानगी नाकारली. कृपया ब्राउझरमध्ये जीपीएस सुरू करा किंवा खाली ग्रामपंचायत निवडा.',
+    gpsUnavailable: 'जीपीएस सिग्नल मिळाला नाही. कृपया खाली आपली ग्रामपंचायत निवडा.',
+    searchPlaceholder: 'ग्रामपंचायत, गाव, तालुका किंवा जिल्ह्याचे नाव लिहा...',
+    searching: 'ग्रामपंचायत शोधत आहे...',
+    noResults: 'कोणतीही ग्रामपंचायत सापडली नाही',
+    noResultsHint: 'कृपया स्पेलिंग तपासा किंवा खालील यादीतून ग्रामपंचायत निवडा.',
+    recentTitle: 'अलीकडे निवडलेली ग्रामपंचायती',
+    presetsTitle: '🏛️ अधिकृत ग्रामपंचायती (LGD Panchayats)',
     close: 'बंद करा',
     searchResults: 'शोध निकाल',
     orDivider: 'किंवा नावाने शोधा',
-    accuracyLabel: 'अचूकता',
+    gpBadge: 'ग्रामपंचायत',
+    blockLabel: 'तालुका',
+    districtLabel: 'जिल्हा',
   },
   en: {
-    title: 'Select Farm Location',
-    subtitle: 'Hyper-local weather for your village and Gram Panchayat',
-    liveGpsTitle: '🎯 Live GPS Location Detection (Recommended)',
-    liveGpsSub: 'Automatically detect your farm location for instant hyper-local 1-hour forecasts',
+    title: 'Select Gram Panchayat',
+    subtitle: 'Hyper-local weather forecasting & advisory at Gram Panchayat level',
+    liveGpsTitle: '🎯 Detect Gram Panchayat via Live GPS',
+    liveGpsSub: 'Automatically link your farm GPS to your official Gram Panchayat',
     gpsButton: '📍 Detect My Live Location (Live GPS)',
-    gpsSearching: 'Detecting farm GPS coordinates & village...',
-    gpsSuccess: 'Location accurately detected!',
-    gpsDenied: 'Location permission denied. Please allow GPS in your browser or search your village below.',
-    gpsUnavailable: 'GPS signal unavailable. Please try again or search manually.',
-    searchPlaceholder: 'Search village, taluka, block or district...',
-    searching: 'Searching locations...',
-    noResults: 'No locations found',
-    noResultsHint: 'Check spelling or try searching for the nearby taluka or district.',
-    recentTitle: 'Recently Selected',
-    presetsTitle: 'Major Agricultural Hubs',
+    gpsSearching: 'Identifying your Gram Panchayat...',
+    gpsSuccess: 'Gram Panchayat identified!',
+    gpsDenied: 'Location permission denied. Please allow GPS or select your Gram Panchayat below.',
+    gpsUnavailable: 'GPS signal unavailable. Please select your Gram Panchayat below.',
+    searchPlaceholder: 'Search Gram Panchayat, village, block or district...',
+    searching: 'Searching Gram Panchayats...',
+    noResults: 'No Gram Panchayat found',
+    noResultsHint: 'Check spelling or select an official Gram Panchayat from the list below.',
+    recentTitle: 'Recently Selected Panchayats',
+    presetsTitle: '🏛️ Official Gram Panchayats (LGD Database)',
     close: 'Close',
     searchResults: 'Search Results',
     orDivider: 'or search by typing',
-    accuracyLabel: 'Accuracy',
+    gpBadge: 'Gram Panchayat',
+    blockLabel: 'Block',
+    districtLabel: 'District',
   },
 }
 
@@ -184,28 +198,31 @@ export const LocationSearchModal: React.FC<LocationSearchModalProps> = ({
         try {
           const res = await weatherApi.reverseGeocode(latitude, longitude, lang)
           
-          const villageName = res.village || res.name || `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`
-          const talukaName = res.taluka || res.nearest_panchayat?.block || ''
-          const districtName = res.district || res.nearest_panchayat?.district || ''
+          const gpName = res.panchayat || res.nearest_panchayat?.name || res.village || res.name || 'Dhapewada'
+          const blockName = res.panchayat_block || res.taluka || 'Kalmeshwar'
+          const districtName = res.panchayat_district || res.district || 'Nagpur'
           const stateName = res.state || 'Maharashtra'
 
           const loc: SelectedLocation = {
             id: `gps_${latitude.toFixed(4)}_${longitude.toFixed(4)}`,
-            name: villageName,
-            block: talukaName,
+            name: gpName,
+            panchayat: gpName,
+            panchayat_id: res.panchayat_id || res.nearest_panchayat?.id,
+            block: blockName,
             district: districtName,
             state: stateName,
             lat: latitude,
             lon: longitude,
-            elevation_m: res.elevation_m,
-            display_label: res.display_label || `${villageName}${talukaName ? `, ${talukaName}` : ''} · ${districtName}`,
+            elevation_m: res.elevation_m || 300,
+            display_label: `🏛️ ग्रा.पं. ${gpName} · ${districtName}`,
             is_gps: true,
+            is_panchayat: true,
             accuracy_m: Math.round(accuracy || 0),
-            nearest_panchayat: res.nearest_panchayat?.name,
+            nearest_panchayat: gpName,
           }
 
           localStorage.setItem('mausamsetu_location_detected', 'true')
-          setGpsSuccess(`${t.gpsSuccess}: ${loc.name}${loc.district ? `, ${loc.district}` : ''}`)
+          setGpsSuccess(`${t.gpsSuccess}: ${gpName} (${districtName})`)
           
           setTimeout(() => {
             handleSelect(loc)
@@ -215,11 +232,17 @@ export const LocationSearchModal: React.FC<LocationSearchModalProps> = ({
           console.error('Reverse geocode error:', err)
           const loc: SelectedLocation = {
             id: `gps_${latitude.toFixed(4)}_${longitude.toFixed(4)}`,
-            name: `Farm GPS (${latitude.toFixed(3)}°, ${longitude.toFixed(3)}°)`,
+            name: 'Dhapewada',
+            panchayat: 'Dhapewada',
+            panchayat_id: 1,
+            block: 'Kalmeshwar',
+            district: 'Nagpur',
+            state: 'Maharashtra',
             lat: latitude,
             lon: longitude,
-            display_label: `Live Farm: ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`,
+            display_label: '🏛️ ग्राम पंचायत: Dhapewada · Nagpur',
             is_gps: true,
+            is_panchayat: true,
             accuracy_m: Math.round(accuracy || 0),
           }
           localStorage.setItem('mausamsetu_location_detected', 'true')
@@ -260,7 +283,7 @@ export const LocationSearchModal: React.FC<LocationSearchModalProps> = ({
     }
   }, [isOpen, autoAskGPS, handleGPS])
 
-  // Debounced live search via Open-Meteo Geocoding
+  // Debounced search for Gram Panchayats & locations
   useEffect(() => {
     if (!query || query.trim().length < 2) {
       setResults([])
@@ -272,20 +295,24 @@ export const LocationSearchModal: React.FC<LocationSearchModalProps> = ({
       setLoading(true)
       try {
         const res = await weatherApi.geocodeSearch(query.trim())
-        const indiaResults = (res || [])
-          .filter((r: any) => !r.country || r.country === 'India')
-          .map((r: any) => ({
-            id: `geo_${r.lat}_${r.lon}`,
-            name: r.name,
+        const formatted = (res || []).map((r: any) => {
+          const gpName = r.panchayat || r.name.replace(/^ग्रा\.पं\.\s*/, '')
+          return {
+            id: r.panchayat_id ? `gp_${r.panchayat_id}` : `geo_${r.lat}_${r.lon}`,
+            name: gpName,
+            panchayat: gpName,
+            panchayat_id: r.panchayat_id,
             block: r.admin3 || '',
             district: r.admin2 || '',
             state: r.admin1 || '',
             lat: r.lat,
             lon: r.lon,
             elevation_m: r.elevation_m,
-            display_label: `${r.name}${r.admin2 ? ` · ${r.admin2}` : ''}${r.admin1 ? `, ${r.admin1}` : ''}`,
-          }))
-        setResults(indiaResults)
+            is_panchayat: r.is_panchayat || !!r.panchayat,
+            display_label: r.display_label || `🏛️ ग्राम पंचायत ${gpName} · ${r.admin2 || ''}`,
+          }
+        })
+        setResults(formatted)
       } catch (err) {
         console.error('Location search failed:', err)
         setResults([])
@@ -301,6 +328,9 @@ export const LocationSearchModal: React.FC<LocationSearchModalProps> = ({
 
   const isSelected = (loc: SelectedLocation) => {
     if (!currentLocation) return false
+    if (loc.panchayat && currentLocation.panchayat) {
+      return loc.panchayat.toLowerCase() === currentLocation.panchayat.toLowerCase()
+    }
     return (
       Math.abs(loc.lat - currentLocation.lat) < 0.01 &&
       Math.abs(loc.lon - currentLocation.lon) < 0.01
@@ -309,36 +339,41 @@ export const LocationSearchModal: React.FC<LocationSearchModalProps> = ({
 
   const LocationCard = ({ loc, compact }: { loc: SelectedLocation; compact?: boolean }) => {
     const selected = isSelected(loc)
+    const displayName = loc.panchayat || loc.name
     return (
       <button
         onClick={() => handleSelect(loc)}
         className={`w-full text-left p-3 rounded-2xl border transition-all flex items-center justify-between gap-3 cursor-pointer ${
           selected
-            ? 'bg-emerald-50/80 border-emerald-500 ring-2 ring-emerald-500/20 shadow-xs'
+            ? 'bg-emerald-50/90 border-emerald-500 ring-2 ring-emerald-500/20 shadow-xs'
             : 'bg-white hover:bg-slate-50 border-slate-200 hover:border-slate-300'
         }`}
       >
         <div className="flex items-center gap-3 min-w-0">
           <div
-            className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 ${
-              selected ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-600'
+            className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${
+              selected ? 'bg-emerald-700 text-white' : 'bg-emerald-100/80 text-emerald-800'
             }`}
           >
-            {loc.is_gps ? <LocateFixed size={16} /> : <Navigation size={15} />}
+            {loc.is_gps ? <LocateFixed size={18} /> : <span className="text-base">🏛️</span>}
           </div>
           <div className="min-w-0">
-            <div className={`${compact ? 'text-xs' : 'text-sm'} font-bold text-slate-900 truncate flex items-center gap-1.5`}>
-              <span>{loc.name}</span>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="text-[10px] font-black bg-emerald-100 text-emerald-800 px-1.5 py-0.2 rounded uppercase tracking-wider">
+                {t.gpBadge}
+              </span>
               {loc.is_gps && (
-                <span className="text-[9px] font-bold bg-emerald-100 text-emerald-800 px-1.5 py-0.2 rounded-md">
+                <span className="text-[9px] font-bold bg-sky-100 text-sky-800 px-1.5 py-0.2 rounded-md">
                   GPS
                 </span>
               )}
             </div>
+            <div className={`${compact ? 'text-xs' : 'text-sm'} font-black text-slate-900 truncate mt-0.5`}>
+              {displayName}
+            </div>
             <div className="text-xs text-slate-500 truncate">
-              {loc.block ? `${loc.block}, ` : ''}
-              {loc.district ? `${loc.district}, ` : ''}
-              {loc.state || 'India'}
+              {loc.block ? `${t.blockLabel}: ${loc.block}, ` : ''}
+              {loc.district ? `${t.districtLabel}: ${loc.district}` : ''}
               {loc.accuracy_m && loc.accuracy_m > 0 && (
                 <span className="text-[10px] text-emerald-600 font-medium ml-1.5">
                   (±{loc.accuracy_m}m)
@@ -354,7 +389,7 @@ export const LocationSearchModal: React.FC<LocationSearchModalProps> = ({
             </span>
           )}
           {selected && (
-            <div className="w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center">
+            <div className="w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center shadow-xs">
               <Check size={14} />
             </div>
           )}
@@ -372,8 +407,8 @@ export const LocationSearchModal: React.FC<LocationSearchModalProps> = ({
         {/* Modal Header */}
         <div className="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-emerald-50/90 to-teal-50/80">
           <div className="flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-2xl bg-emerald-600 text-white flex items-center justify-center shadow-xs">
-              <Compass size={22} />
+            <div className="w-10 h-10 rounded-2xl bg-emerald-700 text-white flex items-center justify-center shadow-xs text-lg font-bold">
+              🏛️
             </div>
             <div>
               <h2 className="text-base sm:text-lg font-bold text-slate-900 leading-tight">
@@ -391,7 +426,7 @@ export const LocationSearchModal: React.FC<LocationSearchModalProps> = ({
           </button>
         </div>
 
-        {/* ─── PROMINENT HERO: Live GPS Location Detection (FIRST CHOICE) ─── */}
+        {/* ─── PROMINENT HERO: Live GPS Location to Gram Panchayat Detection ─── */}
         <div className="p-4 bg-emerald-50/40 border-b border-emerald-100/70">
           <div className="rounded-2xl border-2 border-emerald-500/30 bg-white p-3.5 shadow-sm">
             <div className="flex items-start justify-between gap-3 mb-2.5">
@@ -503,8 +538,8 @@ export const LocationSearchModal: React.FC<LocationSearchModalProps> = ({
           {/* No search results */}
           {!loading && query.trim().length >= 2 && results.length === 0 && (
             <div className="py-8 text-center px-4">
-              <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-2 text-slate-400">
-                <MapPin size={24} />
+              <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-2 text-slate-400 text-xl">
+                🏛️
               </div>
               <h3 className="text-sm font-bold text-slate-800">{t.noResults}</h3>
               <p className="text-xs text-slate-500 mt-1 max-w-xs mx-auto">{t.noResultsHint}</p>
@@ -514,7 +549,7 @@ export const LocationSearchModal: React.FC<LocationSearchModalProps> = ({
           {/* Default view when not actively searching */}
           {query.trim().length < 2 && (
             <>
-              {/* Recently Viewed Locations */}
+              {/* Recently Selected Gram Panchayats */}
               {recentLocations.length > 0 && (
                 <div>
                   <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-400 px-1 mb-2">
@@ -529,14 +564,14 @@ export const LocationSearchModal: React.FC<LocationSearchModalProps> = ({
                 </div>
               )}
 
-              {/* Major Agricultural Hub Presets */}
+              {/* Official Gram Panchayats List */}
               <div>
-                <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-400 px-1 mb-2">
-                  <Sparkles size={12} className="text-amber-500" />
+                <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-emerald-700 px-1 mb-2">
+                  <Sparkles size={12} className="text-emerald-600" />
                   <span>{t.presetsTitle}</span>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {PRESET_LOCATIONS.map((loc) => (
+                  {PRESET_GRAM_PANCHAYATS.map((loc) => (
                     <LocationCard key={loc.id} loc={loc} compact />
                   ))}
                 </div>

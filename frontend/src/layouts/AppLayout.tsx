@@ -5,11 +5,16 @@ import { PWAInstallBanner } from '../components/shared/PWAInstallBanner'
 import { LocationSearchModal, type SelectedLocation } from '../components/farmer/LocationSearchModal'
 import type { Language } from '../types'
 
+import { resolvePanchayatDetails, type PanchayatDetails } from '../utils/panchayat'
+
 export interface AppOutletContext {
   lang: Language
   setLang: (lang: Language) => void
   panchayatName: string
+  blockName?: string
   districtName: string
+  lgdCode?: string
+  gpDetails?: PanchayatDetails
   userName: string
   selectedLocation?: SelectedLocation | null
   openLocationModal?: () => void
@@ -72,9 +77,11 @@ export const AppLayout: React.FC = () => {
     adminData.name ||
     (role === 'admin' ? 'District Admin' : role === 'officer' ? 'Field Officer' : 'Kisan')
 
-  // Dynamic location
-  let panchayatName = selectedLoc?.name || farmerData.panchayat || 'धापेवाड़ा'
-  let districtName = selectedLoc?.district || farmerData.district || officerData.district || adminData.district || 'नागपुर'
+  // Gram Panchayat details calculation
+  const gpDetails = resolvePanchayatDetails(selectedLoc, farmerData, lang)
+  let panchayatName = gpDetails.panchayatName
+  let districtName = gpDetails.districtName
+  let blockName = gpDetails.blockName
 
   if (role === 'officer') {
     panchayatName = officerData.block || 'कलमेश्वर'
@@ -83,14 +90,8 @@ export const AppLayout: React.FC = () => {
       lang === 'en' ? 'District HQ' : lang === 'mr' ? 'जिल्हा मुख्यालय' : 'ज़िला मुख्यालय'
   }
 
-  // Translated location names for display
+  // Translated location names for display with Gram Panchayat priority
   const getLocationDisplay = () => {
-    if (selectedLoc) {
-      if (selectedLoc.district && selectedLoc.name !== selectedLoc.district) {
-        return `${selectedLoc.name}, ${selectedLoc.district}`
-      }
-      return selectedLoc.name
-    }
     if (role === 'admin') {
       return lang === 'en'
         ? `Nagpur · District HQ`
@@ -98,32 +99,16 @@ export const AppLayout: React.FC = () => {
         ? `नागपूर · जिल्हा मुख्यालय`
         : `नागपुर · ज़िला मुख्यालय`
     }
-    if (lang === 'en') {
-      const p =
-        farmerData.panchayat ||
-        (role === 'officer' ? officerData.block || 'Kalmeshwar' : 'Dhapewada')
-      const d = districtName === 'नागपुर' || !districtName ? 'Nagpur' : districtName
-      return `${p}, ${d}`
-    } else if (lang === 'mr') {
-      const p =
-        panchayatName === 'Dhapewada'
-          ? 'धापेवाडा'
-          : panchayatName === 'Kalmeshwar'
-          ? 'कलमेश्वर'
-          : panchayatName
-      const d = districtName === 'Nagpur' ? 'नागपूर' : districtName
-      return `${p}, ${d}`
-    } else {
-      // Hindi default
-      const p =
-        panchayatName === 'Dhapewada'
-          ? 'धापेवाड़ा'
-          : panchayatName === 'Kalmeshwar'
-          ? 'कलमेश्वर'
-          : panchayatName
-      const d = districtName === 'Nagpur' ? 'नागपुर' : districtName
-      return `${p}, ${d}`
+
+    if (role === 'officer') {
+      const b = officerData.block || 'Kalmeshwar'
+      const bTranslated = lang === 'en' ? 'Kalmeshwar' : lang === 'mr' ? 'कळमेश्वर' : 'कलमेश्वर'
+      const dTranslated = lang === 'en' ? 'Nagpur' : lang === 'mr' ? 'नागपूर' : 'नागपुर'
+      return lang === 'en' ? `Sub-Div: ${bTranslated} · ${dTranslated}` : `🏛️ उप-विभाग: ${bTranslated} · ${dTranslated}`
     }
+
+    // Farmer role: Always prominently show Gram Panchayat
+    return gpDetails.navLabel
   }
 
   const handleLogout = () => {
@@ -252,7 +237,10 @@ export const AppLayout: React.FC = () => {
             lang,
             setLang: handleLanguageChange,
             panchayatName,
+            blockName,
             districtName,
+            lgdCode: gpDetails.lgdCode,
+            gpDetails,
             userName,
             selectedLocation: selectedLoc,
             openLocationModal: () => setShowLocationModal(true),

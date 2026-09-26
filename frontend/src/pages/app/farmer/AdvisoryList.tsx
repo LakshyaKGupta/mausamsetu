@@ -18,6 +18,7 @@ import type { Language } from '@/types'
 import { FarmerNav } from '@/components/farmer/FarmerNav'
 import { farmerApi } from '@/api/client'
 import { cn } from '@/lib/utils'
+import { resolvePanchayatDetails } from '@/utils/panchayat'
 
 interface AdviceItem {
   crop: string
@@ -79,9 +80,16 @@ export default function FarmerAdvisoryListPage() {
   const [expandedIdx, setExpandedIdx] = useState<number | null>(null)
   const t = T[lang] || T.hi
 
+  const farmerData = (() => {
+    try {
+      return JSON.parse(localStorage.getItem('mausamsetu_farmer') || '{}')
+    } catch { return {} }
+  })()
+  const gpDetails = resolvePanchayatDetails(outlet?.selectedLocation, farmerData, lang)
+
   const activeLat = outlet?.selectedLocation?.lat || 21.282
   const activeLon = outlet?.selectedLocation?.lon || 78.895
-  const locationName = outlet?.selectedLocation?.name || 'Nagpur'
+  const locationName = gpDetails.panchayatName
 
   // Load saved crops from localStorage
   const getSavedCrops = (): string => {
@@ -119,14 +127,17 @@ export default function FarmerAdvisoryListPage() {
       <FarmerNav lang={lang} />
 
       <div className="max-w-2xl mx-auto px-4 pt-4 space-y-4">
-        {/* Header */}
+        {/* Header with Gram Panchayat Highlight */}
         <div>
           <h1 className="text-lg font-bold text-slate-900">{t.title}</h1>
-          <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium">
-            <MapPin size={12} />
-            <span>{locationName}</span>
-            <span>·</span>
-            <span>{t.subtitle}</span>
+          <div className="flex flex-wrap items-center gap-1.5 text-xs mt-1">
+            <span className="font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-lg border border-emerald-200">
+              🏛️ {gpDetails.heroTitle}
+            </span>
+            <span className="text-slate-400">·</span>
+            <span className="text-slate-500 font-medium">{gpDetails.districtName}</span>
+            <span className="text-slate-400">·</span>
+            <span className="text-slate-500 font-medium">{t.subtitle}</span>
           </div>
         </div>
 

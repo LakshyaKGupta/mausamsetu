@@ -20,10 +20,11 @@ import {
   ShieldCheck,
 } from 'lucide-react'
 import { FarmerNav } from '@/components/farmer/FarmerNav'
-import { FarmerLocationMap } from '@/components/farmer/FarmerLocationMap'
+import { FarmerAnimatedWeatherMap } from '@/components/farmer/FarmerAnimatedWeatherMap'
 import { weatherApi, farmerApi } from '@/api/client'
 import type { Language } from '@/types'
 import type { SelectedLocation } from '@/components/farmer/LocationSearchModal'
+import { resolvePanchayatDetails } from '@/utils/panchayat'
 
 export interface AppOutletContext {
   lang: Language
@@ -172,22 +173,28 @@ export default function FarmerHome() {
   }
 
   const loc = getLocation()
+  const farmerData = (() => {
+    try {
+      return JSON.parse(localStorage.getItem('mausamsetu_farmer') || '{}')
+    } catch { return {} }
+  })()
+  const gpDetails = resolvePanchayatDetails(loc, farmerData, lang)
   const activeLat = loc?.lat || 21.282
   const activeLon = loc?.lon || 78.895
-  const locationName = loc?.name || outlet?.panchayatName || 'Nagpur'
+  const locationName = gpDetails.panchayatName
 
   const loadData = () => {
     setLoading(true)
 
-    // Fetch live weather
+    // Fetch live weather with Gram Panchayat priority
     weatherApi
       .getLiveWeather({
         lat: activeLat,
         lon: activeLon,
         name: locationName,
-        block: loc?.block,
-        district: loc?.district,
-        state: loc?.state,
+        block: gpDetails.blockName,
+        district: gpDetails.districtName,
+        state: gpDetails.stateName,
         elevation_m: loc?.elevation_m,
       })
       .then((res: any) => {
@@ -310,6 +317,75 @@ export default function FarmerHome() {
 
       <div className="max-w-2xl mx-auto px-4 pt-4 space-y-4">
 
+        {/* ─── Official Gram Panchayat Hero Banner (Core Mission) ─── */}
+        <div className="bg-gradient-to-br from-emerald-850 via-teal-900 to-slate-900 text-white rounded-3xl p-4 sm:p-5 shadow-md border border-emerald-700/60 relative overflow-hidden">
+          <div className="absolute -right-6 -bottom-8 opacity-10 text-9xl pointer-events-none select-none">
+            🏛️
+          </div>
+
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative z-10">
+            <div className="flex items-start gap-3.5">
+              <div className="w-12 h-12 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-2xl shadow-inner flex-shrink-0">
+                🏛️
+              </div>
+              <div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-[10px] uppercase tracking-wider font-extrabold px-2.5 py-0.5 rounded-full bg-emerald-400/25 text-emerald-200 border border-emerald-400/30">
+                    {lang === 'hi' ? 'आधिकारिक ग्राम पंचायत' : lang === 'mr' ? 'अधिकृत ग्रामपंचायत' : 'Official Gram Panchayat'}
+                  </span>
+                  <span className="text-[10px] font-mono text-emerald-300/80 bg-black/25 px-2 py-0.5 rounded-md">
+                    {gpDetails.lgdCode}
+                  </span>
+                  {loc?.is_gps && (
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500 text-white flex items-center gap-1 shadow-2xs">
+                      ✓ GPS Verified
+                    </span>
+                  )}
+                </div>
+
+                <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white mt-1">
+                  {gpDetails.heroTitle}
+                </h2>
+
+                <p className="text-xs text-emerald-100/90 font-medium mt-0.5 flex flex-wrap items-center gap-x-2">
+                  <span>
+                    {lang === 'hi'
+                      ? `ब्लॉक: ${gpDetails.blockName}`
+                      : lang === 'mr'
+                      ? `तालुका: ${gpDetails.blockName}`
+                      : `Block: ${gpDetails.blockName}`}
+                  </span>
+                  <span>·</span>
+                  <span>
+                    {lang === 'hi'
+                      ? `ज़िला: ${gpDetails.districtName}`
+                      : lang === 'mr'
+                      ? `जिल्हा: ${gpDetails.districtName}`
+                      : `District: ${gpDetails.districtName}`}
+                  </span>
+                  <span>·</span>
+                  <span>{gpDetails.stateName}</span>
+                </p>
+              </div>
+            </div>
+
+            <button
+              onClick={() => outlet?.openLocationModal?.()}
+              className="self-start sm:self-center px-3.5 py-2 rounded-xl bg-white/15 hover:bg-white/25 active:scale-95 border border-white/20 text-white text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer backdrop-blur-sm shadow-xs"
+              title="स्थान व ग्राम पंचायत बदलें"
+            >
+              <MapPin size={13} className="text-emerald-300" />
+              <span>
+                {lang === 'hi'
+                  ? 'ग्राम पंचायत बदलें'
+                  : lang === 'mr'
+                  ? 'ग्रामपंचायत बदला'
+                  : 'Change GP'}
+              </span>
+            </button>
+          </div>
+        </div>
+
         {/* ─── Greeting & Location Badge ─── */}
         <div className="flex items-center justify-between">
           <div>
@@ -322,8 +398,8 @@ export default function FarmerHome() {
               title="स्थान बदलें / Change Location"
             >
               <MapPin size={13} className="text-emerald-600 group-hover:scale-110 transition-transform" />
-              <span>{locationName}</span>
-              {loc?.district && <span>· {loc.district}</span>}
+              <span>{gpDetails.heroTitle}</span>
+              {gpDetails.districtName && <span>· {gpDetails.districtName}</span>}
               {loc?.is_gps && (
                 <span className="text-[9px] font-bold bg-emerald-100 text-emerald-800 px-1 rounded">
                   GPS
@@ -424,7 +500,12 @@ export default function FarmerHome() {
         {!loading && weather && (
           <div className="bg-gradient-to-br from-emerald-50 to-sky-50 rounded-2xl border border-emerald-200 p-4 shadow-sm">
             <div className="flex items-center justify-between mb-3">
-              <h2 className="text-sm font-bold text-slate-700">{t.todayWeather}</h2>
+              <h2 className="text-sm font-bold text-slate-800 flex items-center gap-1.5 flex-wrap">
+                <span>{t.todayWeather}</span>
+                <span className="text-emerald-700 font-extrabold bg-emerald-100/70 px-2 py-0.5 rounded-lg text-xs">
+                  🏛️ {gpDetails.panchayatName}
+                </span>
+              </h2>
               <span className="text-[10px] text-slate-400 font-medium">{t.source}</span>
             </div>
 
@@ -578,13 +659,15 @@ export default function FarmerHome() {
           </div>
         )}
 
-        {/* ─── SECTION 5: Location Map ─── */}
+        {/* ─── SECTION 5: Regional Weather & Animated Radar Map ─── */}
         {!loading && (
-          <FarmerLocationMap
+          <FarmerAnimatedWeatherMap
             lat={activeLat}
             lon={activeLon}
-            name={locationName}
+            panchayatName={gpDetails.panchayatName}
+            districtName={gpDetails.districtName}
             lang={lang}
+            selectedLocation={loc}
           />
         )}
 

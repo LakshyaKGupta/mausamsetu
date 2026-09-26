@@ -17,6 +17,7 @@ import { weatherApi } from '@/api/client'
 import type { Language } from '@/types'
 import { FarmerNav } from '@/components/farmer/FarmerNav'
 import { cn } from '@/lib/utils'
+import { resolvePanchayatDetails } from '@/utils/panchayat'
 
 interface HourlyForecast {
   time: string
@@ -198,9 +199,16 @@ export default function FarmerForecastPage() {
   const [expandedDay, setExpandedDay] = useState<string | null>(null)
   const t = T[lang] || T.hi
 
+  const farmerData = (() => {
+    try {
+      return JSON.parse(localStorage.getItem('mausamsetu_farmer') || '{}')
+    } catch { return {} }
+  })()
+  const gpDetails = resolvePanchayatDetails(outlet?.selectedLocation, farmerData, lang)
+
   const activeLat = outlet?.selectedLocation?.lat || 21.282
   const activeLon = outlet?.selectedLocation?.lon || 78.895
-  const locationName = outlet?.selectedLocation?.name || outlet?.panchayatName || 'Nagpur'
+  const locationName = gpDetails.panchayatName
 
   const loadForecast = async (m: ForecastMode) => {
     setLoading(true)
@@ -244,13 +252,14 @@ export default function FarmerForecastPage() {
       <FarmerNav lang={lang} />
 
       <div className="max-w-2xl mx-auto px-4 pt-4 space-y-4">
-        {/* Header */}
+        {/* Header with Prominent Gram Panchayat Identity */}
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-lg font-bold text-slate-900">{t.title}</h1>
-            <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium">
-              <MapPin size={12} />
-              <span>{locationName}</span>
+            <div className="flex items-center gap-1.5 text-xs text-emerald-800 font-bold bg-emerald-50 px-2 py-0.5 rounded-lg border border-emerald-200 mt-1 inline-flex">
+              <span>🏛️ {gpDetails.heroTitle}</span>
+              <span>·</span>
+              <span className="text-slate-600 font-medium">{gpDetails.districtName}</span>
             </div>
           </div>
           <div className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-1 rounded-lg border border-emerald-200">
