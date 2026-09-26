@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import {
   ShieldCheck, Database, Cpu, CheckCircle2, AlertTriangle,
   BarChart2, Server, MapPin, RefreshCw, Layers, Clock,
@@ -51,7 +51,22 @@ export const AdminDashboard: React.FC = () => {
   const [selectedPanchayat, setSelectedPanchayat] = useState<PanchayatHierarchyItem | null>(null)
   const [filterBlock, setFilterBlock] = useState<string>('all')
   const [searchPanchayat, setSearchPanchayat] = useState('')
-  const [selectedState, setSelectedState] = useState('MH')
+  const [selectedState, setSelectedState] = useState<string>('Maharashtra')
+  const [selectedDistrict, setSelectedDistrict] = useState<string>('Nagpur')
+  const [availableDistricts, setAvailableDistricts] = useState<string[]>([
+    'Nagpur', 'Pune', 'Nashik', 'Wardha', 'Amravati'
+  ])
+  const [availableBlocks, setAvailableBlocks] = useState<string[]>([
+    'Kalmeshwar', 'Hingna', 'Saoner', 'Katol', 'Ramtek'
+  ])
+
+  // Live Location Autocomplete Search across India
+  const [locationSearchQuery, setLocationSearchQuery] = useState('')
+  const [locationSearchResults, setLocationSearchResults] = useState<any[]>([])
+  const [isSearchingLocation, setIsSearchingLocation] = useState(false)
+  const [showLocationDropdown, setShowLocationDropdown] = useState(false)
+  const searchTimeoutRef = useRef<any>(null)
+
   const [reassignModalOfficer, setReassignModalOfficer] = useState<OfficerDirectoryItem | null>(null)
   const [reassignBlockTarget, setReassignBlockTarget] = useState('Kalmeshwar')
 
@@ -67,37 +82,146 @@ export const AdminDashboard: React.FC = () => {
   const [drillDistrict, setDrillDistrict] = useState<string>('Nagpur')
   const [drillBlock, setDrillBlock] = useState<string>('Kalmeshwar')
 
-  const district = 'Nagpur'
+  const district = selectedDistrict
 
-  const loadData = async () => {
+  const loadData = async (dist = selectedDistrict, blk = filterBlock, st = selectedState) => {
     setRefreshing(true)
     try {
-      const [sum, perf, offList, advList, statesList, gpList, audits, dHealth, curve] = await Promise.all([
-        advisoryApi.districtSummary(district),
+      const stateObj = states.find(
+        (s) => s.state.toLowerCase() === st.toLowerCase() || s.code.toLowerCase() === st.toLowerCase()
+      )
+      const stateCode = stateObj?.code || 'MH'
+
+      const [sum, perf, offList, advList, statesList, gpList, audits, dHealth, curve, distList, blkList] = await Promise.all([
+        advisoryApi.districtSummary(dist).catch(() => null),
         advisoryApi.modelHealth(),
-        officerApi.list(district).catch(() => []),
+        officerApi.list(dist).catch(() => []),
         advisoryApi.list().catch(() => []),
         geographyApi.getStates().catch(() => []),
-        geographyApi.getPanchayats().catch(() => []),
+        geographyApi.getPanchayats(blk !== 'all' ? blk : undefined).catch(() => []),
         advisoryApi.districtAudit().catch(() => []),
         adminApi.dataHealth().catch(() => []),
         adminApi.getModelBenchmarkCurve().catch(() => []),
+        geographyApi.getDistricts(stateCode).catch(() => []),
+        geographyApi.getBlocks(dist).catch(() => []),
       ])
       setSummary(sum)
       setModelPerf(perf)
       setOfficers(offList)
       setAdvisories(advList)
-      setStates(statesList)
+      if (statesList?.length) setStates(statesList)
       setPanchayats(gpList)
       setAuditLogs(audits)
       setDataHealthList(dHealth)
       setBenchmarkCurve(curve)
+
+      if (distList?.length) {
+        setAvailableDistricts(distList.map((d: any) => d.district))
+      }
+      if (blkList?.length) {
+        setAvailableBlocks(blkList.map((b: any) => b.block))
+      }
     } catch (err) {
       console.error('Failed to load district admin data:', err)
     } finally {
       setLoading(false)
       setRefreshing(false)
     }
+  }
+
+  const handleStateChange = async (newState: string) => {
+    setSelectedState(newState)
+    setDrillState(newState)
+    const stateObj = states.find(
+      (s) => s.state.toLowerCase() === newState.toLowerCase() || s.code.toLowerCase() === newState.toLowerCase()
+    )
+    const stateCode = stateObj?.code || 'MH'
+    try {
+      const dists = await geographyApi.getDistricts(stateCode).catch(() => [])
+      if (dists && dists.length > 0) {
+        const distNames = dists.map((d: any) => d.district)
+        setAvailableDistricts(distNames)
+        const firstDist = distNames[0]
+        setSelectedDistrict(firstDist)
+        setDrillDistrict(firstDist)
+        setFilterBlock('all')
+        setDrillBlock('all')
+        const blks = await geographyApi.getBlocks(firstDist).catch(() => [])
+        if (blks && blks.length > 0) {
+          setAvailableBlocks(blks.map((b: any) => b.block))
+        } else {
+          setAvailableBlocks([])
+        }
+        loadData(firstDist, 'all', newState)
+      }
+    } catch (e) {
+      console.error(e)
+    }
+  }
+
+  const handleDistrictChange = async (newDistrict: string) => {
+    setSelectedDistrict(newDistrict)
+    setDrillDistrict(newDistrict)
+    setFilterBlock('all')
+    setDrillBlock('all')
+    try {
+      const blks = await geographyApi.getBlocks(newDistrict).catch(() => [])
+      if (blks && blks.length > 0) {
+        setAvailableBlocks(blks.map((b: any) => b.block))
+      } else {
+        setAvailableBlocks([])
+      }
+      loadData(newDistrict, 'all', selectedState)
+    } catch (e) {
+      console.error(e)
+    }
+  }
+
+  const handleSelectSearchResult = async (item: any) => {
+    const nextDist = item.district || item.name
+    const nextState = item.state || selectedState
+    const nextBlock = item.type === 'BLOCK' && item.block ? item.block : 'all'
+
+    setSelectedState(nextState)
+    setSelectedDistrict(nextDist)
+    setDrillState(nextState)
+    setDrillDistrict(nextDist)
+    setFilterBlock(nextBlock)
+    setDrillBlock(nextBlock)
+    setLocationSearchQuery('')
+    setShowLocationDropdown(false)
+
+    try {
+      const blks = await geographyApi.getBlocks(nextDist).catch(() => [])
+      if (blks && blks.length > 0) {
+        setAvailableBlocks(blks.map((b: any) => b.block))
+      }
+      loadData(nextDist, nextBlock, nextState)
+    } catch (e) {
+      console.error(e)
+    }
+  }
+
+  const handleSearchInput = (q: string) => {
+    setLocationSearchQuery(q)
+    if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current)
+    if (q.trim().length < 2) {
+      setLocationSearchResults([])
+      setShowLocationDropdown(false)
+      return
+    }
+    searchTimeoutRef.current = setTimeout(async () => {
+      setIsSearchingLocation(true)
+      try {
+        const data = await geographyApi.searchLocations(q.trim())
+        setLocationSearchResults(data.results || [])
+        setShowLocationDropdown(true)
+      } catch (err) {
+        console.error('Location search failed:', err)
+      } finally {
+        setIsSearchingLocation(false)
+      }
+    }, 250)
   }
 
   const runFallbackSimulation = async () => {
@@ -256,11 +380,11 @@ export const AdminDashboard: React.FC = () => {
       {/* Main Content Area */}
       <main className="flex-1 p-3.5 sm:p-6 md:p-8 overflow-y-auto">
         {/* Top Control Bar */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
           <div>
             <div className="flex items-center gap-2">
               <span className="text-[11px] uppercase font-bold text-brand-800 tracking-wider bg-brand-100 px-2.5 py-0.5 rounded-full">
-                {district} District Operations Command
+                {district} District Operations Command • {selectedState}
               </span>
               <span className="text-xs text-slate-400">• Real-Time Synchronized</span>
             </div>
@@ -279,13 +403,169 @@ export const AdminDashboard: React.FC = () => {
 
           <div className="flex items-center gap-3">
             <button
-              onClick={loadData}
+              onClick={() => loadData(selectedDistrict, filterBlock, selectedState)}
               disabled={refreshing}
               className="btn-secondary text-xs py-2 px-3 flex items-center gap-1.5"
             >
               <RefreshCw size={14} className={cn(refreshing && 'animate-spin')} />
-              Refresh District Feeds
+              Refresh Feeds
             </button>
+          </div>
+        </div>
+
+        {/* Pan-India Jurisdiction Command & Search Bar */}
+        <div className="bg-white border border-slate-200/90 rounded-2xl p-3.5 sm:p-4 mb-6 shadow-xs relative">
+          <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4">
+            
+            {/* Cascading State / District / Block Selectors */}
+            <div className="flex flex-wrap items-center gap-2.5">
+              <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-700 mr-1">
+                <MapPin size={15} className="text-brand-600 shrink-0" />
+                <span className="text-slate-500 uppercase tracking-wider text-[10px] font-bold">Jurisdiction:</span>
+              </div>
+
+              {/* State Dropdown */}
+              <div className="relative">
+                <label className="sr-only">Select State</label>
+                <select
+                  value={selectedState}
+                  onChange={(e) => handleStateChange(e.target.value)}
+                  className="text-xs font-semibold bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-slate-800 hover:border-brand-500 focus:outline-hidden focus:ring-1 focus:ring-brand-500 cursor-pointer"
+                >
+                  {states.length > 0 ? (
+                    states.map((st) => (
+                      <option key={st.code || st.state} value={st.state}>
+                        {st.state}
+                      </option>
+                    ))
+                  ) : (
+                    <>
+                      <option value="Maharashtra">Maharashtra</option>
+                      <option value="Punjab">Punjab</option>
+                      <option value="Uttar Pradesh">Uttar Pradesh</option>
+                      <option value="Madhya Pradesh">Madhya Pradesh</option>
+                      <option value="Rajasthan">Rajasthan</option>
+                      <option value="Gujarat">Gujarat</option>
+                      <option value="Karnataka">Karnataka</option>
+                      <option value="Haryana">Haryana</option>
+                      <option value="Tamil Nadu">Tamil Nadu</option>
+                    </>
+                  )}
+                </select>
+              </div>
+
+              {/* District Dropdown */}
+              <div className="relative">
+                <label className="sr-only">Select District</label>
+                <select
+                  value={selectedDistrict}
+                  onChange={(e) => handleDistrictChange(e.target.value)}
+                  className="text-xs font-bold bg-brand-50/70 border border-brand-200 rounded-lg px-2.5 py-1.5 text-brand-950 hover:border-brand-500 focus:outline-hidden focus:ring-1 focus:ring-brand-500 cursor-pointer"
+                >
+                  {availableDistricts.map((d) => (
+                    <option key={d} value={d}>
+                      {d} District
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Block Dropdown */}
+              <div className="relative">
+                <label className="sr-only">Select Block</label>
+                <select
+                  value={filterBlock}
+                  onChange={(e) => {
+                    const blk = e.target.value
+                    setFilterBlock(blk)
+                    setDrillBlock(blk)
+                    loadData(selectedDistrict, blk, selectedState)
+                  }}
+                  className="text-xs font-semibold bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-slate-800 hover:border-brand-500 focus:outline-hidden focus:ring-1 focus:ring-brand-500 cursor-pointer"
+                >
+                  <option value="all">All Blocks ({availableBlocks.length})</option>
+                  {availableBlocks.map((b) => (
+                    <option key={b} value={b}>
+                      {b} Block
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Live Autocomplete Search Across All India */}
+            <div className="relative flex-1 max-w-md">
+              <div className="relative">
+                <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="text"
+                  value={locationSearchQuery}
+                  onChange={(e) => handleSearchInput(e.target.value)}
+                  onFocus={() => {
+                    if (locationSearchResults.length > 0) setShowLocationDropdown(true)
+                  }}
+                  placeholder="Search any district, block or city in India (e.g. Pune, Ludhiana, Katol)..."
+                  className="w-full pl-9 pr-8 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg text-slate-800 placeholder-slate-400 focus:outline-hidden focus:ring-2 focus:ring-brand-500 focus:bg-white transition-all"
+                />
+                {isSearchingLocation ? (
+                  <RefreshCw size={12} className="absolute right-3 top-1/2 -translate-y-1/2 text-brand-600 animate-spin" />
+                ) : locationSearchQuery ? (
+                  <button
+                    onClick={() => {
+                      setLocationSearchQuery('')
+                      setLocationSearchResults([])
+                      setShowLocationDropdown(false)
+                    }}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5"
+                  >
+                    <X size={13} />
+                  </button>
+                ) : null}
+              </div>
+
+              {/* Backdrop to close dropdown on click outside */}
+              {showLocationDropdown && (
+                <div
+                  className="fixed inset-0 z-40"
+                  onClick={() => setShowLocationDropdown(false)}
+                />
+              )}
+
+              {/* Floating Autocomplete Results Dropdown */}
+              {showLocationDropdown && locationSearchResults.length > 0 && (
+                <div className="absolute top-full left-0 right-0 mt-1.5 bg-white border border-slate-200 rounded-xl shadow-xl z-50 max-h-72 overflow-y-auto divide-y divide-slate-100">
+                  <div className="px-3 py-1.5 bg-slate-50/90 text-[10px] font-bold text-slate-500 uppercase tracking-wider flex justify-between items-center">
+                    <span>Select Jurisdiction to Inspect</span>
+                    <span>{locationSearchResults.length} found</span>
+                  </div>
+                  {locationSearchResults.map((item, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => handleSelectSearchResult(item)}
+                      className="w-full text-left px-3.5 py-2.5 hover:bg-brand-50/70 transition-colors flex items-center justify-between group"
+                    >
+                      <div className="min-w-0 pr-2">
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-semibold text-xs text-slate-800 group-hover:text-brand-900 truncate">
+                            {item.name || item.district}
+                          </span>
+                          <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-sm bg-slate-100 text-slate-600 group-hover:bg-brand-100 group-hover:text-brand-800">
+                            {item.type || 'LOCATION'}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-slate-500 truncate mt-0.5">
+                          {item.block && `${item.block} Block • `}
+                          {item.district && `${item.district} District, `}
+                          {item.state}
+                        </p>
+                      </div>
+                      <ArrowRight size={13} className="text-slate-300 group-hover:text-brand-600 shrink-0 ml-2 transition-transform group-hover:translate-x-0.5" />
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
           </div>
         </div>
 
@@ -295,7 +575,7 @@ export const AdminDashboard: React.FC = () => {
             {/* Top Scope Strip */}
             <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
               {[
-                { label: 'District', val: district, sub: 'Maharashtra', color: 'slate' },
+                { label: 'District', val: district, sub: selectedState, color: 'slate' },
                 { label: 'Panchayats', val: String(summary?.total_panchayats || 0), sub: 'Total GPs', color: 'slate' },
                 { label: 'Blocks', val: String(summary?.total_blocks || 0), sub: 'Sub-Districts', color: 'slate' },
                 { label: 'AWS Stations', val: String(summary?.total_stations || 12), sub: `${(summary?.total_stations || 12) - (summary?.offline_stations || 0)} Online`, color: 'slate' },
@@ -1552,7 +1832,7 @@ export const AdminDashboard: React.FC = () => {
             <div className="flex items-center justify-between border-b pb-3">
               <div>
                 <h3 className="font-bold text-slate-900 text-base">{selectedPanchayat.name} GP</h3>
-                <p className="text-xs text-slate-500">{selectedPanchayat.block} Block • Nagpur District</p>
+                <p className="text-xs text-slate-500">{selectedPanchayat.block} Block • {selectedDistrict} District</p>
               </div>
               <button onClick={() => setSelectedPanchayat(null)} className="text-slate-400 hover:text-slate-700">
                 <X size={18} />

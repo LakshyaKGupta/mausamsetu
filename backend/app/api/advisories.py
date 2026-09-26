@@ -178,8 +178,9 @@ def get_district_operations_summary(
     """Summary of operations for the District Admin operations center with RBAC district verification."""
     target_district = district or auth.district or "Nagpur"
     
-    # Critical RBAC verification: Admin cannot access a district outside their jurisdiction
-    if auth.role == "admin" and auth.district and target_district.lower() != auth.district.lower():
+    # Critical RBAC verification: Admin cannot access a district outside their jurisdiction unless National/All-India
+    is_national_admin = auth.district and auth.district.lower() in ["all-india", "all_india", "national", "india"]
+    if auth.role == "admin" and auth.district and not is_national_admin and target_district.lower() != auth.district.lower():
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail=f"Access denied: District Admin for {auth.district} cannot access operations in {target_district}.",
@@ -283,15 +284,48 @@ def get_district_operations_summary(
         ),
     ]
 
+    from app.api.geography import STATES_DATA
+    custom_blocks = []
+    for s in STATES_DATA:
+        for d in s["districts"]:
+            if d["district"].lower() == target_district.lower():
+                for b in d.get("blocks", []):
+                    custom_blocks.append(
+                        BlockSummaryItem(
+                            block=b["block"],
+                            total_panchayats=b.get("panchayats_count", 20),
+                            verified_today=18,
+                            pending_review=2,
+                            stale_count=0,
+                            avg_error_mm="±0.9 mm",
+                            assigned_officer=b.get("assigned_officer", "Agromet Extension Officer"),
+                        )
+                    )
+                break
+        if custom_blocks:
+            break
+
+    if custom_blocks:
+        blocks = custom_blocks
+    elif target_district.lower() != "nagpur":
+        blocks = [
+            BlockSummaryItem(block=f"{target_district} Central", total_panchayats=24, verified_today=20, pending_review=2, stale_count=0, avg_error_mm="±0.8 mm", assigned_officer="Agromet Officer"),
+            BlockSummaryItem(block=f"{target_district} North", total_panchayats=20, verified_today=18, pending_review=1, stale_count=0, avg_error_mm="±1.0 mm", assigned_officer="Extension Officer"),
+            BlockSummaryItem(block=f"{target_district} South", total_panchayats=18, verified_today=16, pending_review=2, stale_count=1, avg_error_mm="±1.1 mm", assigned_officer="Block Coordinator"),
+        ]
+
+    total_panchayats_calc = sum(b.total_panchayats for b in blocks) if blocks else 78
+    total_blocks_calc = len(blocks) if blocks else 4
+
     return DistrictOperationsSummary(
         district=target_district,
-        total_panchayats=78,
-        total_blocks=4,
+        total_panchayats=total_panchayats_calc,
+        total_blocks=total_blocks_calc,
         total_stations=12,
         approved_today=district_approved,
         pending_advisories=district_pending,
-        stale_panchayats=3,
-        offline_stations=2,
+        stale_panchayats=1 if target_district.lower() != "nagpur" else 3,
+        offline_stations=0 if target_district.lower() != "nagpur" else 2,
         telemetry_status="Healthy",
         model_status="Active (XGBoost v0.3)",
         alerts=alerts,
