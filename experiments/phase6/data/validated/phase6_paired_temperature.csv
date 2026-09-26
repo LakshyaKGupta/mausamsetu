@@ -1,0 +1,9 @@
+station_id,station_lat,station_lon,station_type,observation_time,forecast_issue_time,forecast_valid_time,lead_time_hours,observed_temperature_c,forecast_temperature_c,station_elevation_m,reference_elevation_m,elevation_difference_m,observation_qc,forecast_source,forecast_file,forecast_grid_lat,forecast_grid_lon
+43063099999,18.53,73.85,Synoptic/Airport,2023-01-01T00:00:00,Unknown (GFS Seamless),2023-01-01T00:00:00,24,13.8,21.0,558.0,561.0,-3.0,1,Open-Meteo GFS Seamless (Proxy),API,18.5,73.8
+43063099999,18.53,73.85,Synoptic/Airport,2023-01-01T03:00:00,Unknown (GFS Seamless),2023-01-01T03:00:00,24,15.2,22.1,558.0,561.0,-3.0,1,Open-Meteo GFS Seamless (Proxy),API,18.5,73.8
+43063099999,18.53,73.85,Synoptic/Airport,2023-01-01T09:00:00,Unknown (GFS Seamless),2023-01-01T09:00:00,24,31.4,29.7,558.0,561.0,-3.0,1,Open-Meteo GFS Seamless (Proxy),API,18.5,73.8
+43063099999,18.53,73.85,Synoptic/Airport,2023-01-01T12:00:00,Unknown (GFS Seamless),2023-01-01T12:00:00,24,28.8,29.3,558.0,561.0,-3.0,1,Open-Meteo GFS Seamless (Proxy),API,18.5,73.8
+43063099999,18.53,73.85,Synoptic/Airport,2023-01-01T15:00:00,Unknown (GFS Seamless),2023-01-01T15:00:00,24,18.6,24.1,558.0,561.0,-3.0,1,Open-Meteo GFS Seamless (Proxy),API,18.5,73.8
+43063099999,18.53,73.85,Synoptic/Airport,2023-01-01T18:00:00,Unknown (GFS Seamless),2023-01-01T18:00:00,24,14.2,23.0,558.0,561.0,-3.0,1,Open-Meteo GFS Seamless (Proxy),API,18.5,73.8
+43063099999,18.53,73.85,Synoptic/Airport,2023-01-01T21:00:00,Unknown (GFS Seamless),2023-01-01T21:00:00,24,12.8,21.5,558.0,561.0,-3.0,1,Open-Meteo GFS Seamless (Proxy),API,18.5,73.8
+43063099999,18.53,73.85,Synoptic/Airport,2023-01-02T00:00:00,Unknown (GFS Seamless),2023-01-02T00:00:00,24,12.0,19.7,558.0,561.0,-3.0,1,Open-Meteo GFS Seamless (Proxy),API,18.5,73.8

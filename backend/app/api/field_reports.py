@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from typing import Optional
 
 from app.db.session import get_db
-from app.models.models import FieldReport, Officer, Panchayat
+from app.models.models import FieldReport, OfficerProfile, Panchayat
 from app.schemas.schemas import FieldReportCreate, FieldReportOut
 
 router = APIRouter(prefix="/field-reports", tags=["field-reports"])
@@ -33,7 +33,7 @@ def list_field_reports(
     
     result = []
     for r in reports:
-        officer = db.query(Officer).filter(Officer.id == r.officer_id).first()
+        officer = db.query(OfficerProfile).filter(OfficerProfile.id == r.officer_id).first()
         panchayat = db.query(Panchayat).filter(Panchayat.id == r.panchayat_id).first()
         result.append(
             FieldReportOut(
@@ -61,23 +61,29 @@ def create_field_report(body: FieldReportCreate, db: Session = Depends(get_db)):
     if not panchayat:
         raise HTTPException(status_code=404, detail="Panchayat not found")
         
-    officer = db.query(Officer).filter(Officer.id == body.officer_id).first()
+    officer = db.query(OfficerProfile).filter(OfficerProfile.id == body.officer_id).first()
     if not officer:
-        # Fallback or create dummy for demo session
-        officer = db.query(Officer).first()
+        # Fallback to first officer for demo session
+        officer = db.query(OfficerProfile).first()
         if not officer:
-            officer = Officer(name="Rajesh Sharma", phone="9823012345", block="Kalmeshwar", district="Nagpur")
+            from app.models.models import User, UserRole
+            demo_user = User(role=UserRole.officer, phone="9876543210", username="9876543210", is_active=True)
+            db.add(demo_user)
+            db.flush()
+            officer = OfficerProfile(user_id=demo_user.id, name="Rajesh Sharma", block="Kalmeshwar", district="Nagpur")
             db.add(officer)
             db.commit()
             db.refresh(officer)
 
+    obs_type = body.observation_type or body.category or "crop_stress"
+    desc = body.description or body.observation_notes or "Field observation recorded."
     report = FieldReport(
         officer_id=officer.id,
         panchayat_id=panchayat.id,
         crop=body.crop,
-        observation_type=body.observation_type,
+        observation_type=obs_type,
         severity=body.severity,
-        description=body.description,
+        description=desc,
         photo_url=body.photo_url,
     )
     db.add(report)

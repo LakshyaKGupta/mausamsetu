@@ -137,3 +137,61 @@ AI Advisory → Officer Review → Farmer delivery pipeline.
 - Officer auth: In dev mode, OTP is logged to console AND returned in the API response body. Never do this in production.
 
 - The frontend language switcher updates the UI language at runtime — no page reload needed.
+
+---
+
+## Session Update — Mobile Alignment & PWA Ergonomics Audit
+
+### Completed:
+1. **Viewport & Safe-Area Alignment**:
+   - `index.html`: Configured `viewport-fit=cover`, mobile theme colors, and standalone web app tags.
+   - `AppLayout.tsx`: Added `pt-[env(safe-area-inset-top,0px)]` to the sticky header to safeguard iOS Dynamic Island / notch & Android camera cutouts in standalone PWA mode.
+   - `FarmerNav.tsx`: Bottom navigation equipped with `max(env(safe-area-inset-bottom, 0px), 6px)` and comfortable `min-h-[48px]` tap targets with `touch-manipulation` and active click state.
+   - Bottom page padding: All farmer workflows (`Home`, `Forecast`, `MyCrops`, `AdvisoryList`, `Ask`) standardized with `pb-[calc(5.5rem+env(safe-area-inset-bottom,0px))] md:pb-8` to guarantee zero occlusion of content by bottom bars.
+
+2. **Zero-Wobble & Anti-Zoom Mobile Protection**:
+   - `index.css`: Enforced `overflow-x-hidden` on `html` and `body` to stop horizontal rubber-banding on touch devices.
+   - iOS Auto-Zoom fix: Enforced `16px` font-size on mobile inputs/selects/textareas to prevent iOS Safari/WebKit from zooming the viewport when tapping text fields.
+   - Added `touch-action: manipulation` globally to eliminate 300ms mobile tap delays.
+
+3. **Responsive Header & Action Buttons**:
+   - Expanded mobile location badge width (`xs:max-w-[130px]`) and configured `xs: '380px'` in `tailwind.config.js`.
+   - Enlarged mobile language selection pills and logout tap targets for finger ergonomics.
+   - Officer Dashboard: Converted action buttons (`Emergency Broadcast`, `File Field Report`, `Sync`) to flexible wrapping cards with responsive full-touch areas.
+
+4. **Audited & Verified Across All Views**:
+   - Farmer Home, 7-Day Forecast, My Crops, Advisories Archive, Voice Chatbot, Login, Signup, Officer Console, and Admin Dashboard all verified at 390x844 mobile viewport with 0 horizontal scroll errors and 0 TypeScript build errors.
+
+---
+
+## Session Update — Farmer Radically Simplified, Pan-India Resolution, Officer Console & 100% Tests
+
+### Core Objectives Delivered:
+1. **Radically Simplified Farmer App ("Weather → What should I do → Ask me anything")**:
+   - Replaced complex meteorological telemetry, downscaling curves, microclimate scrubbers, and Gram Panchayat GIS maps from the farmer interface with a 3-card clean architecture:
+     1. **☀️ Weather**: Crisp local temperatures, rain, humidity, wind, and sky condition.
+     2. **🌱 Dominant Action Card ("आज क्या करें?")**: Clear actionable agronomic advice with official Agricultural Officer stamp and 1-tap audio speech synthesis (`SpeakAdvisoryButton`).
+     3. **🎙️ Voice Ask Card ("पूछें")**: Instant voice query entry into the conversational assistant.
+   - Simplified 5-day visual forecast cards and removed technical jargon from all farmer screens.
+   - Cleaned navigation tabs: `Home` | `Weather` | `🎙️ Ask` | `Crops` | `Advice`.
+
+2. **Pan-India Real Weather & Location Resolution**:
+   - Integrated Open-Meteo Geocoding & Open-Meteo Weather APIs with SRTM 90m DEM elevation resolution.
+   - `GET /weather/live`: Real-time weather data retrieval for any Indian coordinate (`lat`, `lon`), providing instant conditions, precipitation, humidity, wind speed, dynamic crop action recommendations, and 7-day outlook.
+   - `LocationSearchModal.tsx`: Search across India with quick presets (Nashik, Pune, Vidarbha, Punjab, etc.) that instantly re-renders local weather and actions.
+
+3. **Connected Agricultural Officer Operations Console**:
+   - Connected KPI cards: Clicking "2 Pending Review" immediately switches to the Advisory Queue (`#MS-1042` and `#MS-1043`).
+   - Side-by-Side Review Screen (`AdvisoryDetailModal`): Compares IMD 40km Baseline vs MausamSetu Topographic Downscaled forecast, displays Model Evidence, provides Hindi/Marathi/English editing with mandatory change rationale, and executes state mutation (`PATCH /advisories/{id}/review`).
+   - Approved items display verified farmer reach ("Delivered to 84 farmers") and audit logs.
+   - Auto-zooms Gram Panchayat block map directly to Kalmeshwar Block coordinates (`21.2333, 78.9167`) with interactive panchayat boundaries.
+   - Field Reports: Connected "+ Record Observation" modal directly to `POST /field-reports/`.
+
+4. **District Admin Operations Center & ML Model Lab**:
+   - Grounded all model health telemetry in `phase6_expanded_dataset.csv` (1,661 paired observations across 18 Synoptic/Airport ground truth stations in Maharashtra).
+   - Embedded interactive Topographic Microclimate Downscaler Calculator with real-time sliders for lapse-rate and orographic physics calculation.
+   - Multi-tier spatial drilldown map with honest pilot badges (🟢 Live Operational Pilot for Nagpur/Kalmeshwar vs 🟡 Architecture Ready for rest of India).
+
+5. **Quality & Verification**:
+   - **Backend Pytest**: **60/60 tests PASSED (100%)** across all test suites (`test_api_workflow`, `test_downscaling`, `test_elevation`, `test_health`, `test_hierarchy`, `test_locations`, `test_provider`, `test_rbac_and_scope`).
+   - **Frontend Build**: `tsc -b && vite build` passed with **0 errors**.

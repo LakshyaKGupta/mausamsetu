@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom'
-import { LogOut, MapPin } from 'lucide-react'
+import { LogOut, MapPin, ChevronDown } from 'lucide-react'
 import { PWAInstallBanner } from '../components/shared/PWAInstallBanner'
+import { LocationSearchModal, type SelectedLocation } from '../components/farmer/LocationSearchModal'
 import type { Language } from '../types'
 
 export interface AppOutletContext {
@@ -10,6 +11,8 @@ export interface AppOutletContext {
   panchayatName: string
   districtName: string
   userName: string
+  selectedLocation?: SelectedLocation | null
+  openLocationModal?: () => void
 }
 
 const LANGUAGES: { code: Language; label: string }[] = [
@@ -33,6 +36,23 @@ export const AppLayout: React.FC = () => {
     window.dispatchEvent(new CustomEvent('mausamsetu_lang_change', { detail: newLang }))
   }
 
+  // User selected location (can be any village, block, district across India)
+  const [selectedLoc, setSelectedLoc] = useState<SelectedLocation | null>(() => {
+    try {
+      const stored = localStorage.getItem('mausamsetu_selected_location')
+      return stored ? JSON.parse(stored) : null
+    } catch {
+      return null
+    }
+  })
+  const [showLocationModal, setShowLocationModal] = useState(false)
+
+  const handleSelectLocation = (loc: SelectedLocation) => {
+    setSelectedLoc(loc)
+    localStorage.setItem('mausamsetu_selected_location', JSON.stringify(loc))
+    window.dispatchEvent(new CustomEvent('mausamsetu_location_change', { detail: loc }))
+  }
+
   // Parse logged in user details from localStorage
   const farmerData = JSON.parse(localStorage.getItem('mausamsetu_farmer') || '{}')
   const officerData = JSON.parse(localStorage.getItem('mausamsetu_officer') || '{}')
@@ -53,8 +73,8 @@ export const AppLayout: React.FC = () => {
     (role === 'admin' ? 'District Admin' : role === 'officer' ? 'Field Officer' : 'Kisan')
 
   // Dynamic location
-  let panchayatName = farmerData.panchayat || 'धापेवाड़ा'
-  let districtName = farmerData.district || officerData.district || adminData.district || 'नागपुर'
+  let panchayatName = selectedLoc?.name || farmerData.panchayat || 'धापेवाड़ा'
+  let districtName = selectedLoc?.district || farmerData.district || officerData.district || adminData.district || 'नागपुर'
 
   if (role === 'officer') {
     panchayatName = officerData.block || 'कलमेश्वर'
@@ -65,6 +85,12 @@ export const AppLayout: React.FC = () => {
 
   // Translated location names for display
   const getLocationDisplay = () => {
+    if (selectedLoc) {
+      if (selectedLoc.district && selectedLoc.name !== selectedLoc.district) {
+        return `${selectedLoc.name}, ${selectedLoc.district}`
+      }
+      return selectedLoc.name
+    }
     if (role === 'admin') {
       return lang === 'en'
         ? `Nagpur · District HQ`
@@ -114,14 +140,23 @@ export const AppLayout: React.FC = () => {
       {/* PWA Install Notification Banner (Dismissable, shown only if not installed) */}
       <PWAInstallBanner lang={lang} variant="banner" />
 
+      {/* Location Search Modal across all India */}
+      <LocationSearchModal
+        isOpen={showLocationModal}
+        onClose={() => setShowLocationModal(false)}
+        onSelectLocation={handleSelectLocation}
+        currentLocation={selectedLoc}
+        lang={lang}
+      />
+
       {/* ── Single Unified Navigation Bar ── */}
-      <header className="bg-white/95 backdrop-blur-md border-b border-[#E2E8E4] sticky top-0 z-40 shadow-xs">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-3">
+      <header className="bg-white/95 backdrop-blur-md border-b border-[#E2E8E4] sticky top-0 z-40 shadow-xs pt-[env(safe-area-inset-top,0px)]">
+        <div className="max-w-7xl mx-auto px-2.5 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between gap-1 sm:gap-3">
           {/* Brand Logo & Name */}
-          <div className="flex items-center gap-3 flex-shrink-0">
-            <Link to="/" className="flex items-center gap-2.5 group focus:outline-none" aria-label="MausamSetu">
-              <div className="w-9 h-9 rounded-xl bg-[#126B3A] text-white flex items-center justify-center font-bold text-base shadow-xs group-hover:bg-[#0B4F2A] transition-colors">
-                <svg viewBox="0 0 32 32" width="20" height="20" fill="none" aria-hidden="true">
+          <div className="flex items-center gap-1.5 sm:gap-3 flex-shrink-0">
+            <Link to="/" className="flex items-center gap-1.5 sm:gap-2.5 group focus:outline-none" aria-label="MausamSetu">
+              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-[#126B3A] text-white flex items-center justify-center font-bold text-sm sm:text-base shadow-xs group-hover:bg-[#0B4F2A] transition-colors flex-shrink-0">
+                <svg viewBox="0 0 32 32" width="18" height="18" fill="none" aria-hidden="true" className="sm:w-5 sm:h-5">
                   <path
                     d="M5 22 Q5 10 16 10 Q27 10 27 22"
                     stroke="white"
@@ -142,7 +177,7 @@ export const AppLayout: React.FC = () => {
                 </svg>
               </div>
               <div className="flex flex-col">
-                <span className="font-bold text-lg text-[#111814] tracking-tight leading-tight">
+                <span className="font-bold text-base sm:text-lg text-[#111814] tracking-tight leading-tight">
                   Mausam<span className="text-[#126B3A]">Setu</span>
                 </span>
                 <span className="hidden sm:inline-block text-[10px] text-[#647067] font-medium leading-none">
@@ -152,33 +187,38 @@ export const AppLayout: React.FC = () => {
             </Link>
           </div>
 
-          {/* Location Badge */}
-          <div className="flex items-center">
-            <div className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-[#166534] bg-[#F0FDF4] border border-[#DCFCE7] px-3 py-1.5 rounded-xl shadow-2xs">
-              <MapPin size={15} className="text-[#126B3A] flex-shrink-0" />
-              <span className="truncate max-w-[130px] sm:max-w-[240px]">{getLocationDisplay()}</span>
-            </div>
+          {/* Location Badge (Clickable button to change location anywhere in India) */}
+          <div className="flex items-center min-w-0">
+            <button
+              onClick={() => setShowLocationModal(true)}
+              className="inline-flex items-center gap-1 sm:gap-1.5 text-[11px] sm:text-xs font-semibold text-[#166534] bg-[#F0FDF4] hover:bg-[#DCFCE7]/80 border border-[#DCFCE7] hover:border-[#86EFAC] px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg sm:rounded-xl shadow-2xs transition-all cursor-pointer group active:scale-95 text-left"
+              title="स्थान बदलें (गाँव, ब्लॉक, ज़िला) / Change Location"
+              aria-label="Change Location"
+            >
+              <MapPin size={12} className="text-[#126B3A] flex-shrink-0 group-hover:scale-110 transition-transform" />
+              <span className="truncate max-w-[90px] xs:max-w-[125px] sm:max-w-[200px]">{getLocationDisplay()}</span>
+              <ChevronDown size={11} className="text-[#126B3A]/70 group-hover:text-[#126B3A] flex-shrink-0" />
+            </button>
           </div>
 
-          {/* Right Controls: Install App Button, Language Choice Switcher & User Profile / Logout */}
-          <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
-            {/* Install PWA App Button */}
-            <PWAInstallBanner lang={lang} variant="button" />
+          {/* Right Controls: Language Choice Switcher, User Profile & Logout */}
+          <div className="flex items-center gap-1 sm:gap-2.5 flex-shrink-0">
 
-            {/* Language Choice Switcher */}
-            <div className="flex items-center bg-[#F2F5F2] border border-[#E2E8E4] p-1 rounded-xl shadow-2xs">
+            {/* Language Choice Switcher (Responsive short codes on mobile) */}
+            <div className="flex items-center bg-[#F2F5F2] border border-[#E2E8E4] p-0.5 sm:p-1 rounded-lg sm:rounded-xl shadow-2xs">
               {LANGUAGES.map(({ code, label }) => (
                 <button
                   key={code}
                   onClick={() => handleLanguageChange(code)}
-                  className={`px-2.5 sm:px-3 py-1 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
+                  className={`px-1.5 xs:px-2 sm:px-3 py-1 text-[11px] sm:text-xs font-semibold rounded-md sm:rounded-lg transition-all cursor-pointer min-h-[28px] flex items-center justify-center ${
                     lang === code
                       ? 'bg-[#126B3A] text-white shadow-xs font-bold'
                       : 'text-[#647067] hover:text-[#111814] hover:bg-white/60'
                   }`}
                   aria-label={`Switch language to ${label}`}
                 >
-                  {label}
+                  <span className="sm:hidden">{code === 'hi' ? 'हिं' : code === 'mr' ? 'मरा' : 'EN'}</span>
+                  <span className="hidden sm:inline">{label}</span>
                 </button>
               ))}
             </div>
@@ -194,10 +234,11 @@ export const AppLayout: React.FC = () => {
             {/* Logout Button */}
             <button
               onClick={handleLogout}
-              className="text-xs font-medium text-red-600 hover:text-red-700 hover:bg-red-50 flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl border border-transparent hover:border-red-200 transition-all cursor-pointer"
+              className="text-xs font-medium text-red-600 hover:text-red-700 hover:bg-red-50 flex items-center p-1.5 sm:px-2.5 sm:py-1.5 rounded-lg sm:rounded-xl border border-transparent hover:border-red-200 transition-all cursor-pointer min-h-[28px] min-w-[28px] justify-center"
               title="Logout"
+              aria-label="Logout"
             >
-              <LogOut size={14} />
+              <LogOut size={16} />
               <span className="hidden sm:inline">Logout</span>
             </button>
           </div>
@@ -206,7 +247,17 @@ export const AppLayout: React.FC = () => {
 
       {/* App Body */}
       <main className="flex-1">
-        <Outlet context={{ lang, setLang: handleLanguageChange, panchayatName, districtName, userName }} />
+        <Outlet
+          context={{
+            lang,
+            setLang: handleLanguageChange,
+            panchayatName,
+            districtName,
+            userName,
+            selectedLocation: selectedLoc,
+            openLocationModal: () => setShowLocationModal(true),
+          }}
+        />
       </main>
     </div>
   )

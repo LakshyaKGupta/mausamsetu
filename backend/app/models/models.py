@@ -52,9 +52,109 @@ class WeatherSource(str, enum.Enum):
     mock = "mock"
 
 
+class UserRole(str, enum.Enum):
+    farmer = "farmer"
+    officer = "officer"
+    admin = "admin"
+
+
 # ---------------------------------------------------------------------------
 # Models
 # ---------------------------------------------------------------------------
+
+class User(Base):
+    __tablename__ = "users"
+    id = Column(Integer, primary_key=True, index=True)
+    role = Column(Enum(UserRole), nullable=False)
+    phone = Column(String(15), unique=True, nullable=True, index=True)
+    username = Column(String(100), unique=True, nullable=True, index=True)
+    password_hash = Column(String(255), nullable=True)
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=func.now())
+    last_login_at = Column(DateTime, nullable=True)
+
+    farmer_profile = relationship("FarmerProfile", back_populates="user", uselist=False, cascade="all, delete-orphan")
+    officer_profile = relationship("OfficerProfile", back_populates="user", uselist=False, cascade="all, delete-orphan")
+    admin_profile = relationship("AdminProfile", back_populates="user", uselist=False, cascade="all, delete-orphan")
+
+
+class FarmerProfile(Base):
+    __tablename__ = "farmer_profiles"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, unique=True)
+    panchayat_id = Column(Integer, ForeignKey("panchayats.id"), nullable=False, index=True)
+    name = Column(String(200), nullable=False)
+    preferred_language = Column(Enum(Language), default=Language.hi, nullable=False)
+    land_area_acres = Column(Float, nullable=True)
+    state = Column(String(100), default="Maharashtra", nullable=True)
+    district = Column(String(200), default="Nagpur", nullable=True)
+    block = Column(String(200), default="Kalmeshwar", nullable=True)
+    onboarding_completed = Column(Boolean, default=False)
+    created_at = Column(DateTime, default=func.now())
+
+    user = relationship("User", back_populates="farmer_profile")
+    panchayat = relationship("Panchayat", back_populates="farmers")
+    crops = relationship("FarmerCrop", back_populates="farmer", cascade="all, delete-orphan")
+    chatbot_sessions = relationship("ChatbotSession", back_populates="farmer")
+
+
+class FarmerCrop(Base):
+    __tablename__ = "farmer_crops"
+
+    id = Column(Integer, primary_key=True, index=True)
+    farmer_id = Column(Integer, ForeignKey("farmer_profiles.id"), nullable=False)
+    crop_id = Column(String(100), nullable=False)
+    variety = Column(String(100), nullable=True)
+    area_acres = Column(Float, nullable=True)
+    sowing_date = Column(DateTime, nullable=True)
+    crop_stage = Column(String(100), nullable=True)
+    created_at = Column(DateTime, default=func.now())
+    
+    farmer = relationship("FarmerProfile", back_populates="crops")
+
+
+class OfficerProfile(Base):
+    __tablename__ = "officer_profiles"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, unique=True)
+    name = Column(String(200), nullable=False)
+    department = Column(String(200), nullable=True)
+    designation = Column(String(100), nullable=True)
+    block = Column(String(200), nullable=False)
+    district = Column(String(200), nullable=False, default="Nagpur")
+    created_at = Column(DateTime, default=func.now())
+
+    user = relationship("User", back_populates="officer_profile")
+    approvals = relationship("Approval", back_populates="officer")
+    advisories_reviewed = relationship("Advisory", back_populates="officer")
+    field_reports = relationship("FieldReport", back_populates="officer")
+
+
+class AdminProfile(Base):
+    __tablename__ = "admin_profiles"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, unique=True)
+    name = Column(String(200), nullable=False)
+    district_scope = Column(String(200), nullable=False, default="Nagpur")
+    permissions = Column(JSON, nullable=True)
+    created_at = Column(DateTime, default=func.now())
+
+    user = relationship("User", back_populates="admin_profile")
+
+
+class OTPVerification(Base):
+    __tablename__ = "otp_verifications"
+
+    id = Column(Integer, primary_key=True, index=True)
+    phone_number = Column(String(15), nullable=False, index=True)
+    otp_hash = Column(String(255), nullable=False)
+    expires_at = Column(DateTime, nullable=False)
+    attempts = Column(Integer, default=0)
+    verified = Column(Boolean, default=False)
+    created_at = Column(DateTime, default=func.now())
 
 
 class Panchayat(Base):
@@ -71,48 +171,9 @@ class Panchayat(Base):
     created_at = Column(DateTime, default=func.now())
 
     # Relationships
-    farmers = relationship("Farmer", back_populates="panchayat")
+    farmers = relationship("FarmerProfile", back_populates="panchayat")
     advisories = relationship("Advisory", back_populates="panchayat")
     weather_observations = relationship("WeatherObservation", back_populates="panchayat")
-
-
-class Officer(Base):
-    __tablename__ = "officers"
-
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String(200), nullable=False)
-    phone = Column(String(15), unique=True, nullable=False, index=True)
-    block = Column(String(200), nullable=False)
-    district = Column(String(200), nullable=False, default="Nagpur")
-    is_active = Column(Boolean, default=True)
-    hashed_otp = Column(String(200), nullable=True)
-    otp_expires_at = Column(DateTime, nullable=True)
-    created_at = Column(DateTime, default=func.now())
-
-    # Relationships
-    approvals = relationship("Approval", back_populates="officer")
-    advisories_reviewed = relationship("Advisory", back_populates="officer")
-
-
-class Farmer(Base):
-    __tablename__ = "farmers"
-
-    id = Column(Integer, primary_key=True, index=True)
-    panchayat_id = Column(Integer, ForeignKey("panchayats.id"), nullable=False, index=True)
-    name = Column(String(200), nullable=False)
-    phone = Column(String(15), unique=True, nullable=False, index=True)
-    preferred_language = Column(Enum(Language), default=Language.hi, nullable=False)
-    crops = Column(JSON, default=list)  # List of crop names: ["soybean", "cotton"]
-    land_area_acres = Column(Float, nullable=True)
-    state = Column(String(100), default="Maharashtra", nullable=True)
-    district = Column(String(200), default="Nagpur", nullable=True)
-    block = Column(String(200), default="Kalmeshwar", nullable=True)
-    is_active = Column(Boolean, default=True)
-    created_at = Column(DateTime, default=func.now())
-
-    # Relationships
-    panchayat = relationship("Panchayat", back_populates="farmers")
-    chatbot_sessions = relationship("ChatbotSession", back_populates="farmer")
 
 
 class WeatherObservation(Base):
@@ -141,7 +202,7 @@ class Advisory(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     panchayat_id = Column(Integer, ForeignKey("panchayats.id"), nullable=False, index=True)
-    officer_id = Column(Integer, ForeignKey("officers.id"), nullable=True)
+    officer_id = Column(Integer, ForeignKey("officer_profiles.id"), nullable=True)
     crop = Column(String(100), nullable=False)
     crop_stage = Column(String(100), default="Vegetative Stage", nullable=True)
     advisory_date = Column(DateTime, nullable=False, index=True)
@@ -173,7 +234,7 @@ class Advisory(Base):
 
     # Relationships
     panchayat = relationship("Panchayat", back_populates="advisories")
-    officer = relationship("Officer", back_populates="advisories_reviewed")
+    officer = relationship("OfficerProfile", back_populates="advisories_reviewed")
     approvals = relationship("Approval", back_populates="advisory")
 
 
@@ -182,7 +243,7 @@ class Approval(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     advisory_id = Column(Integer, ForeignKey("advisories.id"), nullable=False, index=True)
-    officer_id = Column(Integer, ForeignKey("officers.id"), nullable=False)
+    officer_id = Column(Integer, ForeignKey("officer_profiles.id"), nullable=False)
     action = Column(Enum(ApprovalAction), nullable=False)
     reason_category = Column(String(100), nullable=True)
     note = Column(Text, nullable=True)
@@ -193,14 +254,14 @@ class Approval(Base):
 
     # Relationships
     advisory = relationship("Advisory", back_populates="approvals")
-    officer = relationship("Officer", back_populates="approvals")
+    officer = relationship("OfficerProfile", back_populates="approvals")
 
 
 class ChatbotSession(Base):
     __tablename__ = "chatbot_sessions"
 
     id = Column(Integer, primary_key=True, index=True)
-    farmer_id = Column(Integer, ForeignKey("farmers.id"), nullable=True)
+    farmer_id = Column(Integer, ForeignKey("farmer_profiles.id"), nullable=True)
     panchayat_id = Column(Integer, ForeignKey("panchayats.id"), nullable=True)
     language = Column(Enum(Language), default=Language.hi)
     messages = Column(JSON, default=list)  # [{role, content, timestamp}]
@@ -208,14 +269,14 @@ class ChatbotSession(Base):
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
 
     # Relationships
-    farmer = relationship("Farmer", back_populates="chatbot_sessions")
+    farmer = relationship("FarmerProfile", back_populates="chatbot_sessions")
 
 
 class FieldReport(Base):
     __tablename__ = "field_reports"
 
     id = Column(Integer, primary_key=True, index=True)
-    officer_id = Column(Integer, ForeignKey("officers.id"), nullable=False, index=True)
+    officer_id = Column(Integer, ForeignKey("officer_profiles.id"), nullable=False, index=True)
     panchayat_id = Column(Integer, ForeignKey("panchayats.id"), nullable=False, index=True)
     crop = Column(String(100), nullable=False)
     observation_type = Column(String(100), nullable=False)  # crop_stress, pest_reported, drainage_blocked, forecast_divergence, sensor_drift
@@ -225,6 +286,10 @@ class FieldReport(Base):
     created_at = Column(DateTime, default=func.now(), index=True)
 
     # Relationships
-    officer = relationship("Officer")
+    officer = relationship("OfficerProfile", back_populates="field_reports")
     panchayat = relationship("Panchayat")
 
+
+# Backwards compatibility aliases
+Officer = OfficerProfile
+Farmer = FarmerProfile

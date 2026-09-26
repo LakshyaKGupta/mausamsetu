@@ -44,7 +44,7 @@ export const OTPVerification: React.FC<OTPVerificationProps> = ({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5 text-left">
+    <form onSubmit={handleSubmit} className="space-y-5 text-left animate-slide-up-fade">
       {/* Dev Mode Banner (Clearly Labeled, Safe Isolation) */}
       {devOtp && (
         <div className="p-3.5 bg-[#FFFBEB] border border-[#FDE68A] rounded-2xl">

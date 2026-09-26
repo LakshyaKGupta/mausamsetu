@@ -31,14 +31,18 @@ export function FieldReportModal({ panchayats, onClose, onCreated }: Props) {
     setError('')
     try {
       await fieldReportApi.create({
+        officer_id: 1,
         panchayat_id: panchayatId,
         crop,
         crop_stage: cropStage,
         category,
+        observation_type: category,
         severity,
+        notes,
         observation_notes: notes,
+        description: notes,
         action_recommended: actionRecommended || undefined,
-      })
+      } as any)
       onCreated()
       onClose()
     } catch (err: any) {

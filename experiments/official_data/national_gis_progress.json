@@ -1,0 +1,290 @@
+{
+  "35": {
+    "status": "COMPLETED",
+    "records_staged": 219,
+    "records_committed": 79,
+    "error": null,
+    "started_at": "2026-09-23T22:51:36.631080",
+    "completed_at": "2026-09-23T22:52:21.433498"
+  },
+  "37": {
+    "status": "COMPLETED",
+    "records_staged": 194,
+    "records_committed": 194,
+    "error": null,
+    "started_at": "2026-09-23T22:52:21.434290",
+    "completed_at": "2026-09-23T22:52:32.317620"
+  },
+  "12": {
+    "status": "COMPLETED",
+    "records_staged": 1941,
+    "records_committed": 1941,
+    "error": null,
+    "started_at": "2026-09-23T22:52:32.318355",
+    "completed_at": "2026-09-23T22:52:45.333656"
+  },
+  "18": {
+    "status": "COMPLETED",
+    "records_staged": 6787,
+    "records_committed": 2599,
+    "error": null,
+    "started_at": "2026-09-23T22:52:45.334532",
+    "completed_at": "2026-09-23T22:55:44.178337"
+  },
+  "10": {
+    "status": "COMPLETED",
+    "records_staged": 19460,
+    "records_committed": 8139,
+    "error": null,
+    "started_at": "2026-09-23T22:55:44.179262",
+    "completed_at": "2026-09-23T23:01:10.343707"
+  },
+  "4": {
+    "status": "COMPLETED",
+    "records_staged": 0,
+    "records_committed": 0,
+    "error": null,
+    "started_at": "2026-09-23T23:01:10.344701",
+    "completed_at": "2026-09-23T23:01:23.413846"
+  },
+  "22": {
+    "status": "COMPLETED",
+    "records_staged": 24529,
+    "records_committed": 11580,
+    "error": null,
+    "started_at": "2026-09-23T23:01:23.414613",
+    "completed_at": "2026-09-23T23:06:48.758069"
+  },
+  "39": {
+    "status": "COMPLETED",
+    "records_staged": 0,
+    "records_committed": 0,
+    "error": null,
+    "started_at": "2026-09-23T23:06:48.758815",
+    "completed_at": "2026-09-23T23:07:02.904230"
+  },
+  "7": {
+    "status": "COMPLETED",
+    "records_staged": 0,
+    "records_committed": 0,
+    "error": null,
+    "started_at": "2026-09-23T23:07:02.904974",
+    "completed_at": "2026-09-23T23:07:47.435911"
+  },
+  "30": {
+    "status": "COMPLETED",
+    "records_staged": 378,
+    "records_committed": 190,
+    "error": null,
+    "started_at": "2026-09-23T23:07:47.436884",
+    "completed_at": "2026-09-23T23:08:04.152769"
+  },
+  "24": {
+    "status": "COMPLETED",
+    "records_staged": 28909,
+    "records_committed": 14318,
+    "error": null,
+    "started_at": "2026-09-23T23:08:04.153810",
+    "completed_at": "2026-09-23T23:16:59.786797"
+  },
+  "6": {
+    "status": "COMPLETED",
+    "records_staged": 11751,
+    "records_committed": 6142,
+    "error": null,
+    "started_at": "2026-09-23T23:16:59.787865",
+    "completed_at": "2026-09-23T23:19:31.859762"
+  },
+  "2": {
+    "status": "COMPLETED",
+    "records_staged": 3504,
+    "records_committed": 3504,
+    "error": null,
+    "started_at": "2026-09-23T23:19:31.860893",
+    "completed_at": "2026-09-23T23:19:50.596280"
+  },
+  "1": {
+    "status": "COMPLETED",
+    "records_staged": 3489,
+    "records_committed": 3489,
+    "error": null,
+    "started_at": "2026-09-23T23:19:50.597151",
+    "completed_at": "2026-09-23T23:20:08.645199"
+  },
+  "20": {
+    "status": "COMPLETED",
+    "records_staged": 10768,
+    "records_committed": 4343,
+    "error": null,
+    "started_at": "2026-09-23T23:20:08.646032",
+    "completed_at": "2026-09-23T23:22:45.268676"
+  },
+  "32": {
+    "status": "COMPLETED",
+    "records_staged": 1838,
+    "records_committed": 941,
+    "error": null,
+    "started_at": "2026-09-23T23:22:45.269711",
+    "completed_at": "2026-09-23T23:23:36.805924"
+  },
+  "38": {
+    "status": "COMPLETED",
+    "records_staged": 32,
+    "records_committed": 30,
+    "error": null,
+    "started_at": "2026-09-23T23:23:36.807221",
+    "completed_at": "2026-09-23T23:23:49.425069"
+  },
+  "31": {
+    "status": "COMPLETED",
+    "records_staged": 37,
+    "records_committed": 10,
+    "error": null,
+    "started_at": "2026-09-23T23:23:49.426045",
+    "completed_at": "2026-09-23T23:24:00.221022"
+  },
+  "27": {
+    "status": "COMPLETED",
+    "records_staged": 57639,
+    "records_committed": 27851,
+    "error": null,
+    "started_at": "2026-09-23T23:24:00.222240",
+    "completed_at": "2026-09-23T23:40:36.476366"
+  },
+  "14": {
+    "status": "COMPLETED",
+    "records_staged": 158,
+    "records_committed": 158,
+    "error": null,
+    "started_at": "2026-09-23T23:40:36.477538",
+    "completed_at": "2026-09-23T23:40:49.432841"
+  },
+  "17": {
+    "status": "COMPLETED",
+    "records_staged": 1,
+    "records_committed": 0,
+    "error": null,
+    "started_at": "2026-09-23T23:40:49.434265",
+    "completed_at": "2026-09-23T23:41:00.175076"
+  },
+  "15": {
+    "status": "COMPLETED",
+    "records_staged": 0,
+    "records_committed": 0,
+    "error": null,
+    "started_at": "2026-09-23T23:41:00.176610",
+    "completed_at": "2026-09-23T23:41:10.300278"
+  },
+  "13": {
+    "status": "COMPLETED",
+    "records_staged": 0,
+    "records_committed": 0,
+    "error": null,
+    "started_at": "2026-09-23T23:41:10.301502",
+    "completed_at": "2026-09-23T23:41:21.463526"
+  },
+  "21": {
+    "status": "COMPLETED",
+    "records_staged": 18745,
+    "records_committed": 6800,
+    "error": null,
+    "started_at": "2026-09-23T23:41:21.464698",
+    "completed_at": "2026-09-23T23:46:56.914673"
+  },
+  "34": {
+    "status": "COMPLETED",
+    "records_staged": 181,
+    "records_committed": 101,
+    "error": null,
+    "started_at": "2026-09-23T23:46:56.915634",
+    "completed_at": "2026-09-23T23:47:10.376990"
+  },
+  "3": {
+    "status": "COMPLETED",
+    "records_staged": 24202,
+    "records_committed": 12835,
+    "error": null,
+    "started_at": "2026-09-23T23:47:10.378155",
+    "completed_at": "2026-09-23T23:51:16.222670"
+  },
+  "8": {
+    "status": "COMPLETED",
+    "records_staged": 24408,
+    "records_committed": 11290,
+    "error": null,
+    "started_at": "2026-09-23T23:51:16.224025",
+    "completed_at": "2026-09-23T23:57:42.750306"
+  },
+  "11": {
+    "status": "COMPLETED",
+    "records_staged": 179,
+    "records_committed": 179,
+    "error": null,
+    "started_at": "2026-09-23T23:57:42.751333",
+    "completed_at": "2026-09-23T23:57:55.052752"
+  },
+  "33": {
+    "status": "COMPLETED",
+    "records_staged": 23499,
+    "records_committed": 11650,
+    "error": null,
+    "started_at": "2026-09-23T23:57:55.053860",
+    "completed_at": "2026-09-24T00:06:00.328643"
+  },
+  "36": {
+    "status": "COMPLETED",
+    "records_staged": 19923,
+    "records_committed": 11494,
+    "error": null,
+    "started_at": "2026-09-24T00:06:00.329713",
+    "completed_at": "2026-09-24T00:09:24.314063"
+  },
+  "16": {
+    "status": "COMPLETED",
+    "records_staged": 1139,
+    "records_committed": 904,
+    "error": null,
+    "started_at": "2026-09-24T00:09:24.315548",
+    "completed_at": "2026-09-24T00:09:52.579926"
+  },
+  "5": {
+    "status": "COMPLETED",
+    "records_staged": 16941,
+    "records_committed": 7753,
+    "error": null,
+    "started_at": "2026-09-24T00:09:52.581022",
+    "completed_at": "2026-09-24T00:13:43.930157"
+  },
+  "9": {
+    "status": "COMPLETED",
+    "records_staged": 120113,
+    "records_committed": 58051,
+    "error": null,
+    "started_at": "2026-09-24T00:13:43.931633",
+    "completed_at": "2026-09-24T00:41:12.337423"
+  },
+  "19": {
+    "status": "COMPLETED",
+    "records_staged": 7508,
+    "records_committed": 3337,
+    "error": null,
+    "started_at": "2026-09-24T00:41:12.338748",
+    "completed_at": "2026-09-24T00:43:23.881811"
+  },
+  "29": {
+    "status": "COMPLETED",
+    "records_staged": 13480,
+    "records_committed": 5963,
+    "error": null,
+    "started_at": "2026-09-24T00:43:23.883309",
+    "completed_at": "2026-09-24T00:47:10.815348"
+  },
+  "23": {
+    "status": "COMPLETED",
+    "records_staged": 49750,
+    "records_committed": 22975,
+    "error": null,
+    "started_at": "2026-09-24T00:47:10.816966",
+    "completed_at": "2026-09-24T01:00:00.190416"
+  }
+}

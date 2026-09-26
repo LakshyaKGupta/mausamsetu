@@ -1,0 +1,39 @@
+[
+  {
+    "source_name": "NOAA ISD History",
+    "organization": "NOAA NCEI",
+    "source_type": "OBSERVATION",
+    "access_url": "https://www.ncei.noaa.gov/pub/data/noaa/isd-history.csv",
+    "access_status": "VERIFIED",
+    "retrieval_timestamp": "2026-09-20T10:18:34Z",
+    "coverage": "Global",
+    "resolution": "Station",
+    "variables": [
+      "temperature",
+      "wind",
+      "precipitation"
+    ],
+    "format": "CSV",
+    "sample_retrieved": true,
+    "sample_size": 2914601,
+    "notes": "Verified 543 Indian stations. 84 in Maharashtra bbox."
+  },
+  {
+    "source_name": "NOAA NCEI GFS Archive",
+    "organization": "NOAA",
+    "source_type": "FORECAST",
+    "access_url": "https://www.ncei.noaa.gov/thredds/catalog/model-gfs-g4-anl-files/202301/20230101/catalog.json",
+    "access_status": "VERIFIED",
+    "retrieval_timestamp": "2026-09-20T10:18:35Z",
+    "coverage": "Global",
+    "resolution": "0.5 degree / 0.25 degree depending on dataset",
+    "variables": [
+      "temperature",
+      "precipitation"
+    ],
+    "format": "GRIB2 / THREDDS / JSON",
+    "sample_retrieved": true,
+    "sample_size": 6380,
+    "notes": "Verified. NCEI maintains historical GFS models (issue times preserved). Requires parsing GRIB2 files via OPeNDAP or direct download."
+  }
+]

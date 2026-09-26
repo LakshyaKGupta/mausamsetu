@@ -1,0 +1,2 @@
+station_id,station_lat,station_lon,station_type,observation_time,forecast_issue_time,forecast_valid_time,lead_time_hours,observed_temperature_c,gfs_temperature_c,station_elevation_m,gfs_reference_elevation_m,elevation_difference_m,observation_qc,forecast_cycle,forecast_hour,gfs_grid_lat,gfs_grid_lon,forecast_source,forecast_file
+43063099999,18.53,73.85,Synoptic/Airport,2023-01-02T00:00:00,2023-01-01T00:00:00,2023-01-02T00:00:00,24,12.0,17.37,558.0,677.98,-119.98,1,00z,24,18.5,73.75,NOAA NCEI GFS Archive,experiments/phase6/data/raw/gfs.t00z.pgrb2.0p25.f024

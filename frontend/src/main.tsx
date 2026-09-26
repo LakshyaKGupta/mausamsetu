@@ -29,6 +29,7 @@ import FarmerAdvisoryListPage from './pages/app/farmer/AdvisoryList'
 import FarmerAskPage from './pages/app/farmer/Ask'
 import OfficerDashboard from './pages/app/officer/Dashboard'
 import AdminDashboard from './pages/app/admin/Admin'
+import MLShowcasePage from './pages/app/ml/MLShowcase'
 
 // Officer Auth Guard
 function OfficerRoute({ children }: { children: React.ReactNode }) {
@@ -95,6 +96,24 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
             element={
               <AdminRoute>
                 <AdminDashboard />
+              </AdminRoute>
+            }
+          />
+
+          {/* ML Model Lab — Admin Only */}
+          <Route
+            path="ml-showcase"
+            element={
+              <AdminRoute>
+                <MLShowcasePage />
+              </AdminRoute>
+            }
+          />
+          <Route
+            path="ml-lab"
+            element={
+              <AdminRoute>
+                <MLShowcasePage />
               </AdminRoute>
             }
           />

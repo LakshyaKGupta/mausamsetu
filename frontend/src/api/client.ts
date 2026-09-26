@@ -63,6 +63,8 @@ export const advisoryApi = {
   districtSummary: (district?: string) =>
     api.get('/advisories/district/operations-summary', { params: district ? { district } : {} }).then((r) => r.data),
 
+  districtAudit: () => api.get('/advisories/district/audit').then((r) => r.data),
+
   modelHealth: () => api.get('/advisories/district/model-health').then((r) => r.data),
 
   review: (
@@ -90,6 +92,7 @@ export const geographyApi = {
   getBlocks: (district?: string) => api.get('/geography/blocks', { params: district ? { district } : {} }).then((r) => r.data),
   getPanchayats: (block?: string) => api.get('/geography/panchayats', { params: block ? { block } : {} }).then((r) => r.data),
   getCrops: (state?: string) => api.get('/geography/crops', { params: state ? { state } : {} }).then((r) => r.data),
+  searchLocations: (q: string) => api.get('/geography/search', { params: { q } }).then((r) => r.data),
 }
 
 export const fieldReportApi = {
@@ -113,13 +116,45 @@ export const officerApi = {
     api.get(`/officers/${officerId}/dashboard`).then((r) => r.data),
   assign: (data: { officer_id: number; block: string }) =>
     api.post('/officers/assign', data).then((r) => r.data),
+  dispatchBroadcast: (data: {
+    officer_id?: number
+    block?: string
+    panchayats: string[]
+    channels: string[]
+    priority: string
+    crop: string
+    message_text: string
+  }) => api.post('/officers/broadcast', data).then((r) => r.data),
 }
 
 export const weatherApi = {
   getToday: (panchayat_id: number) =>
     api.get(`/weather/${panchayat_id}/today`).then((r) => r.data),
+  getLiveWeather: (params: {
+    lat: number
+    lon: number
+    name?: string
+    block?: string
+    district?: string
+    state?: string
+    elevation_m?: number
+    crop?: string
+  }) => api.get('/weather/live', { params }).then((r) => r.data),
+  getLiveHourly: (params: {
+    lat: number
+    lon: number
+    mode: string
+    name?: string
+    crop?: string
+  }) => api.get('/weather/live-hourly', { params }).then((r) => r.data),
+  geocodeSearch: (q: string) =>
+    api.get('/weather/geocode', { params: { q } }).then((r) => r.data),
+  reverseGeocode: (lat: number, lon: number, lang = 'en') =>
+    api.get('/weather/reverse-geocode', { params: { lat, lon, lang } }).then((r) => r.data),
   getHistory: (panchayat_id: number, days = 7) =>
     api.get(`/weather/${panchayat_id}/history`, { params: { days } }).then((r) => r.data),
+  getAgrometIndices: (panchayat_id: number) =>
+    api.get(`/weather/${panchayat_id}/agromet-indices`).then((r) => r.data),
 }
 
 export const panchayatApi = {
@@ -129,8 +164,8 @@ export const panchayatApi = {
 }
 
 export const authApi = {
-  login: (phone: string, otp?: string) =>
-    api.post('/auth/login', { phone, otp: otp || '123456' }).then((r) => r.data),
+  institutionalLogin: (username: string, password: string) =>
+    api.post('/auth/login', { username, password }).then((r) => r.data),
 
   farmerSignup: (data: {
     name: string
@@ -148,10 +183,10 @@ export const authApi = {
     api.get(`/auth/demo-session/${role}`).then((r) => r.data),
 
   requestOtp: (phone: string) =>
-    api.post('/auth/officer/request-otp', { phone }).then((r) => r.data),
+    api.post('/auth/farmer/request-otp', { phone }).then((r) => r.data),
 
   verifyOtp: (phone: string, otp: string) =>
-    api.post('/auth/officer/verify-otp', { phone, otp }).then((r) => r.data),
+    api.post('/auth/farmer/verify-otp', { phone, otp }).then((r) => r.data),
 }
 
 export const chatbotApi = {
@@ -163,3 +198,60 @@ export const chatbotApi = {
     session_id?: number
   }) => api.post('/chatbot/message', body).then((r) => r.data),
 }
+
+export const farmerApi = {
+  getCrops: () => api.get('/farmer/crops').then((r) => r.data),
+  addCrop: (data: {
+    crop: string
+    variety: string
+    stage: string
+    daysAfterSowing: number
+    areaAcres: number
+  }) => api.post('/farmer/crops', data).then((r) => r.data),
+  getMandiPrices: () => api.get('/farmer/mandi-prices').then((r) => r.data),
+  getAdvice: (params: {
+    lat: number
+    lon: number
+    crops: string
+    language: string
+  }) => api.get('/farmer/advice', { params }).then((r) => r.data),
+  getCropAnalysis: (params: {
+    lat: number
+    lon: number
+    crop: string
+    stage?: string
+    days_after_sowing?: number
+  }) => api.get('/farmer/crop-analysis', { params }).then((r) => r.data),
+}
+
+export const adminApi = {
+  dataHealth: () => api.get('/admin/data-health-pipelines').then((r) => r.data),
+  getModelBenchmarkCurve: () => api.get('/admin/model-benchmark-curve').then((r) => r.data),
+  simulateFallback: () => api.post('/admin/simulate-fallback').then((r) => r.data),
+}
+
+export const mlApi = {
+  inferDownscale: (data: {
+    target_elevation_m: number
+    reference_elevation_m: number
+    base_temperature_c: number
+    base_precipitation_mm: number
+    lapse_rate_c_per_km?: number
+    aspect_windward?: boolean
+    soil_saturation_pct?: number
+    ndvi_index?: number
+  }) => api.post('/ml/infer-downscale', data).then((r) => r.data),
+
+  predictPestRisk: (data: {
+    crop: string
+    growth_stage: string
+    avg_temp_72h: number
+    avg_humidity_72h: number
+    consecutive_rain_days: number
+  }) => api.post('/ml/predict-pest-risk', data).then((r) => r.data),
+
+  getMetrics: () => api.get('/ml/metrics').then((r) => r.data),
+}
+
+
+

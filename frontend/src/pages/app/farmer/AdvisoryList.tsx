@@ -1,239 +1,265 @@
 import React, { useState, useEffect } from 'react'
 import { useOutletContext } from 'react-router-dom'
 import {
-  CheckCircle, Volume2, Search, Filter, Calendar,
-  ShieldCheck, Leaf, AlertCircle, ChevronDown, ChevronUp
+  CheckCircle,
+  Volume2,
+  ChevronDown,
+  ChevronUp,
+  Loader2,
+  Droplets,
+  Thermometer,
+  Bug,
+  Wind,
+  Info,
+  MapPin,
+  Leaf
 } from 'lucide-react'
-import { advisoryApi } from '@/api/client'
-import type { Advisory, Language } from '@/types'
+import type { Language } from '@/types'
 import { FarmerNav } from '@/components/farmer/FarmerNav'
-import { cropEmoji, cropLabel, formatDate, cn } from '@/lib/utils'
+import { farmerApi } from '@/api/client'
+import { cn } from '@/lib/utils'
+
+interface AdviceItem {
+  crop: string
+  crop_emoji: string
+  type: string
+  headline: string
+  detail: string
+  why_explanation: string
+  risk_level: string
+  timestamp: string
+}
+
+const T: Record<Language, {
+  title: string; subtitle: string; loading: string; noAdvice: string;
+  whyTitle: string; weatherBasis: string; listenBtn: string;
+  riskLabels: Record<string, string>; typeLabels: Record<string, string>;
+}> = {
+  hi: {
+    title: '🌱 आज की कृषि सलाह',
+    subtitle: 'वास्तविक मौसम पर आधारित बुद्धिमान सलाह',
+    loading: 'मौसम विश्लेषण से सलाह बनाई जा रही है...',
+    noAdvice: 'कोई सलाह उपलब्ध नहीं',
+    whyTitle: '📋 यह सलाह क्यों दी गई?',
+    weatherBasis: 'मौसम आधार',
+    listenBtn: 'सुनें',
+    riskLabels: { safe: '✅ सुरक्षित', warning: '⚠️ सतर्कता', critical: '🔴 गंभीर' },
+    typeLabels: { irrigation: '💧 सिंचाई', spray: '🧪 छिड़काव', pest_alert: '🐛 कीट सतर्कता' },
+  },
+  mr: {
+    title: '🌱 आजचा शेती सल्ला',
+    subtitle: 'वास्तविक हवामानावर आधारित बुद्धिमान सल्ला',
+    loading: 'हवामान विश्लेषणातून सल्ला तयार होत आहे...',
+    noAdvice: 'कोणताही सल्ला उपलब्ध नाही',
+    whyTitle: '📋 हा सल्ला का दिला?',
+    weatherBasis: 'हवामान आधार',
+    listenBtn: 'ऐका',
+    riskLabels: { safe: '✅ सुरक्षित', warning: '⚠️ सतर्कता', critical: '🔴 गंभीर' },
+    typeLabels: { irrigation: '💧 सिंचन', spray: '🧪 फवारणी', pest_alert: '🐛 कीड सतर्कता' },
+  },
+  en: {
+    title: '🌱 Today\'s Farm Advice',
+    subtitle: 'Intelligent advice based on real weather data',
+    loading: 'Generating advice from weather analysis...',
+    noAdvice: 'No advice available',
+    whyTitle: '📋 Why this advice?',
+    weatherBasis: 'Weather Basis',
+    listenBtn: 'Listen',
+    riskLabels: { safe: '✅ Safe', warning: '⚠️ Watch', critical: '🔴 Critical' },
+    typeLabels: { irrigation: '💧 Irrigation', spray: '🧪 Spray', pest_alert: '🐛 Pest Alert' },
+  },
+}
 
 export default function FarmerAdvisoryListPage() {
   const outlet = useOutletContext<any>()
   const lang: Language = outlet?.lang || (localStorage.getItem('mausamsetu_lang') as Language) || 'hi'
-
-  const [advisories, setAdvisories] = useState<Advisory[]>([])
+  const [advices, setAdvices] = useState<AdviceItem[]>([])
+  const [weatherSummary, setWeatherSummary] = useState<any>(null)
   const [loading, setLoading] = useState(true)
-  const [filterCrop, setFilterCrop] = useState<string>('all')
-  const [search, setSearch] = useState('')
-  const [expandedId, setExpandedId] = useState<number | null>(null)
-  const [whyModalAdvisory, setWhyModalAdvisory] = useState<Advisory | null>(null)
+  const [expandedIdx, setExpandedIdx] = useState<number | null>(null)
+  const t = T[lang] || T.hi
+
+  const activeLat = outlet?.selectedLocation?.lat || 21.282
+  const activeLon = outlet?.selectedLocation?.lon || 78.895
+  const locationName = outlet?.selectedLocation?.name || 'Nagpur'
+
+  // Load saved crops from localStorage
+  const getSavedCrops = (): string => {
+    try {
+      const crops = JSON.parse(localStorage.getItem('mausamsetu_crops') || '[]')
+      if (crops.length > 0) return crops.map((c: any) => c.crop || c).join(',')
+    } catch { /* ignore */ }
+    return 'soybean'
+  }
 
   useEffect(() => {
-    advisoryApi.getApprovedForPanchayat(1).then((data) => {
-      setAdvisories(data)
-      setLoading(false)
-    }).catch(() => setLoading(false))
-  }, [])
+    setLoading(true)
+    const cropStr = getSavedCrops()
+    farmerApi
+      .getAdvice({ lat: activeLat, lon: activeLon, crops: cropStr, language: lang })
+      .then((res: any) => {
+        setAdvices(res.advices || [])
+        setWeatherSummary(res.weather_summary || null)
+      })
+      .catch(() => setAdvices([]))
+      .finally(() => setLoading(false))
+  }, [activeLat, activeLon, lang])
 
   const speak = (text: string) => {
     if (!('speechSynthesis' in window)) return
     window.speechSynthesis.cancel()
     const utterance = new SpeechSynthesisUtterance(text)
     utterance.lang = lang === 'hi' ? 'hi-IN' : lang === 'mr' ? 'mr-IN' : 'en-IN'
-    utterance.rate = 0.92
+    utterance.rate = 0.9
     window.speechSynthesis.speak(utterance)
   }
 
-  const filtered = advisories.filter((a) => {
-    const matchesCrop = filterCrop === 'all' || a.crop.toLowerCase() === filterCrop.toLowerCase()
-    const content = lang === 'hi' ? a.content_hi : lang === 'mr' ? (a.content_mr || a.content_hi) : a.content_en
-    const matchesSearch = !search || a.crop.toLowerCase().includes(search.toLowerCase()) || content.toLowerCase().includes(search.toLowerCase())
-    return matchesCrop && matchesSearch
-  })
-
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col font-sans pb-20 md:pb-8">
+    <div className="min-h-screen bg-slate-50 pb-[calc(5.5rem+env(safe-area-inset-bottom,0px))] md:pb-8">
       <FarmerNav lang={lang} />
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6 flex-1">
+      <div className="max-w-2xl mx-auto px-4 pt-4 space-y-4">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
-          <div>
-            <h1 className="text-xl sm:text-2xl font-bold text-slate-900 flex items-center gap-2">
-              <CheckCircle className="text-emerald-700" size={24} />
-              सत्यापित कृषि सलाह अभिलेखागार (Advisories Archive)
-            </h1>
-            <p className="text-xs text-slate-500 mt-1">
-              कृषि अधिकारियों द्वारा हस्ताक्षरित एवं जारी किए गए परामर्श
-            </p>
-          </div>
-          <span className="text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200 px-3 py-1 rounded-full self-start sm:self-auto">
-            धापेवाड़ा ग्राम पंचायत
-          </span>
-        </div>
-
-        {/* Filters and Search */}
-        <div className="flex flex-col sm:flex-row items-center gap-3">
-          <div className="relative flex-1 w-full">
-            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-            <input
-              className="input pl-9 text-xs"
-              placeholder="फसल या सलाह में खोजें..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
-
-          <div className="flex items-center gap-1.5 overflow-x-auto w-full sm:w-auto p-1 bg-white border border-slate-200 rounded-xl">
-            {['all', 'soybean', 'cotton', 'wheat'].map((c) => (
-              <button
-                key={c}
-                onClick={() => setFilterCrop(c)}
-                className={cn(
-                  'px-3 py-1.5 text-xs font-semibold rounded-lg capitalize whitespace-nowrap transition-all',
-                  filterCrop === c ? 'bg-brand-600 text-white' : 'text-slate-600 hover:text-slate-900'
-                )}
-              >
-                {c === 'all' ? 'सभी फसलें' : c}
-              </button>
-            ))}
+        <div>
+          <h1 className="text-lg font-bold text-slate-900">{t.title}</h1>
+          <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium">
+            <MapPin size={12} />
+            <span>{locationName}</span>
+            <span>·</span>
+            <span>{t.subtitle}</span>
           </div>
         </div>
 
-        {/* Advisory List */}
-        {loading ? (
-          <div className="flex justify-center py-20">
-            <div className="w-8 h-8 border-2 border-brand-600 border-t-transparent rounded-full animate-spin" />
-          </div>
-        ) : filtered.length === 0 ? (
-          <div className="bg-white border border-slate-200 rounded-2xl p-12 text-center space-y-2">
-            <span className="text-4xl">🌾</span>
-            <p className="font-bold text-slate-700 text-sm">इस चयन के लिए कोई पुरानी सलाह उपलब्ध नहीं है</p>
-            <p className="text-xs text-slate-400">दैनिक सलाह कृषि अधिकारी द्वारा प्रत्येक प्रातः 09:30 AM पर प्रकाशित की जाती है।</p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {filtered.map((advisory) => {
-              const content =
-                lang === 'hi' ? advisory.content_hi
-                : lang === 'mr' ? (advisory.content_mr || advisory.content_hi)
-                : advisory.content_en
-
-              const isExpanded = expandedId === advisory.id
-
-              return (
-                <div
-                  key={advisory.id}
-                  className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm space-y-3 hover:border-slate-300 transition-all"
-                >
-                  <div className="flex items-center justify-between flex-wrap gap-2">
-                    <div className="flex items-center gap-3">
-                      <span className="text-3xl">{cropEmoji(advisory.crop)}</span>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <h3 className="font-bold text-slate-900 text-base capitalize">
-                            {cropLabel(advisory.crop, lang)}
-                          </h3>
-                          <span className="font-mono text-[10px] text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">
-                            #MS-{1000 + advisory.id}
-                          </span>
-                        </div>
-                        <p className="text-xs text-slate-500">
-                          {formatDate(advisory.advisory_date)} • {advisory.crop_stage || 'Vegetative Stage'}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <span className="badge-green text-xs font-bold flex items-center gap-1">
-                        <CheckCircle size={12} /> अधिकारी सत्यापित
-                      </span>
-                    </div>
-                  </div>
-
-                  <p className="text-sm text-slate-800 font-medium leading-relaxed bg-slate-50 p-4 rounded-xl border border-slate-100">
-                    {content}
-                  </p>
-
-                  {/* Expanded Officer Note */}
-                  {isExpanded && advisory.officer_note && (
-                    <div className="bg-emerald-50/70 border border-emerald-200 p-3 rounded-xl text-xs text-slate-700">
-                      <strong className="text-emerald-950 block mb-0.5">कृषि अधिकारी की अतिरिक्त टिप्पणी:</strong>
-                      <p>{advisory.officer_note}</p>
-                    </div>
-                  )}
-
-                  <div className="flex items-center justify-between pt-2 border-t border-slate-100 flex-wrap gap-2 text-xs">
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => speak(content)}
-                        className="btn-secondary text-xs py-1.5 px-3 flex items-center gap-1.5"
-                      >
-                        <Volume2 size={14} />
-                        सुनें
-                      </button>
-
-                      <button
-                        onClick={() => setWhyModalAdvisory(advisory)}
-                        className="btn-primary text-xs py-1.5 px-3 flex items-center gap-1"
-                      >
-                        क्यूं? (Why?)
-                      </button>
-
-                      {advisory.officer_note && (
-                        <button
-                          onClick={() => setExpandedId(isExpanded ? null : advisory.id)}
-                          className="text-slate-600 hover:text-slate-900 font-semibold flex items-center gap-1 px-2 py-1"
-                        >
-                          {isExpanded ? 'कम विवरण' : 'अधिक विवरण'}
-                          {isExpanded ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
-                        </button>
-                      )}
-                    </div>
-
-                    <span className="text-[11px] text-slate-400">
-                      मॉडल विश्वसनीयता: <strong className="text-emerald-700">{advisory.reliability_tier || 'High'}</strong>
-                    </span>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        )}
-
-        {/* Explainability Modal */}
-        {whyModalAdvisory && (
-          <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 animate-scale-in">
-              <div className="flex items-start justify-between border-b border-slate-100 pb-3">
-                <div>
-                  <h4 className="font-bold text-slate-900 text-base">सलाह का वैज्ञानिक आधार</h4>
-                  <p className="text-xs text-slate-500 capitalize">{whyModalAdvisory.crop} • {whyModalAdvisory.crop_stage || 'Vegetative Stage'}</p>
-                </div>
-                <button
-                  onClick={() => setWhyModalAdvisory(null)}
-                  className="text-slate-400 hover:text-slate-600 text-lg font-bold"
-                >
-                  ✕
-                </button>
-              </div>
-
-              <div className="space-y-2 text-xs text-slate-700">
-                <div className="bg-blue-50 p-2.5 rounded-xl flex justify-between">
-                  <span>अनुमानित वर्षा:</span>
-                  <span className="font-bold text-blue-700">{whyModalAdvisory.predicted_rainfall_mm ?? 3.8} mm (4.2 mm क्षेत्रीय)</span>
-                </div>
-                <div className="bg-slate-50 p-2.5 rounded-xl flex justify-between">
-                  <span>मृदा नमी:</span>
-                  <span className="font-bold text-emerald-800">पर्याप्त (Adequate)</span>
-                </div>
-                <p className="bg-emerald-50/70 p-3 rounded-xl text-slate-800 border border-emerald-200">
-                  काली कपास मिट्टी में जलधारण क्षमता अधिक है। 3.8 mm वर्षा होने पर अतिरिक्त सिंचाई से जड़ों में ऑक्सीजन की कमी हो सकती है। अतः सिंचाई टालने की सलाह दी गई है।
-                </p>
-              </div>
-
-              <button
-                onClick={() => setWhyModalAdvisory(null)}
-                className="w-full btn-primary text-xs py-2"
-              >
-                समझ गया
-              </button>
+        {/* Weather Summary Banner */}
+        {weatherSummary && !loading && (
+          <div className="bg-white rounded-2xl border border-slate-200 p-3 flex items-center gap-3 text-xs">
+            <div className="flex items-center gap-2 text-slate-600">
+              <Thermometer size={14} className="text-orange-500" />
+              <span className="font-bold">{weatherSummary.temperature_max}°C</span>
+            </div>
+            <div className="flex items-center gap-2 text-slate-600">
+              <Droplets size={14} className="text-blue-500" />
+              <span className="font-bold">{weatherSummary.rainfall_mm} mm</span>
+            </div>
+            <div className="flex items-center gap-2 text-slate-600">
+              <Wind size={14} className="text-gray-500" />
+              <span className="font-bold">{weatherSummary.wind_speed_kmh} km/h</span>
+            </div>
+            <div className="flex items-center gap-2 text-slate-600">
+              <span className="font-bold">{weatherSummary.humidity_pct}%</span>
             </div>
           </div>
         )}
-      </main>
+
+        {/* Loading */}
+        {loading && (
+          <div className="py-12 flex flex-col items-center gap-3">
+            <Loader2 className="animate-spin text-emerald-600" size={32} />
+            <p className="text-sm font-medium text-slate-500">{t.loading}</p>
+          </div>
+        )}
+
+        {/* No Advice */}
+        {!loading && advices.length === 0 && (
+          <div className="py-12 text-center">
+            <p className="text-sm font-semibold text-slate-500">{t.noAdvice}</p>
+          </div>
+        )}
+
+        {/* Advice Cards */}
+        {!loading && advices.map((advice, idx) => {
+          const isExpanded = expandedIdx === idx
+          const riskColors: Record<string, string> = {
+            safe: 'border-emerald-200 bg-emerald-50/30',
+            warning: 'border-amber-200 bg-amber-50/30',
+            critical: 'border-red-200 bg-red-50/30',
+          }
+
+          return (
+            <div
+              key={`${advice.crop}-${advice.type}-${idx}`}
+              className={cn(
+                'rounded-2xl border shadow-sm overflow-hidden transition-all',
+                riskColors[advice.risk_level] || 'border-slate-200 bg-white'
+              )}
+            >
+              {/* Card Header */}
+              <div className="px-4 py-3 flex items-start justify-between gap-3">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-lg">{advice.crop_emoji}</span>
+                    <span className="text-xs font-bold text-slate-500">
+                      {advice.crop}
+                    </span>
+                    <span className={cn(
+                      'text-[10px] font-bold px-2 py-0.5 rounded-full',
+                      advice.risk_level === 'safe' ? 'bg-emerald-100 text-emerald-800' :
+                      advice.risk_level === 'warning' ? 'bg-amber-100 text-amber-800' :
+                      'bg-red-100 text-red-800'
+                    )}>
+                      {t.riskLabels[advice.risk_level] || advice.risk_level}
+                    </span>
+                  </div>
+                  <h3 className="text-sm font-bold text-slate-900 leading-snug">
+                    {advice.headline}
+                  </h3>
+                  <p className="text-xs text-slate-600 mt-1 leading-relaxed">
+                    {advice.detail}
+                  </p>
+                </div>
+
+                {/* Listen button */}
+                <button
+                  onClick={() => speak(`${advice.headline}. ${advice.detail}`)}
+                  className="flex-shrink-0 w-9 h-9 rounded-xl bg-emerald-100 hover:bg-emerald-200 text-emerald-800 flex items-center justify-center transition-colors"
+                  aria-label={t.listenBtn}
+                >
+                  <Volume2 size={16} />
+                </button>
+              </div>
+
+              {/* Why Explanation Toggle */}
+              <button
+                onClick={() => setExpandedIdx(isExpanded ? null : idx)}
+                className="w-full px-4 py-2 flex items-center justify-between bg-slate-50/50 hover:bg-slate-100/50 border-t border-slate-100 transition-colors"
+              >
+                <span className="text-xs font-bold text-slate-500 flex items-center gap-1.5">
+                  <Info size={13} />
+                  {t.whyTitle}
+                </span>
+                {isExpanded ? <ChevronUp size={14} className="text-slate-400" /> : <ChevronDown size={14} className="text-slate-400" />}
+              </button>
+
+              {/* Expanded Why Section */}
+              {isExpanded && (
+                <div className="px-4 py-3 bg-slate-50 border-t border-slate-100 text-xs text-slate-700 leading-relaxed">
+                  <div className="flex items-start gap-2">
+                    <CheckCircle size={14} className="text-emerald-600 flex-shrink-0 mt-0.5" />
+                    <p>{advice.why_explanation}</p>
+                  </div>
+                  <div className="mt-2 flex items-center gap-1.5 text-[10px] text-slate-400 font-medium">
+                    <Leaf size={10} />
+                    <span>{t.typeLabels[advice.type] || advice.type}</span>
+                    <span>·</span>
+                    <span>Open-Meteo Real Data</span>
+                  </div>
+                </div>
+              )}
+            </div>
+          )
+        })}
+
+        {/* Source Footer */}
+        {!loading && advices.length > 0 && (
+          <div className="text-center py-3">
+            <span className="text-[11px] font-medium text-slate-400">
+              {lang === 'en' ? 'Powered by real Open-Meteo weather data' :
+               lang === 'mr' ? 'वास्तविक Open-Meteo हवामान डेटा वर आधारित' :
+               'वास्तविक Open-Meteo मौसम डेटा पर आधारित'}
+            </span>
+          </div>
+        )}
+      </div>
     </div>
   )
 }

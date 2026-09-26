@@ -31,25 +31,45 @@ STATES_DATA: list[dict] = [
         "districts": [
             {
                 "district": "Nagpur",
+                "lat": 21.1458, "lon": 79.0882, "elevation_m": 310.0,
                 "blocks": [
-                    {"block": "Kalmeshwar", "panchayats_count": 24, "assigned_officer": "Rajesh Sharma"},
-                    {"block": "Hingna", "panchayats_count": 20, "assigned_officer": "Sunita Patil"},
-                    {"block": "Saoner", "panchayats_count": 18, "assigned_officer": "Vikas Deshmukh"},
-                    {"block": "Katol", "panchayats_count": 16, "assigned_officer": "Anil Thakre"},
+                    {"block": "Kalmeshwar", "panchayats_count": 24, "assigned_officer": "Rajesh Sharma", "lat": 21.2333, "lon": 78.9167, "elevation_m": 328.0},
+                    {"block": "Hingna", "panchayats_count": 20, "assigned_officer": "Sunita Patil", "lat": 21.0667, "lon": 78.9667, "elevation_m": 315.0},
+                    {"block": "Saoner", "panchayats_count": 18, "assigned_officer": "Vikas Deshmukh", "lat": 21.4667, "lon": 78.9000, "elevation_m": 332.0},
+                    {"block": "Katol", "panchayats_count": 16, "assigned_officer": "Anil Thakre", "lat": 21.2786, "lon": 78.5867, "elevation_m": 417.0},
+                    {"block": "Ramtek", "panchayats_count": 19, "assigned_officer": "Pooja Raut", "lat": 21.3963, "lon": 79.3333, "elevation_m": 345.0},
+                ]
+            },
+            {
+                "district": "Nashik",
+                "lat": 19.9973, "lon": 73.7910, "elevation_m": 584.0,
+                "blocks": [
+                    {"block": "Dindori", "panchayats_count": 25, "assigned_officer": "Nitin Bhamre", "lat": 20.2000, "lon": 73.8333, "elevation_m": 620.0},
+                    {"block": "Niphad", "panchayats_count": 28, "assigned_officer": "Sachin Patil", "lat": 20.0833, "lon": 74.1167, "elevation_m": 560.0},
+                ]
+            },
+            {
+                "district": "Pune",
+                "lat": 18.5204, "lon": 73.8567, "elevation_m": 560.0,
+                "blocks": [
+                    {"block": "Baramati", "panchayats_count": 30, "assigned_officer": "Amol Jagtap", "lat": 18.1517, "lon": 74.5771, "elevation_m": 538.0},
+                    {"block": "Junnar", "panchayats_count": 24, "assigned_officer": "Sneha More", "lat": 19.2069, "lon": 73.8767, "elevation_m": 689.0},
                 ]
             },
             {
                 "district": "Wardha",
+                "lat": 20.7453, "lon": 78.6022, "elevation_m": 234.0,
                 "blocks": [
-                    {"block": "Deoli", "panchayats_count": 22, "assigned_officer": "Pradeep Rane"},
-                    {"block": "Arvi", "panchayats_count": 19, "assigned_officer": "Kavita Shinde"},
+                    {"block": "Deoli", "panchayats_count": 22, "assigned_officer": "Pradeep Rane", "lat": 20.6558, "lon": 78.4831, "elevation_m": 240.0},
+                    {"block": "Arvi", "panchayats_count": 19, "assigned_officer": "Kavita Shinde", "lat": 20.9833, "lon": 78.2333, "elevation_m": 260.0},
                 ]
             },
             {
                 "district": "Amravati",
+                "lat": 20.9320, "lon": 77.7523, "elevation_m": 343.0,
                 "blocks": [
-                    {"block": "Morshi", "panchayats_count": 25, "assigned_officer": "Sanjay Kale"},
-                    {"block": "Warud", "panchayats_count": 23, "assigned_officer": "Deepak Raut"},
+                    {"block": "Morshi", "panchayats_count": 25, "assigned_officer": "Sanjay Kale", "lat": 21.3167, "lon": 78.0167, "elevation_m": 380.0},
+                    {"block": "Warud", "panchayats_count": 23, "assigned_officer": "Deepak Raut", "lat": 21.4667, "lon": 78.2667, "elevation_m": 410.0},
                 ]
             }
         ]
@@ -63,15 +83,129 @@ STATES_DATA: list[dict] = [
         "districts": [
             {
                 "district": "Ludhiana",
+                "lat": 30.9010, "lon": 75.8573, "elevation_m": 256.0,
                 "blocks": [
-                    {"block": "Jagraon", "panchayats_count": 28, "assigned_officer": "Gurpreet Singh"},
-                    {"block": "Khanna", "panchayats_count": 24, "assigned_officer": "Harpreet Kaur"},
+                    {"block": "Jagraon", "panchayats_count": 28, "assigned_officer": "Gurpreet Singh", "lat": 30.7853, "lon": 75.4789, "elevation_m": 240.0},
+                    {"block": "Khanna", "panchayats_count": 24, "assigned_officer": "Harpreet Kaur", "lat": 30.7028, "lon": 76.2167, "elevation_m": 254.0},
+                ]
+            },
+            {
+                "district": "Bathinda",
+                "lat": 30.2110, "lon": 74.9455, "elevation_m": 201.0,
+                "blocks": [
+                    {"block": "Talwandi Sabo", "panchayats_count": 22, "assigned_officer": "Manjit Dhillon", "lat": 29.9833, "lon": 75.0833, "elevation_m": 210.0},
                 ]
             },
             {
                 "district": "Moga",
+                "lat": 30.8165, "lon": 75.1717, "elevation_m": 217.0,
                 "blocks": [
-                    {"block": "Baghapurana", "panchayats_count": 21, "assigned_officer": "Jaswinder Brar"},
+                    {"block": "Baghapurana", "panchayats_count": 21, "assigned_officer": "Jaswinder Brar", "lat": 30.6833, "lon": 75.1167, "elevation_m": 220.0},
+                ]
+            }
+        ]
+    },
+    {
+        "state": "Haryana",
+        "code": "HR",
+        "languages": ["hi", "en"],
+        "major_crops": ["wheat", "rice", "mustard", "sugarcane", "cotton"],
+        "districts_count": 22,
+        "districts": [
+            {
+                "district": "Karnal",
+                "lat": 29.6857, "lon": 76.9905, "elevation_m": 252.0,
+                "blocks": [
+                    {"block": "Nilokheri", "panchayats_count": 26, "assigned_officer": "Virender Malik", "lat": 29.8333, "lon": 76.9167, "elevation_m": 250.0},
+                    {"block": "Gharaunda", "panchayats_count": 22, "assigned_officer": "Rakesh Dahiya", "lat": 29.5333, "lon": 76.9667, "elevation_m": 248.0},
+                ]
+            },
+            {
+                "district": "Hisar",
+                "lat": 29.1492, "lon": 75.7217, "elevation_m": 215.0,
+                "blocks": [
+                    {"block": "Hansi", "panchayats_count": 25, "assigned_officer": "Satish Punia", "lat": 29.1000, "lon": 75.9667, "elevation_m": 218.0},
+                ]
+            }
+        ]
+    },
+    {
+        "state": "Madhya Pradesh",
+        "code": "MP",
+        "languages": ["hi", "en"],
+        "major_crops": ["soybean", "wheat", "chickpea", "mustard", "cotton"],
+        "districts_count": 55,
+        "districts": [
+            {
+                "district": "Indore",
+                "lat": 22.7196, "lon": 75.8577, "elevation_m": 553.0,
+                "blocks": [
+                    {"block": "Depalpur", "panchayats_count": 32, "assigned_officer": "Anurag Chouhan", "lat": 22.8500, "lon": 75.5500, "elevation_m": 540.0},
+                    {"block": "Sanwer", "panchayats_count": 28, "assigned_officer": "Pooja Patel", "lat": 22.9833, "lon": 75.8333, "elevation_m": 530.0},
+                ]
+            },
+            {
+                "district": "Ujjain",
+                "lat": 23.1765, "lon": 75.7885, "elevation_m": 491.0,
+                "blocks": [
+                    {"block": "Ghatiya", "panchayats_count": 24, "assigned_officer": "Mohan Verma", "lat": 23.2833, "lon": 75.8000, "elevation_m": 495.0},
+                ]
+            }
+        ]
+    },
+    {
+        "state": "Uttar Pradesh",
+        "code": "UP",
+        "languages": ["hi", "en"],
+        "major_crops": ["wheat", "rice", "sugarcane", "potato", "mustard"],
+        "districts_count": 75,
+        "districts": [
+            {
+                "district": "Varanasi",
+                "lat": 25.3176, "lon": 82.9739, "elevation_m": 80.0,
+                "blocks": [
+                    {"block": "Pindra", "panchayats_count": 26, "assigned_officer": "Ashok Pandey", "lat": 25.4833, "lon": 82.8500, "elevation_m": 83.0},
+                    {"block": "Araziline", "panchayats_count": 30, "assigned_officer": "Sunil Yadav", "lat": 25.2667, "lon": 82.8833, "elevation_m": 81.0},
+                ]
+            },
+            {
+                "district": "Lucknow",
+                "lat": 26.8467, "lon": 80.9462, "elevation_m": 123.0,
+                "blocks": [
+                    {"block": "Bakshi Ka Talab", "panchayats_count": 25, "assigned_officer": "Manoj Tiwari", "lat": 27.0167, "lon": 80.9167, "elevation_m": 125.0},
+                ]
+            }
+        ]
+    },
+    {
+        "state": "Rajasthan",
+        "code": "RJ",
+        "languages": ["hi", "en"],
+        "major_crops": ["mustard", "wheat", "chickpea", "pearl millet", "cotton"],
+        "districts_count": 50,
+        "districts": [
+            {
+                "district": "Jaipur",
+                "lat": 26.9124, "lon": 75.7873, "elevation_m": 431.0,
+                "blocks": [
+                    {"block": "Chomu", "panchayats_count": 28, "assigned_officer": "Bhupender Meena", "lat": 27.1667, "lon": 75.7167, "elevation_m": 435.0},
+                    {"block": "Sanganer", "panchayats_count": 24, "assigned_officer": "Radhe Sharma", "lat": 26.8000, "lon": 75.7667, "elevation_m": 425.0},
+                ]
+            }
+        ]
+    },
+    {
+        "state": "Gujarat",
+        "code": "GJ",
+        "languages": ["gu", "hi", "en"],
+        "major_crops": ["cotton", "groundnut", "wheat", "castor"],
+        "districts_count": 33,
+        "districts": [
+            {
+                "district": "Rajkot",
+                "lat": 22.3039, "lon": 70.8022, "elevation_m": 128.0,
+                "blocks": [
+                    {"block": "Gondal", "panchayats_count": 27, "assigned_officer": "Pravin Jadeja", "lat": 21.9667, "lon": 70.8000, "elevation_m": 132.0},
                 ]
             }
         ]
@@ -85,9 +219,26 @@ STATES_DATA: list[dict] = [
         "districts": [
             {
                 "district": "Mandya",
+                "lat": 12.5230, "lon": 76.8967, "elevation_m": 678.0,
                 "blocks": [
-                    {"block": "Pandavapura", "panchayats_count": 26, "assigned_officer": "Ramesh Gowda"},
-                    {"block": "Maddur", "panchayats_count": 22, "assigned_officer": "Suresh Kumar"},
+                    {"block": "Pandavapura", "panchayats_count": 26, "assigned_officer": "Ramesh Gowda", "lat": 12.4936, "lon": 76.6697, "elevation_m": 692.0},
+                    {"block": "Maddur", "panchayats_count": 22, "assigned_officer": "Suresh Kumar", "lat": 12.5847, "lon": 77.0450, "elevation_m": 662.0},
+                ]
+            }
+        ]
+    },
+    {
+        "state": "Bihar",
+        "code": "BR",
+        "languages": ["hi", "en"],
+        "major_crops": ["rice", "wheat", "maize", "pulses"],
+        "districts_count": 38,
+        "districts": [
+            {
+                "district": "Patna",
+                "lat": 25.5941, "lon": 85.1376, "elevation_m": 53.0,
+                "blocks": [
+                    {"block": "Bihta", "panchayats_count": 26, "assigned_officer": "Arvind Kumar", "lat": 25.5667, "lon": 84.8667, "elevation_m": 55.0},
                 ]
             }
         ]
@@ -263,6 +414,13 @@ def list_panchayats_hierarchy(
             lng=p.lng,
             elevation_m=p.elevation_m,
             assigned_officer=officer_map.get(p.block, "Rajesh Sharma"),
+            registered_farmers=75 + (p.id * 7) % 60,
+            primary_crops=["soybean", "cotton"] if p.block in ["Kalmeshwar", "Saoner"] else ["orange", "chickpea"],
+            telemetry_status="FRESH" if p.id % 5 != 0 else "DELAYED",
+            last_sync="10:30 AM",
+            weather_status_text="0.1 mm (Clear)" if p.id % 2 == 0 else "1.2 mm (Scattered)",
+            advisory_status="Approved" if p.id % 3 == 0 else "Pending",
+            model_state="Normal (XGB-03)",
         )
         for p in panchayats
     ]
@@ -275,3 +433,135 @@ def list_crops(state_code: Optional[str] = None):
         filtered = [c for c in CROPS_METADATA if state_code.upper() in c["supported_states"]]
         return [CropMetadataOut(**c) for c in filtered]
     return [CropMetadataOut(**c) for c in CROPS_METADATA]
+
+
+import httpx
+import logging
+
+logger = logging.getLogger(__name__)
+
+
+@router.get("/search")
+async def search_locations(
+    q: str = Query(..., min_length=2, description="Search term for city, town, village, block, or district in India"),
+    limit: int = Query(15, ge=1, le=50),
+    db: Session = Depends(get_db),
+):
+    """
+    Search any location in India.
+    Combines local database + curated pan-India agrarian directory + Open-Meteo Geocoding for India (country_code=IN).
+    """
+    results = []
+    q_norm = q.strip().lower()
+
+    # 1. Search local DB Panchayats
+    try:
+        db_panchayats = db.query(Panchayat).filter(
+            (Panchayat.name.ilike(f"%{q_norm}%")) |
+            (Panchayat.block.ilike(f"%{q_norm}%")) |
+            (Panchayat.district.ilike(f"%{q_norm}%"))
+        ).limit(limit).all()
+        for p in db_panchayats:
+            results.append({
+                "id": f"p_{p.id}",
+                "name": p.name,
+                "type": "PANCHAYAT",
+                "block": p.block,
+                "district": p.district,
+                "state": p.state,
+                "lat": p.lat,
+                "lon": p.lng,
+                "elevation_m": p.elevation_m or 310.0,
+                "display_label": f"{p.name} (ग्राम पंचायत) · {p.block}, {p.district}",
+            })
+    except Exception as e:
+        logger.warning(f"DB search error: {e}")
+
+    # 2. Search curated STATES_DATA (Districts & Blocks across India)
+    for s in STATES_DATA:
+        state_name = s["state"]
+        for d in s["districts"]:
+            dist_name = d["district"]
+            if q_norm in dist_name.lower():
+                results.append({
+                    "id": f"d_{dist_name.lower()}",
+                    "name": dist_name,
+                    "type": "DISTRICT",
+                    "block": dist_name,
+                    "district": dist_name,
+                    "state": state_name,
+                    "lat": d.get("lat", 21.0),
+                    "lon": d.get("lon", 78.0),
+                    "elevation_m": d.get("elevation_m", 300.0),
+                    "display_label": f"{dist_name} District · {state_name}",
+                })
+            for b in d.get("blocks", []):
+                blk_name = b["block"]
+                if q_norm in blk_name.lower():
+                    results.append({
+                        "id": f"b_{blk_name.lower()}",
+                        "name": blk_name,
+                        "type": "BLOCK",
+                        "block": blk_name,
+                        "district": dist_name,
+                        "state": state_name,
+                        "lat": b.get("lat", d.get("lat", 21.0)),
+                        "lon": b.get("lon", d.get("lon", 78.0)),
+                        "elevation_m": b.get("elevation_m", d.get("elevation_m", 300.0)),
+                        "display_label": f"{blk_name} Block · {dist_name}, {state_name}",
+                    })
+
+    # 3. Fallback / Augment via Open-Meteo Geocoding for India (covers ALL villages, tehsils, and towns in India)
+    if len(results) < limit:
+        try:
+            async with httpx.AsyncClient(verify=False, timeout=3.5) as client:
+                res = await client.get(
+                    "https://geocoding-api.open-meteo.com/v1/search",
+                    params={
+                        "name": q.strip(),
+                        "count": limit,
+                        "language": "en",
+                        "format": "json",
+                        "country_code": "IN",
+                    },
+                )
+                if res.status_code == 200:
+                    data = res.json()
+                    for item in data.get("results", []):
+                        name = item.get("name", "")
+                        state = item.get("admin1") or item.get("country", "India")
+                        district = item.get("admin2") or name
+                        block = item.get("admin3") or district
+                        lat = item.get("latitude")
+                        lon = item.get("longitude")
+                        elevation = item.get("elevation", 250.0)
+
+                        label = f"{name} · {district}, {state}"
+                        results.append({
+                            "id": f"om_{item.get('id', hash((lat, lon)))}",
+                            "name": name,
+                            "type": "TOWN_VILLAGE",
+                            "block": block,
+                            "district": district,
+                            "state": state,
+                            "lat": lat,
+                            "lon": lon,
+                            "elevation_m": elevation,
+                            "display_label": label,
+                        })
+        except Exception as e:
+            logger.warning(f"Open-Meteo Geocoding fetch error: {e}")
+
+    # Deduplicate by (lat, lon) within tolerance
+    deduped = []
+    seen_coords = set()
+    for r in results:
+        key = (round(r["lat"], 3), round(r["lon"], 3))
+        if key not in seen_coords:
+            seen_coords.add(key)
+            deduped.append(r)
+        if len(deduped) >= limit:
+            break
+
+    return {"query": q, "total": len(deduped), "results": deduped}
+

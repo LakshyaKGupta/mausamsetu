@@ -36,7 +36,7 @@ export const AuthLayout: React.FC = () => {
 
       {/* Main Centered Content Area */}
       <main className="relative z-10 flex-1 flex items-center justify-center px-4 py-8">
-        <div className="w-full max-w-[420px]">
+        <div className="w-full max-w-[460px]">
           <Outlet />
         </div>
       </main>

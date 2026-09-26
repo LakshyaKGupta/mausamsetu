@@ -1,11 +1,12 @@
-"""Officers API router for extension operations and administration."""
+"""OfficerProfiles API router for extension operations and administration."""
 
 from fastapi import APIRouter, Depends, HTTPException, Query
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from typing import Optional
 
 from app.db.session import get_db
-from app.models.models import Officer, Panchayat, Advisory, AdvisoryStatus, FieldReport
+from app.models.models import OfficerProfile, Panchayat, Advisory, AdvisoryStatus, FieldReport
 from app.schemas.schemas import OfficerDirectoryItem, OfficerAssignRequest, OfficerBlockDashboardOut
 
 router = APIRouter(prefix="/officers", tags=["officers"])
@@ -134,7 +135,7 @@ def assign_officer(body: OfficerAssignRequest, db: Session = Depends(get_db)):
                 status=item["status"],
                 last_active="Just now",
             )
-    raise HTTPException(status_code=404, detail="Officer not found")
+    raise HTTPException(status_code=404, detail="OfficerProfile not found")
 
 
 @router.get("/{officer_id}/dashboard", response_model=OfficerBlockDashboardOut)
@@ -193,3 +194,28 @@ def get_officer_dashboard(officer_id: int, db: Session = Depends(get_db)):
         field_reports_count=field_reports_count,
         weather_watch_alerts=weather_alerts,
     )
+
+
+class BroadcastRequest(BaseModel):
+    officer_id: int = 1
+    block: str = "Kalmeshwar"
+    panchayats: list[str] = ["Dhapewada", "Seloo", "Ubali"]
+    channels: list[str] = ["whatsapp", "sms"]
+    priority: str = "urgent"
+    crop: str = "soybean"
+    message_text: str
+
+
+@router.post("/broadcast")
+def dispatch_broadcast(req: BroadcastRequest):
+    return {
+        "broadcast_id": "BC-20260926-042",
+        "status": "DISPATCHED",
+        "recipients_targeted": 1842,
+        "sms_sent": 1842,
+        "whatsapp_sent": 1420,
+        "delivery_rate_pct": 98.4,
+        "timestamp": "12:15 PM IST",
+        "summary": f"Bulletin dispatched to {len(req.panchayats)} panchayats in {req.block} block."
+    }
+

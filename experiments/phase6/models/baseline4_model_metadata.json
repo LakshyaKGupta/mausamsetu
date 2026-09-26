@@ -1,0 +1,25 @@
+{
+    "model_id": "B4_R_Linear_Residual_v1",
+    "version": "1.0",
+    "training_data_reference": "phase6_real_gfs_isd_expanded.csv (Jan, Apr, Jul 2023)",
+    "feature_schema": [
+        "baseline1_temperature_c",
+        "lead_time_hours",
+        "elevation_difference_m"
+    ],
+    "training_period": "2023-01-01 to 2023-07-07",
+    "validation_period": "2023-10-01 to 2023-10-07",
+    "coefficients": {
+        "baseline1_temperature_c": 0.034727486013356644,
+        "lead_time_hours": -0.007019555736028402,
+        "elevation_difference_m": -0.0012574617092580122
+    },
+    "intercept": -1.0177849094375833,
+    "metrics": {
+        "validation_mae": 2.383955815075598,
+        "validation_rmse": 2.818148289027269,
+        "validation_bias": -2.3367424309856633
+    },
+    "creation_timestamp": "2026-09-20T11:16:49.180540Z",
+    "status": "EXPERIMENTAL"
+}

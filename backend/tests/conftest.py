@@ -11,14 +11,19 @@ from app.main import app
 from app.db.session import Base, get_db
 from app.models.models import (
     Panchayat,
-    Officer,
-    Farmer,
+    User,
+    UserRole,
+    OfficerProfile,
+    FarmerProfile,
+    FarmerCrop,
     Advisory,
     AdvisoryStatus,
     Language,
     Approval,
     FieldReport,
     WeatherObservation,
+    Officer,
+    Farmer,
 )
 
 # Shared in-memory SQLite database across all test modules
@@ -75,40 +80,53 @@ def clean_db():
         elevation_m=298.0,
     )
     db.add_all([p1, p2])
+    db.flush()
 
     # 2. Seed Officers
-    o1 = Officer(
+    u1 = User(id=1, role=UserRole.officer, phone="9876543210", username="9876543210", is_active=True)
+    u2 = User(id=2, role=UserRole.officer, phone="9876543211", username="9876543211", is_active=True)
+    db.add_all([u1, u2])
+    db.flush()
+
+    o1 = OfficerProfile(
         id=1,
+        user_id=1,
         name="Rajesh Sharma",
-        phone="9876543210",
         block="Kalmeshwar",
         district="Nagpur",
-        is_active=True,
     )
-    o2 = Officer(
+    o2 = OfficerProfile(
         id=2,
+        user_id=2,
         name="Sunita Patil",
-        phone="9876543211",
         block="Hingna",
         district="Nagpur",
-        is_active=True,
     )
     db.add_all([o1, o2])
+    db.flush()
 
     # 3. Seed Farmer
-    f = Farmer(
+    uf = User(id=3, role=UserRole.farmer, phone="9812345678", username="9812345678", is_active=True)
+    db.add(uf)
+    db.flush()
+
+    f = FarmerProfile(
         id=1,
+        user_id=3,
         name="Ramesh Patel",
-        phone="9812345678",
         panchayat_id=1,
         preferred_language=Language.hi,
-        crops=["soybean", "cotton"],
         district="Nagpur",
         block="Kalmeshwar",
         land_area_acres=4.0,
-        is_active=True,
+        onboarding_completed=True,
     )
     db.add(f)
+    db.flush()
+    db.add_all([
+        FarmerCrop(farmer_id=1, crop_id="soybean", variety="Standard", crop_stage="Vegetative"),
+        FarmerCrop(farmer_id=1, crop_id="cotton", variety="Standard", crop_stage="Flowering"),
+    ])
 
     # 4. Seed Advisories
     a1 = Advisory(

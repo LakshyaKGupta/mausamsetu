@@ -72,3 +72,21 @@ ml/models/*
 
 # Agent configs
 .agents/
+
+# Temporary and Lock files
+.~lock.*#
+*.tmp
+db_test*.py
+query_db.py
+rewrite_page.py
+test_corruption.py
+test_gis_parents.py
+test_sources.py
+backend/clear.py
+backend/db_check.py
+backend/drop_advisories.py
+backend/test_api.py
+backend/test_centroid.py
+backend/test_fetch.js
+backend/test_live_provider.py
+backend/query_maha.py

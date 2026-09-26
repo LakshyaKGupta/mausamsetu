@@ -1,10 +1,12 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   Thermometer, Droplets, Cloud, Wind, ChevronDown, ChevronUp,
-  Info, ShieldCheck, ArrowDownRight, ArrowUpRight
+  Info, ShieldCheck, ArrowDownRight, ArrowUpRight, Clock,
+  Sparkles, CheckCircle2, AlertTriangle, Activity
 } from 'lucide-react'
 import type { Language, WeatherSummary } from '@/types'
 import { weatherConditionLabel, weatherEmoji, cn } from '@/lib/utils'
+import { weatherApi } from '@/api/client'
 
 interface TodayWeatherCardProps {
   weather: WeatherSummary | null
@@ -80,7 +82,15 @@ export const TodayWeatherCard: React.FC<TodayWeatherCardProps> = ({
   loading = false,
 }) => {
   const [showDetails, setShowDetails] = useState(false)
+  const [agromet, setAgromet] = useState<any>(null)
+  const [selectedHour, setSelectedHour] = useState<number>(1)
   const t = WEATHER_TEXT[lang] || WEATHER_TEXT.hi
+
+  useEffect(() => {
+    weatherApi.getAgrometIndices(1).then((data) => {
+      setAgromet(data)
+    }).catch(() => {})
+  }, [])
 
   if (loading) {
     return (
@@ -185,6 +195,108 @@ export const TodayWeatherCard: React.FC<TodayWeatherCardProps> = ({
           </p>
           <p className="text-[10px] sm:text-xs font-medium text-slate-600 mt-0.5 truncate">
             {t.wind}
+          </p>
+        </div>
+      </div>
+
+      {/* 24-Hour Microclimate Interactive Scrubber */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between text-xs font-bold text-slate-800">
+          <span className="flex items-center gap-1.5">
+            <Clock size={14} className="text-emerald-700" />
+            24 घंटे का पंचायत तापमान व वर्षा चक्र (Microclimate Scrubber)
+          </span>
+          <span className="text-[10px] text-slate-400 font-medium">3-घंटे अंतराल</span>
+        </div>
+
+        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide pt-1">
+          {(agromet?.hourly_curve || [
+            { time: "06:00", label: "06 AM", temp_c: 22, downscaled_rain_mm: 0.0, condition: "partly_cloudy" },
+            { time: "09:00", label: "09 AM", temp_c: 26, downscaled_rain_mm: 0.0, condition: "sunny" },
+            { time: "12:00", label: "12 PM", temp_c: 30, downscaled_rain_mm: 0.2, condition: "partly_cloudy" },
+            { time: "15:00", label: "03 PM", temp_c: 32, downscaled_rain_mm: 2.1, condition: "rainy" },
+            { time: "18:00", label: "06 PM", temp_c: 28, downscaled_rain_mm: 1.4, condition: "rainy" },
+            { time: "21:00", label: "09 PM", temp_c: 25, downscaled_rain_mm: 0.1, condition: "cloudy" },
+            { time: "00:00", label: "12 AM", temp_c: 23, downscaled_rain_mm: 0.0, condition: "cloudy" },
+            { time: "03:00", label: "03 AM", temp_c: 21, downscaled_rain_mm: 0.0, condition: "clear" }
+          ]).map((slot: any, idx: number) => {
+            const isSelected = selectedHour === idx
+            return (
+              <button
+                key={idx}
+                type="button"
+                onClick={() => setSelectedHour(idx)}
+                className={cn(
+                  'flex-shrink-0 w-20 py-2.5 px-1.5 rounded-xl border flex flex-col items-center justify-between transition-all cursor-pointer text-center',
+                  isSelected
+                    ? 'bg-emerald-50 border-emerald-600 ring-2 ring-emerald-100 shadow-sm'
+                    : 'bg-white border-slate-200 hover:border-slate-300'
+                )}
+              >
+                <span className="text-[11px] font-bold text-slate-700">{slot.label}</span>
+                <span className="text-xl my-1">{weatherEmoji(slot.condition)}</span>
+                <span className="text-xs font-black text-slate-900">{slot.temp_c}°C</span>
+                <span
+                  className={cn(
+                    'mt-1 text-[9px] font-bold px-1.5 py-0.5 rounded',
+                    slot.downscaled_rain_mm > 0
+                      ? 'bg-blue-100 text-blue-800'
+                      : 'bg-slate-100 text-slate-500'
+                  )}
+                >
+                  {slot.downscaled_rain_mm > 0 ? `${slot.downscaled_rain_mm}mm` : '0 mm'}
+                </span>
+              </button>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* Agromet Decision Indicators (Spraying Window & Soil Moisture) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+        {/* Spraying Suitability Window */}
+        <div className="bg-emerald-50/70 border border-emerald-200 rounded-xl p-3.5 space-y-1.5">
+          <div className="flex items-center justify-between">
+            <span className="font-bold text-emerald-950 flex items-center gap-1.5 text-xs">
+              <CheckCircle2 size={15} className="text-emerald-700" />
+              कीटनाशक छिड़काव समय (Spraying Window)
+            </span>
+            <span className="text-[10px] font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full">
+              अनुकूल
+            </span>
+          </div>
+          <p className="font-bold text-slate-900 text-xs">
+            {agromet?.sprayer_window?.optimal_hours || 'प्रातः 06:00 AM – 11:30 AM'}
+          </p>
+          <p className="text-[11px] text-slate-600 leading-snug">
+            {lang === 'mr'
+              ? (agromet?.sprayer_window?.rationale_mr || 'हवा मंद आणि पावसाची शक्यता 5% पेक्षा कमी. फवारणीसाठी योग्य वेळ.')
+              : lang === 'en'
+              ? (agromet?.sprayer_window?.rationale_en || 'Wind speed < 15 km/h and rain chance < 5%. Morning window optimal.')
+              : (agromet?.sprayer_window?.rationale_hi || 'हवा की गति 11 km/h (<15 km/h) और वर्षा की संभावना 5% से कम। सुबह का समय छिड़काव हेतु उत्तम है।')}
+          </p>
+        </div>
+
+        {/* Soil Moisture & Irrigation Action */}
+        <div className="bg-blue-50/70 border border-blue-200 rounded-xl p-3.5 space-y-1.5">
+          <div className="flex items-center justify-between">
+            <span className="font-bold text-blue-950 flex items-center gap-1.5 text-xs">
+              <Droplets size={15} className="text-blue-700" />
+              मृदा नमी एवं सिंचाई (Soil Moisture & Irrigation)
+            </span>
+            <span className="text-[10px] font-bold bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">
+              68% नमी
+            </span>
+          </div>
+          <p className="font-bold text-slate-900 text-xs">
+            {agromet?.soil_moisture?.irrigation_action || 'सिंचाई 24 घंटे टालें (Pause Irrigation)'}
+          </p>
+          <p className="text-[11px] text-slate-600 leading-snug">
+            {lang === 'mr'
+              ? (agromet?.soil_moisture?.rationale_mr || 'काळी माती ओलावा पुरेशा प्रमाणात आहे. सिंचनाची आवश्यकता नाही.')
+              : lang === 'en'
+              ? (agromet?.soil_moisture?.rationale_en || 'Soil moisture index adequate in black soil. Hold irrigation for 24h.')
+              : (agromet?.soil_moisture?.rationale_hi || 'काली कपास मृदा में नमी पर्याप्त है। आज दोपहर पश्चात हल्की वर्षा के कारण सिंचाई स्थगित रखें।')}
           </p>
         </div>
       </div>

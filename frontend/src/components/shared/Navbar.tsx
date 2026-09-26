@@ -144,7 +144,6 @@ export const Navbar: React.FC = () => {
 
           {/* Right Action Buttons */}
           <div className="hidden lg:flex items-center gap-3">
-
             <Link to="/login">
               <Button variant="ghost" size="md">
                 Sign In

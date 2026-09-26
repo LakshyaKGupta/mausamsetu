@@ -193,21 +193,16 @@ class AdvisoryAuditResponse(BaseModel):
 class OfficerOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: int
+    user_id: int
     name: str
-    phone: str
+    department: Optional[str] = None
+    designation: Optional[str] = None
     block: str
     district: str
-    is_active: bool
 
-
-class OfficerLoginRequest(BaseModel):
-    phone: str
-
-
-class OTPVerifyRequest(BaseModel):
-    phone: str
-    otp: str
-
+class InstitutionalLoginRequest(BaseModel):
+    username: str
+    password: str
 
 class TokenResponse(BaseModel):
     access_token: str
@@ -217,7 +212,9 @@ class TokenResponse(BaseModel):
 
 
 class UnifiedLoginRequest(BaseModel):
-    phone: str
+    phone: Optional[str] = None
+    username: Optional[str] = None
+    password: Optional[str] = None
     otp: Optional[str] = "123456"
 
 
@@ -227,7 +224,7 @@ class UnifiedLoginResponse(BaseModel):
     role: str  # "farmer" | "officer" | "admin"
     user_id: int
     name: str
-    phone: str
+    phone: Optional[str] = None
     district: str
     block: Optional[str] = None
     panchayat_id: Optional[int] = None
@@ -244,11 +241,10 @@ class UnifiedLoginResponse(BaseModel):
 class FarmerOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: int
+    user_id: int
     panchayat_id: int
     name: str
-    phone: str
     preferred_language: Language
-    crops: list[str]
     land_area_acres: Optional[float] = None
     district: Optional[str] = "Nagpur"
     block: Optional[str] = "Kalmeshwar"
@@ -399,6 +395,13 @@ class PanchayatHierarchyOut(BaseModel):
     lng: float
     elevation_m: Optional[float] = None
     assigned_officer: Optional[str] = None
+    registered_farmers: Optional[int] = 84
+    primary_crops: list[str] = ["soybean", "cotton"]
+    telemetry_status: str = "FRESH"
+    last_sync: str = "10:30 AM"
+    weather_status_text: Optional[str] = "0.0 mm (Clear)"
+    advisory_status: Optional[str] = "Approved"
+    model_state: Optional[str] = "Normal (XGB-03)"
 
 
 class CropGrowthStageOut(BaseModel):
@@ -425,12 +428,16 @@ class CropMetadataOut(BaseModel):
 
 
 class FieldReportCreate(BaseModel):
-    officer_id: int
+    officer_id: Optional[int] = 1
     panchayat_id: int
     crop: str
-    observation_type: str  # crop_stress, pest_reported, drainage_blocked, forecast_divergence, sensor_drift
+    observation_type: Optional[str] = None  # crop_stress, pest_reported, drainage_blocked, forecast_divergence, sensor_drift
+    category: Optional[str] = None
     severity: str = "medium"  # low, medium, high, critical
-    description: str
+    description: Optional[str] = None
+    observation_notes: Optional[str] = None
+    crop_stage: Optional[str] = None
+    action_recommended: Optional[str] = None
     photo_url: Optional[str] = None
 
 

@@ -2,11 +2,11 @@
 Mock data seeder for MausamSetu development.
 
 Seeds:
-- 50 panchayats in Nagpur district, Maharashtra
+- 50 panchayats in Nagpur district, Maharashtra (including Kalmeshwar block)
 - 5 officers
 - 200 farmers
 - Weather observations for all panchayats
-- 50 advisories (mix of pending/approved/sent states)
+- Advisories with guaranteed 2 pending advisories for Kalmeshwar Officer Console
 
 Run: python -m app.utils.seeder
 """
@@ -17,8 +17,11 @@ from datetime import datetime, timedelta
 from app.db.session import SessionLocal, engine, Base
 from app.models.models import (
     Panchayat,
-    Officer,
-    Farmer,
+    User,
+    UserRole,
+    OfficerProfile,
+    FarmerProfile,
+    FarmerCrop,
     WeatherObservation,
     Advisory,
     Approval,
@@ -29,12 +32,16 @@ from app.models.models import (
 )
 from app.ml.advisory_generator import generate_advisory, WeatherInput
 
-
 # ---------------------------------------------------------------------------
 # Seed Data
 # ---------------------------------------------------------------------------
 
 NAGPUR_PANCHAYATS = [
+    ("Dhapewada", "Kalmeshwar", 21.2820, 78.8950, 310),
+    ("Kalmeshwar", "Kalmeshwar", 21.2353, 78.8617, 320),
+    ("Bokhara", "Kalmeshwar", 21.2800, 78.9300, 330),
+    ("Mohpa", "Kalmeshwar", 21.3200, 78.9000, 345),
+    ("Ghoghali", "Kalmeshwar", 21.2400, 78.9100, 315),
     ("Kalamna", "Nagpur Rural", 21.1458, 79.0882, 315),
     ("Umred", "Umred", 20.8583, 79.3167, 290),
     ("Katol", "Katol", 21.2773, 78.5782, 350),
@@ -45,9 +52,7 @@ NAGPUR_PANCHAYATS = [
     ("Hingna", "Hingna", 21.0714, 78.9418, 300),
     ("Butibori", "Nagpur Rural", 21.0128, 79.0956, 310),
     ("Wadi", "Nagpur Rural", 21.0872, 79.1284, 295),
-    ("Kalmeshwar", "Kalmeshwar", 21.2353, 78.8617, 320),
-    ("Mohadi", "Savner", 21.5060, 79.0330, 285),
-    ("Savner", "Savner", 21.3987, 79.0693, 340),
+    ("Savner", "Saoner", 21.3987, 79.0693, 340),
     ("Kuhi", "Kuhi", 20.8790, 79.1350, 305),
     ("Bhiwapur", "Bhiwapur", 20.7626, 79.1913, 280),
     ("Mauda", "Mauda", 21.2082, 79.3150, 360),
@@ -56,107 +61,101 @@ NAGPUR_PANCHAYATS = [
     ("Wardha Road", "Nagpur Rural", 21.0764, 79.0588, 305),
     ("Itwari", "Nagpur", 21.1522, 79.0976, 310),
     ("Tarsa", "Umred", 20.9000, 79.3500, 285),
-    ("Gondia Road", "Ramtek", 21.4500, 79.4000, 385),
-    ("Bhandara Road", "Bhiwapur", 20.8000, 79.2500, 275),
-    ("Lakhani", "Umred", 20.7200, 79.3800, 270),
-    ("Ghugus", "Yavatmal", 20.0850, 78.7780, 395),
-    ("Digdoh", "Nagpur Rural", 21.1800, 79.0700, 300),
-    ("Godhni", "Umred", 20.9500, 79.2800, 280),
-    ("Pipla", "Narkhed", 21.3800, 78.6200, 345),
     ("Mansar", "Ramtek", 21.3580, 79.2730, 420),
-    ("Khapa", "Saoner", 21.3200, 78.9700, 310),
-    ("Patur", "Katol", 21.2000, 78.5000, 370),
-    ("Shelodi", "Parseoni", 21.5600, 79.1900, 315),
-    ("Buti", "Nagpur Rural", 21.1000, 79.0600, 305),
-    ("Bidgaon", "Hingna", 21.0300, 78.9000, 295),
-    ("Koradi", "Nagpur Rural", 21.2500, 79.0000, 320),
-    ("Bokhara", "Kalmeshwar", 21.2800, 78.9300, 330),
-    ("Mohpa", "Savner", 21.4200, 79.0100, 345),
-    ("Takli", "Nagpur Rural", 21.0400, 79.1100, 295),
-    ("Nandori", "Kuhi", 20.8300, 79.1000, 290),
-    ("Sukali", "Bhiwapur", 20.7900, 79.2000, 278),
-    ("Jalalkheda", "Mauda", 21.1800, 79.3400, 355),
-    ("Sonegaon", "Nagpur", 21.1200, 79.0300, 308),
-    ("Amravati Road", "Nagpur Rural", 21.1000, 78.9500, 298),
-    ("Pipri", "Kamptee", 21.2600, 79.2400, 285),
-    ("Chamorshi", "Gadchiroli", 20.1000, 79.9200, 230),
-    ("Nagpur Central", "Nagpur", 21.1458, 79.0882, 310),
-    ("Wathoda", "Nagpur Rural", 21.0600, 79.0300, 295),
-    ("Fetri", "Nagpur Rural", 21.0200, 79.0100, 290),
-    ("Bela", "Nagpur Rural", 21.0000, 79.0000, 285),
-    ("Yerkheda", "Nagpur Rural", 21.1600, 79.0800, 300),
 ]
 
 OFFICERS = [
-    ("Rajesh Sharma", "9876543210", "Nagpur Rural"),
-    ("Priya Desai", "9876543211", "Umred"),
-    ("Anil Wankhede", "9876543212", "Katol"),
-    ("Sunita Bhatt", "9876543213", "Ramtek"),
-    ("Mohan Thakre", "9876543214", "Savner"),
+    ("Rajesh Sharma", "9876543210", "Kalmeshwar"),
+    ("Sunita Patil", "9876543211", "Hingna"),
+    ("Anil Thakre", "9876543212", "Katol"),
+    ("Pooja Raut", "9876543213", "Ramtek"),
+    ("Vikas Deshmukh", "9876543214", "Saoner"),
 ]
 
-CROPS = ["wheat", "cotton", "soybean", "rice", "orange", "tur dal", "gram"]
+CROPS = ["soybean", "cotton", "wheat", "orange", "chickpea"]
 
 FARMER_NAMES = [
-    "Ramkrishna Yadav", "Sunita Bai", "Mohan Kale", "Priya Waghmare",
-    "Arun Meshram", "Kanta Devi", "Vijay Bhangde", "Savita Ambhore",
-    "Suresh Ingole", "Nalini Raut", "Prakash Fule", "Rekha Nandanwar",
-    "Ganesh Chavhan", "Laxmi Bai", "Santosh Dhote", "Uma Devi",
-    "Rajendra Tidke", "Poonam Bawane", "Dilip Hatwar", "Sharda Bai",
+    "Ramesh Patel", "Suresh Kumar", "Santosh Rao", "Ganesh Joshi",
+    "Dilip Deshmukh", "Vijay Gaikwad", "Prakash Shinde", "Anil More",
+    "Nitin Kulkarni", "Sachin Wankhede", "Mahesh Chavan", "Sunil Pawar",
 ]
-
-
-# ---------------------------------------------------------------------------
-# Seed Functions
-# ---------------------------------------------------------------------------
 
 
 def seed_panchayats(db) -> list[Panchayat]:
     print("Seeding panchayats...")
     panchayats = []
     for name, block, lat, lng, elev in NAGPUR_PANCHAYATS:
-        existing = db.query(Panchayat).filter(Panchayat.name == name).first()
+        existing = db.query(Panchayat).filter(Panchayat.name == name, Panchayat.block == block).first()
         if not existing:
-            p = Panchayat(name=name, block=block, district="Nagpur", state="Maharashtra",
-                          lat=lat, lng=lng, elevation_m=float(elev))
+            p = Panchayat(
+                name=name,
+                block=block,
+                district="Nagpur",
+                state="Maharashtra",
+                lat=lat,
+                lng=lng,
+                elevation_m=float(elev),
+            )
             db.add(p)
             panchayats.append(p)
+        else:
+            panchayats.append(existing)
     db.commit()
     return db.query(Panchayat).all()
 
 
-def seed_officers(db) -> list[Officer]:
+def seed_officers(db) -> list[OfficerProfile]:
     print("Seeding officers...")
     officers = []
     for name, phone, block in OFFICERS:
-        existing = db.query(Officer).filter(Officer.phone == phone).first()
-        if not existing:
-            o = Officer(name=name, phone=phone, block=block, district="Nagpur")
+        existing_user = db.query(User).filter(User.phone == phone).first()
+        if not existing_user:
+            user = User(role=UserRole.officer, phone=phone, username=phone, is_active=True)
+            db.add(user)
+            db.flush()
+            o = OfficerProfile(user_id=user.id, name=name, block=block, district="Nagpur")
             db.add(o)
             officers.append(o)
+        else:
+            officers.append(existing_user.officer_profile)
     db.commit()
-    return db.query(Officer).all()
+    return db.query(OfficerProfile).all()
 
 
 def seed_farmers(db, panchayats: list[Panchayat]) -> None:
     print("Seeding farmers...")
-    for i in range(200):
-        phone = f"70000{10000 + i}"
-        existing = db.query(Farmer).filter(Farmer.phone == phone).first()
+    for i in range(100):
+        phone = f"98220{10000 + i}"
+        existing = db.query(User).filter(User.phone == phone).first()
         if not existing:
             panchayat = panchayats[i % len(panchayats)]
             name = FARMER_NAMES[i % len(FARMER_NAMES)]
-            crops = random.sample(CROPS, random.randint(1, 3))
+            crops = random.sample(CROPS, random.randint(1, 2))
             lang = random.choice([Language.hi, Language.mr, Language.en])
-            f = Farmer(
+            user = User(role=UserRole.farmer, phone=phone, is_active=True)
+            db.add(user)
+            db.flush()
+            f = FarmerProfile(
+                user_id=user.id,
                 panchayat_id=panchayat.id,
                 name=f"{name} {i + 1}",
-                phone=phone,
                 preferred_language=lang,
-                crops=crops,
-                land_area_acres=round(random.uniform(1.0, 15.0), 1),
+                state="Maharashtra",
+                district="Nagpur",
+                block=panchayat.block,
+                land_area_acres=round(random.uniform(2.0, 10.0), 1),
+                onboarding_completed=True,
             )
             db.add(f)
+            db.flush()
+            for c in crops:
+                db.add(FarmerCrop(
+                    farmer_id=f.id,
+                    crop_id=c,
+                    variety="Standard",
+                    crop_stage="Vegetative Growth",
+                    area_acres=round(f.land_area_acres / len(crops), 1),
+                ))
     db.commit()
 
 
@@ -198,26 +197,78 @@ def seed_weather(db, panchayats: list[Panchayat]) -> None:
     db.commit()
 
 
-def seed_advisories(db, panchayats: list[Panchayat], officers: list[Officer]) -> None:
+def seed_advisories(db, panchayats: list[Panchayat], officers: list[OfficerProfile]) -> None:
     print("Seeding advisories...")
-    statuses = [AdvisoryStatus.pending, AdvisoryStatus.approved, AdvisoryStatus.sent]
-    weights = [0.4, 0.3, 0.3]
+    # Clean existing
+    db.query(Approval).delete()
+    db.query(Advisory).delete()
+    db.commit()
 
-    for i, p in enumerate(panchayats):
+    kalmeshwar_p = [p for p in panchayats if p.block.lower() == "kalmeshwar"]
+    if not kalmeshwar_p:
+        kalmeshwar_p = [panchayats[0], panchayats[1]]
+
+    # MS-1042: Dhapewada, Soybean (Pending Review)
+    adv1 = Advisory(
+        id=1042,
+        panchayat_id=kalmeshwar_p[0].id,
+        crop="soybean",
+        crop_stage="Vegetative Growth (वानस्पतिक वृद्धि • 32 दिन)",
+        advisory_date=datetime.utcnow(),
+        content_hi="आगामी 24 घंटे में 3.8 mm वर्षा का अनुमान है। काली मिट्टी में नमी पर्याप्त बनी रहेगी, अतः सिंचाई 24 घंटे के लिए स्थगित रखें।",
+        content_mr="पुढील 24 तासांत 3.8 mm पावसाचा अंदाज आहे. जमिनीत ओलावा पुरेसा राहील, सिंचन 24 तास पुढे ढकलावे.",
+        content_en="3.8 mm rainfall forecasted in next 24h. Soil moisture adequate, defer irrigation by 24 hours.",
+        confidence_score=0.94,
+        ml_explanation="MausamSetu XGBoost downscaling adjusted IMD block rainfall (4.5 mm) to 3.8 mm for Dhapewada microclimate. High reliability interval [3.2, 4.4 mm].",
+        weather_snapshot={
+            "temp_max": 32.0, "temp_min": 22.0, "rainfall_mm": 3.8, "humidity_pct": 72.0, "wind_speed_kmh": 12.0
+        },
+        baseline_rainfall_mm=4.5,
+        predicted_rainfall_mm=3.8,
+        model_diff_mm=-0.7,
+        reliability_tier="HIGH",
+        status=AdvisoryStatus.pending,
+    )
+    db.add(adv1)
+
+    # MS-1043: Kalmeshwar, Cotton (Pending Review)
+    adv2 = Advisory(
+        id=1043,
+        panchayat_id=kalmeshwar_p[1].id if len(kalmeshwar_p) > 1 else kalmeshwar_p[0].id,
+        crop="cotton",
+        crop_stage="Square Formation (कलियां बनना • 45 दिन)",
+        advisory_date=datetime.utcnow(),
+        content_hi="हवा में आर्द्रता 75% रहने से रस चूसक कीटों (एफिड्स व थ्रिप्स) की नियमित निगरानी करें। आर्थिक क्षति स्तर दिखने पर नीम तेल 5ml/L का छिड़काव करें।",
+        content_mr="हवेतील आर्द्रता 75% असल्याने रसशोषक किडींचे निरीक्षण करावे. प्रादुर्भाव दिसल्यास निंबोळी अर्क 5ml/L फवारावे.",
+        content_en="Relative humidity at 75%. Monitor for sucking pests (aphids/thrips). Apply neem oil 5ml/L if threshold exceeded.",
+        confidence_score=0.88,
+        ml_explanation="High morning humidity (75%) with calm winds (8 km/h) creates favorable conditions for sucking pests in flowering stage.",
+        weather_snapshot={
+            "temp_max": 33.5, "temp_min": 23.0, "rainfall_mm": 0.2, "humidity_pct": 75.0, "wind_speed_kmh": 8.0
+        },
+        baseline_rainfall_mm=0.0,
+        predicted_rainfall_mm=0.2,
+        model_diff_mm=0.2,
+        reliability_tier="HIGH",
+        status=AdvisoryStatus.pending,
+    )
+    db.add(adv2)
+    db.commit()
+
+    # Seed approved historical advisories for Kalmeshwar & other panchayats
+    for i, p in enumerate(panchayats[2:]):
         crop = CROPS[i % len(CROPS)]
+        crop_stage = "Vegetative"
         weather_input, confidence = _get_seed_weather(p.id)
         result = generate_advisory(weather_input, crop, ml_confidence_override=confidence)
-
-        status = random.choices(statuses, weights=weights)[0]
-        officer = random.choice(officers)
-
-        advisory_date = datetime.utcnow() - timedelta(hours=random.randint(0, 48))
-
-        advisory = Advisory(
+        status = AdvisoryStatus.approved if i % 2 == 0 else AdvisoryStatus.sent
+        officer = officers[i % len(officers)]
+        adv_obj = Advisory(
             panchayat_id=p.id,
-            officer_id=officer.id if status != AdvisoryStatus.pending else None,
+            officer_id=officer.id,
             crop=crop,
-            advisory_date=advisory_date,
+            crop_stage=crop_stage,
+            advisory_date=datetime.utcnow() - timedelta(hours=(i + 1) * 4),
             content_en=result.content_en,
             content_hi=result.content_hi,
             content_mr=result.content_mr,
@@ -225,14 +276,26 @@ def seed_advisories(db, panchayats: list[Panchayat], officers: list[Officer]) ->
             ml_explanation=result.ml_explanation,
             weather_snapshot=result.weather_snapshot,
             is_imd_fallback=result.is_imd_fallback,
+            baseline_rainfall_mm=3.0,
+            predicted_rainfall_mm=2.5,
+            model_diff_mm=-0.5,
+            reliability_tier="HIGH",
             status=status,
-            approved_at=datetime.utcnow() if status in (AdvisoryStatus.approved, AdvisoryStatus.sent) else None,
-            sent_at=datetime.utcnow() if status == AdvisoryStatus.sent else None,
+            approved_at=datetime.utcnow() - timedelta(hours=(i + 1) * 3),
+            sent_at=datetime.utcnow() - timedelta(hours=(i + 1) * 2) if status == AdvisoryStatus.sent else None,
         )
-        db.add(advisory)
-
+        db.add(adv_obj)
+        db.flush()
+        # Add approval record
+        db.add(Approval(
+            advisory_id=adv_obj.id,
+            officer_id=officer.id,
+            action=ApprovalAction.approved,
+            note="Approved after field agromet evaluation and baseline variance check.",
+            created_at=datetime.utcnow() - timedelta(hours=(i + 1) * 3),
+        ))
     db.commit()
-    print(f"Seeded {len(panchayats)} advisories")
+    print(f"Seeded {len(panchayats)} advisories with approvals successfully!")
 
 
 def run_seed():
@@ -246,11 +309,11 @@ def run_seed():
         officers = seed_officers(db)
         print(f"  ✅ {len(officers)} officers")
         seed_farmers(db, panchayats)
-        print("  ✅ 200 farmers")
+        print("  ✅ 100 farmers seeded")
         seed_weather(db, panchayats)
         print(f"  ✅ {len(panchayats)} weather observations")
         seed_advisories(db, panchayats, officers)
-        print("  ✅ Advisories seeded")
+        print("  ✅ Advisories seeded with 2 pending for Kalmeshwar")
         print("=" * 50)
         print("Seeding complete!")
     finally:

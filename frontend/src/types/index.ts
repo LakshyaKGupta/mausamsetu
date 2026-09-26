@@ -47,6 +47,8 @@ export interface WeatherSummary {
   temperature_min?: number
   rainfall_mm?: number
   humidity_pct?: number
+  wind_speed_kmh?: number
+  elevation_m?: number
   condition: WeatherCondition
   confidence_score: number
   predicted_rainfall_mm?: number
@@ -174,6 +176,10 @@ export interface ModelPerformanceResponse {
   status: string
   last_evaluated_at: string
   fallback_rules: string[]
+  baseline_mae?: number
+  model_mae?: number
+  baseline_rmse?: number
+  model_rmse?: number
 }
 
 export interface UnifiedLoginResponse {
@@ -295,6 +301,10 @@ export interface PanchayatHierarchyItem {
   primary_crops: string[]
   telemetry_status: 'FRESH' | 'STALE' | 'OFFLINE'
   last_sync: string
+  weather_status_text?: string
+  advisory_status?: string
+  officer_name?: string
+  model_state?: string
 }
 
 // ---------------------------------------------------------------------------
@@ -348,4 +358,11 @@ export interface OfficerBlockDashboard {
     panchayats: string[]
     detail: string
   }>
+  audit_trail?: Array<{
+    time: string
+    actor: string
+    action: string
+    details: string
+  }>
 }
+

@@ -8,7 +8,7 @@ from pydantic import BaseModel
 
 from app.config import settings
 from app.db.session import get_db
-from app.models.models import Officer, Farmer
+from app.models.models import User, UserRole
 
 ALGORITHM = "HS256"
 
@@ -39,7 +39,7 @@ def get_auth_context(
             return AuthContext(
                 user_id=1,
                 role="farmer",
-                name="Ramesh Patel",
+                name="Demo Farmer",
                 district="Nagpur",
                 block="Kalmeshwar",
             )
@@ -47,19 +47,18 @@ def get_auth_context(
             return AuthContext(
                 user_id=999,
                 role="admin",
-                name="Dr. P. K. Deshmukh",
+                name="Demo Admin",
                 district="Nagpur",
                 block="District Operations HQ",
             )
         elif role == "officer":
             target_id = x_officer_id or officer_id or 1
-            officer = db.query(Officer).filter(Officer.id == target_id).first()
             return AuthContext(
                 user_id=target_id,
                 role="officer",
-                name=officer.name if officer else "Rajesh Sharma",
-                district=officer.district if officer else "Nagpur",
-                block=officer.block if officer else "Kalmeshwar",
+                name="Demo Officer",
+                district="Nagpur",
+                block="Kalmeshwar",
             )
 
     # 2. Bearer JWT token parsing
@@ -70,44 +69,48 @@ def get_auth_context(
             role = payload.get("role", "farmer")
             user_id = int(payload.get("sub", 1))
 
-            if role == "admin":
+            user = db.query(User).filter(User.id == user_id).first()
+            if not user:
+                raise Exception("User not found")
+
+            if user.role == UserRole.admin:
+                profile = user.admin_profile
                 return AuthContext(
-                    user_id=user_id,
+                    user_id=user.id,
                     role="admin",
-                    name="Dr. P. K. Deshmukh",
-                    district="Nagpur",
+                    name=profile.name if profile else "Admin",
+                    district=profile.district_scope if profile else "Nagpur",
                     block="District Operations HQ",
                 )
-            elif role == "officer":
-                officer = db.query(Officer).filter(Officer.id == user_id).first()
+            elif user.role == UserRole.officer:
+                profile = user.officer_profile
                 return AuthContext(
-                    user_id=user_id,
+                    user_id=user.id,
                     role="officer",
-                    name=officer.name if officer else "Rajesh Sharma",
-                    district=officer.district if officer else "Nagpur",
-                    block=officer.block if officer else "Kalmeshwar",
+                    name=profile.name if profile else "Officer",
+                    district=profile.district if profile else "Nagpur",
+                    block=profile.block if profile else "Kalmeshwar",
                 )
             else:
-                farmer = db.query(Farmer).filter(Farmer.id == user_id).first()
+                profile = user.farmer_profile
                 return AuthContext(
-                    user_id=user_id,
+                    user_id=user.id,
                     role="farmer",
-                    name=farmer.name if farmer else "Ramesh Patel",
-                    district="Nagpur",
-                    block="Kalmeshwar",
+                    name=profile.name if profile else "Farmer",
+                    district=profile.district if profile else "Nagpur",
+                    block=profile.block if profile else "Kalmeshwar",
                 )
         except Exception:
             pass  # Fall through to default
 
     # 3. Default fallback for existing endpoints passing ?officer_id=...
     if officer_id:
-        officer = db.query(Officer).filter(Officer.id == officer_id).first()
         return AuthContext(
             user_id=officer_id,
             role="officer",
-            name=officer.name if officer else "Rajesh Sharma",
-            district=officer.district if officer else "Nagpur",
-            block=officer.block if officer else "Kalmeshwar",
+            name="Rajesh Sharma",
+            district="Nagpur",
+            block="Kalmeshwar",
         )
 
     # Default demo context is officer if not specified to maintain backward compatibility
