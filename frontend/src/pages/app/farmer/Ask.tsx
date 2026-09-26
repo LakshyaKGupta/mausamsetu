@@ -9,17 +9,28 @@ import { chatbotApi, farmerApi } from '@/api/client'
 import { FarmerNav } from '@/components/farmer/FarmerNav'
 import type { Language, ChatbotMessage } from '@/types'
 import { cn } from '@/lib/utils'
+import { resolvePanchayatDetails } from '@/utils/panchayat'
 
 export default function FarmerAskPage() {
   const outlet = useOutletContext<any>()
   const lang: Language = outlet?.lang || (localStorage.getItem('mausamsetu_lang') as Language) || 'hi'
 
+  const farmerData = (() => {
+    try { return JSON.parse(localStorage.getItem('mausamsetu_farmer') || '{}') } catch { return {} }
+  })()
+  const gpDetails = resolvePanchayatDetails(outlet?.selectedLocation, farmerData, lang)
+  const activePanchayatId = outlet?.selectedLocation?.panchayat_id || farmerData?.panchayat_id || 1
+
+  const welcomeMessage = lang === 'hi'
+    ? `नमस्ते! मैं मौसमसेतु किसान सहायक हूँ। आप ग्राम पंचायत ${gpDetails.panchayatName} के सूक्ष्म-मौसम, वर्षा पूर्वानुमान, सोयाबीन/कपास फसल सुरक्षा, जलभराव बचाव उपाय या मंडी भाव के बारे में बोलकर या लिखकर पूछ सकते हैं।`
+    : lang === 'mr'
+    ? `नमस्कार! मी मौसमसेतू शेतकरी सहायक आहे. आपण ग्रामपंचायत ${gpDetails.panchayatName} चे हवामान, पावसाचा अंदाज, पीक संरक्षण, पाणी साचल्यास उपाय किंवा बाजारभाव याबद्दल विचारू शकता.`
+    : `Hello! I am MausamSetu Farmer Assistant. You can ask about hyper-local weather, rainfall forecast, crop protection, waterlogging remedies, or mandi rates for ${gpDetails.panchayatName} Gram Panchayat.`
+
   const [messages, setMessages] = useState<ChatbotMessage[]>([
     {
       role: 'assistant',
-      content: lang === 'hi'
-        ? 'नमस्ते! मैं मौसमसेतु किसान सहायक हूँ। आप धापेवाड़ा पंचायत के सूक्ष्म-मौसम, वर्षा पूर्वानुमान, मंडी भाव या फसल सुरक्षा के बारे में बोलकर या लिखकर पूछ सकते हैं।'
-        : 'Hello! I am MausamSetu Farmer Assistant. You can ask about hyper-local weather, rainfall forecast, live mandi prices, or crop advisories for Dhapewada Gram Panchayat.',
+      content: welcomeMessage,
       timestamp: new Date().toISOString(),
     }
   ])
@@ -39,7 +50,19 @@ export default function FarmerAskPage() {
       .catch(() => {})
   }, [])
 
-  const promptSuggestions = [
+  const promptSuggestions = lang === 'mr' ? [
+    { text: 'आज पाऊस पडेल का?', tag: 'पाऊस' },
+    { text: 'कीटकनाशक फवारणीसाठी योग्य वेळ कोणती?', tag: 'फवारणी' },
+    { text: 'सोयाबीन पिकात पाणी साचल्यास काय करावे?', tag: 'पीक' },
+    { text: 'कापूस व सोयाबीनचे आजचे बाजारभाव काय?', tag: 'बाजार' },
+    { text: 'उद्या तापमान आणि वाऱ्याचा वेग कसा राहील?', tag: 'हवा' },
+  ] : lang === 'en' ? [
+    { text: 'Will it rain today?', tag: 'Rain' },
+    { text: 'Safe window for spraying pesticides?', tag: 'Spray' },
+    { text: 'Waterlogging drainage remedies for soybean', tag: 'Crop' },
+    { text: "Today's cotton and soybean mandi rates", tag: 'Mandi' },
+    { text: "Tomorrow's temperature and wind speed?", tag: 'Wind' },
+  ] : [
     { text: 'आज बारिश होगी?', tag: 'वर्षा' },
     { text: 'कीटनाशक छिड़काव का सुरक्षित समय?', tag: 'स्प्रे' },
     { text: 'सोयाबीन में जलभराव बचाव उपाय', tag: 'फसल' },
@@ -84,7 +107,7 @@ export default function FarmerAskPage() {
       const res = await chatbotApi.message({
         message: text,
         language: lang,
-        panchayat_id: 1,
+        panchayat_id: activePanchayatId,
         session_id: sessionId,
       })
       setSessionId(res.session_id)
@@ -150,7 +173,7 @@ export default function FarmerAskPage() {
                 </span>
               </div>
               <p className="text-xs text-slate-500 mt-0.5">
-                धापेवाड़ा पंचायत (3km मॉडल + आईएमडी स्टेशन सत्यापित)
+                🏛️ {gpDetails.heroTitle} · {gpDetails.districtName} (3km मॉडल + आईएमडी स्टेशन सत्यापित)
               </p>
             </div>
           </div>
