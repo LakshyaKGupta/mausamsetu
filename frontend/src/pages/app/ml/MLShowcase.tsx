@@ -39,17 +39,25 @@ export default function MLShowcasePage() {
   // Validation Metrics
   const [metrics, setMetrics] = useState<any | null>(null)
 
-  const runDownscaleInference = async () => {
+  const runDownscaleInference = async (override?: Partial<{
+    target_elevation_m: number
+    reference_elevation_m: number
+    base_temperature_c: number
+    base_precipitation_mm: number
+    aspect_windward: boolean
+    soil_saturation_pct: number
+    ndvi_index: number
+  }>) => {
     setDownscalingLoading(true)
     try {
       const res = await mlApi.inferDownscale({
-        target_elevation_m: targetElev,
-        reference_elevation_m: refElev,
-        base_temperature_c: baseTemp,
-        base_precipitation_mm: basePrecip,
-        aspect_windward: isWindward,
-        soil_saturation_pct: soilSaturation,
-        ndvi_index: ndvi,
+        target_elevation_m: override?.target_elevation_m ?? targetElev,
+        reference_elevation_m: override?.reference_elevation_m ?? refElev,
+        base_temperature_c: override?.base_temperature_c ?? baseTemp,
+        base_precipitation_mm: override?.base_precipitation_mm ?? basePrecip,
+        aspect_windward: override?.aspect_windward ?? isWindward,
+        soil_saturation_pct: override?.soil_saturation_pct ?? soilSaturation,
+        ndvi_index: override?.ndvi_index ?? ndvi,
       })
       setDownscaleResult(res)
     } catch (e) {
@@ -59,15 +67,21 @@ export default function MLShowcasePage() {
     }
   }
 
-  const runPestInference = async () => {
+  const runPestInference = async (override?: Partial<{
+    crop: string
+    growth_stage: string
+    avg_temp_72h: number
+    avg_humidity_72h: number
+    consecutive_rain_days: number
+  }>) => {
     setPestLoading(true)
     try {
       const res = await mlApi.predictPestRisk({
-        crop: pestCrop,
-        growth_stage: growthStage,
-        avg_temp_72h: avgTemp72h,
-        avg_humidity_72h: avgHumidity72h,
-        consecutive_rain_days: consecutiveRainDays,
+        crop: override?.crop ?? pestCrop,
+        growth_stage: override?.growth_stage ?? growthStage,
+        avg_temp_72h: override?.avg_temp_72h ?? avgTemp72h,
+        avg_humidity_72h: override?.avg_humidity_72h ?? avgHumidity72h,
+        consecutive_rain_days: override?.consecutive_rain_days ?? consecutiveRainDays,
       })
       setPestResult(res)
     } catch (e) {
@@ -75,6 +89,36 @@ export default function MLShowcasePage() {
     } finally {
       setPestLoading(false)
     }
+  }
+
+  const loadPresetDownscaleScenario = (s: { name: string; tElev: number; rElev: number; rain: number; temp: number; wind: boolean }) => {
+    setTargetElev(s.tElev)
+    setRefElev(s.rElev)
+    setBasePrecip(s.rain)
+    setBaseTemp(s.temp)
+    setIsWindward(s.wind)
+    runDownscaleInference({
+      target_elevation_m: s.tElev,
+      reference_elevation_m: s.rElev,
+      base_precipitation_mm: s.rain,
+      base_temperature_c: s.temp,
+      aspect_windward: s.wind,
+    })
+  }
+
+  const loadPresetPestScenario = (s: { crop: string; stage: string; temp: number; hum: number; rainDays: number }) => {
+    setPestCrop(s.crop)
+    setGrowthStage(s.stage)
+    setAvgTemp72h(s.temp)
+    setAvgHumidity72h(s.hum)
+    setConsecutiveRainDays(s.rainDays)
+    runPestInference({
+      crop: s.crop,
+      growth_stage: s.stage,
+      avg_temp_72h: s.temp,
+      avg_humidity_72h: s.hum,
+      consecutive_rain_days: s.rainDays,
+    })
   }
 
   useEffect(() => {
@@ -173,14 +217,8 @@ export default function MLShowcasePage() {
                     ].map((s) => (
                       <button
                         key={s.name}
-                        onClick={() => {
-                          setTargetElev(s.tElev)
-                          setRefElev(s.rElev)
-                          setBasePrecip(s.rain)
-                          setBaseTemp(s.temp)
-                          setIsWindward(s.wind)
-                        }}
-                        className="p-2 text-center rounded-xl border border-slate-200 bg-slate-50 hover:bg-brand-50 hover:border-brand-300 text-slate-700 text-[11px] font-semibold transition-all shadow-2xs"
+                        onClick={() => loadPresetDownscaleScenario(s)}
+                        className="p-2 text-center rounded-xl border border-slate-200 bg-slate-50 hover:bg-brand-50 hover:border-brand-300 text-slate-700 text-[11px] font-semibold transition-all shadow-2xs cursor-pointer"
                       >
                         {s.name}
                       </button>
@@ -293,7 +331,7 @@ export default function MLShowcasePage() {
                 </div>
 
                 <button
-                  onClick={runDownscaleInference}
+                  onClick={() => runDownscaleInference()}
                   disabled={downscalingLoading}
                   className="btn-primary w-full py-2.5 text-xs font-bold flex items-center justify-center gap-2 shadow-sm"
                 >
@@ -449,6 +487,29 @@ export default function MLShowcasePage() {
                 </div>
 
                 <div className="space-y-4 text-xs">
+                  {/* Preset Scenarios for Pest Risk */}
+                  <div>
+                    <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-2">
+                      Bio-Climatic Outbreak Scenarios:
+                    </label>
+                    <div className="grid grid-cols-3 gap-1.5">
+                      {[
+                        { name: 'Soybean Flowering', crop: 'soybean', stage: 'flowering', temp: 28.5, hum: 84, rainDays: 3 },
+                        { name: 'Cotton Boll Growth', crop: 'cotton', stage: 'pod_formation', temp: 29.0, hum: 78, rainDays: 2 },
+                        { name: 'Citrus Damp Spell', crop: 'orange', stage: 'maturity', temp: 26.5, hum: 92, rainDays: 4 },
+                      ].map((s) => (
+                        <button
+                          key={s.name}
+                          type="button"
+                          onClick={() => loadPresetPestScenario(s)}
+                          className="p-1.5 text-center rounded-xl border border-slate-200 bg-slate-50 hover:bg-rose-50 hover:border-rose-300 text-slate-700 text-[10px] font-semibold transition-all shadow-2xs cursor-pointer"
+                        >
+                          {s.name}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
                   <div>
                     <label className="text-slate-700 block font-semibold mb-1">Target Crop</label>
                     <select
@@ -524,7 +585,7 @@ export default function MLShowcasePage() {
                 </div>
 
                 <button
-                  onClick={runPestInference}
+                  onClick={() => runPestInference()}
                   disabled={pestLoading}
                   className="btn-primary w-full py-2.5 text-xs font-bold flex items-center justify-center gap-2 shadow-sm"
                 >
@@ -620,7 +681,34 @@ export default function MLShowcasePage() {
         )}
 
         {/* SUBTAB 3: SCIENTIFIC RIGOR & VALIDATION (PHASE 12/13) */}
-        {activeSubTab === 'validation' && (
+        {activeSubTab === 'validation' && (() => {
+          const valMetrics = metrics?.metrics || {
+            baseline_mae_mm: 2.41,
+            downscaler_mae_mm: 1.38,
+            error_reduction_pct: 42.7,
+            baseline_rmse_deg_c: 1.91,
+            downscaler_rmse_deg_c: 1.42,
+            pest_classifier_roc_auc: 0.942,
+            pest_classifier_f1: 0.891,
+          }
+          const cm = metrics?.confusion_matrix || {
+            true_positives: 342,
+            false_positives: 28,
+            false_negatives: 21,
+            true_negatives: 889
+          }
+          const stationList = metrics?.station_locations || [
+            { station: 'JALGAON', elevation_m: 201, distance_km: 3.8, mae_reduction: '44.2%' },
+            { station: 'NASHIK ARPT', elevation_m: 598, distance_km: 2.4, mae_reduction: '48.1%' },
+            { station: 'AKOLA', elevation_m: 282, distance_km: 3.1, mae_reduction: '39.5%' },
+            { station: 'WARDHA', elevation_m: 283, distance_km: 1.8, mae_reduction: '41.8%' },
+            { station: 'PUNE', elevation_m: 558, distance_km: 4.2, mae_reduction: '46.0%' },
+            { station: 'MAHABALESHWAR', elevation_m: 1382, distance_km: 5.1, mae_reduction: '58.4%' },
+            { station: 'SOLAPUR', elevation_m: 483, distance_km: 2.9, mae_reduction: '40.2%' },
+            { station: 'KOLHAPUR', elevation_m: 608, distance_km: 3.4, mae_reduction: '45.7%' },
+          ]
+
+          return (
           <div className="space-y-6">
             <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-xs space-y-6">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b pb-5">
@@ -629,15 +717,15 @@ export default function MLShowcasePage() {
                     Phase 12 & 13 Empirical Validation Summary
                   </h3>
                   <p className="text-xs text-slate-500 mt-1">
-                    Evaluated across 18 NOAA ISD synoptic ground stations & Vidarbha AWS telemetry (1,420 pairs)
+                    Evaluated across {metrics?.validation_stations_count || 18} NOAA ISD synoptic ground stations & Vidarbha AWS telemetry ({metrics?.training_samples || 1420} pairs)
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="badge-green text-xs font-bold py-1 px-3">
-                    ROC-AUC: 0.942
+                    ROC-AUC: {valMetrics.pest_classifier_roc_auc}
                   </span>
                   <span className="bg-blue-100 text-blue-800 text-xs font-bold py-1 px-3 rounded-full">
-                    42.7% MAE Error Reduction
+                    {valMetrics.error_reduction_pct}% MAE Error Reduction
                   </span>
                 </div>
               </div>
@@ -646,22 +734,22 @@ export default function MLShowcasePage() {
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
                 <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl text-center">
                   <span className="text-[10px] uppercase font-bold text-slate-400 block">Baseline Coarse MAE</span>
-                  <span className="text-2xl font-black text-slate-800 mt-1 block">2.41 mm</span>
+                  <span className="text-2xl font-black text-slate-800 mt-1 block">{valMetrics.baseline_mae_mm} mm</span>
                   <span className="text-[10px] text-slate-500">IMD 40km synoptic grid</span>
                 </div>
                 <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl text-center">
                   <span className="text-[10px] uppercase font-bold text-emerald-800 block">MausamSetu MAE</span>
-                  <span className="text-2xl font-black text-emerald-950 mt-1 block">1.38 mm</span>
-                  <span className="text-[10px] font-bold text-emerald-700">42.7% Improvement</span>
+                  <span className="text-2xl font-black text-emerald-950 mt-1 block">{valMetrics.downscaler_mae_mm} mm</span>
+                  <span className="text-[10px] font-bold text-emerald-700">{valMetrics.error_reduction_pct}% Improvement</span>
                 </div>
                 <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl text-center">
                   <span className="text-[10px] uppercase font-bold text-slate-400 block">Baseline RMSE</span>
-                  <span className="text-2xl font-black text-slate-800 mt-1 block">1.91 °C</span>
+                  <span className="text-2xl font-black text-slate-800 mt-1 block">{valMetrics.baseline_rmse_deg_c} °C</span>
                   <span className="text-[10px] text-slate-500">Thermal root-mean-square</span>
                 </div>
                 <div className="p-4 bg-blue-50 border border-blue-200 rounded-2xl text-center">
                   <span className="text-[10px] uppercase font-bold text-blue-800 block">MausamSetu RMSE</span>
-                  <span className="text-2xl font-black text-blue-950 mt-1 block">1.42 °C</span>
+                  <span className="text-2xl font-black text-blue-950 mt-1 block">{valMetrics.downscaler_rmse_deg_c} °C</span>
                   <span className="text-[10px] font-bold text-blue-700">SRTM 90m Lapse Grounded</span>
                 </div>
               </div>
@@ -678,27 +766,16 @@ export default function MLShowcasePage() {
                         <th className="p-3">Synoptic Station</th>
                         <th className="p-3">True Elevation (m)</th>
                         <th className="p-3">Forecast Grid Distance</th>
-                        <th className="p-3">Topographic Bias Correction</th>
                         <th className="p-3 text-right">MAE Improvement</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 text-slate-700">
-                      {[
-                        { name: 'JALGAON', elev: 201, dist: '3.8 km', bias: '+0.12 mm', gain: '44.2%' },
-                        { name: 'NASHIK ARPT', elev: 598, dist: '2.4 km', bias: '-0.38 mm', gain: '48.1%' },
-                        { name: 'AKOLA', elev: 282, dist: '3.1 km', bias: '+0.08 mm', gain: '39.5%' },
-                        { name: 'WARDHA', elev: 283, dist: '1.8 km', bias: '-0.15 mm', gain: '41.8%' },
-                        { name: 'PUNE', elev: 558, dist: '4.2 km', bias: '-0.42 mm', gain: '46.0%' },
-                        { name: 'MAHABALESHWAR', elev: 1382, dist: '5.1 km', bias: '+1.84 mm', gain: '58.4%' },
-                        { name: 'SOLAPUR', elev: 483, dist: '2.9 km', bias: '-0.06 mm', gain: '40.2%' },
-                        { name: 'KOLHAPUR', elev: 608, dist: '3.4 km', bias: '-0.24 mm', gain: '45.7%' },
-                      ].map((st, idx) => (
+                      {stationList.map((st: any, idx: number) => (
                         <tr key={idx} className="hover:bg-slate-50/60">
-                          <td className="p-3 font-bold text-slate-900">{st.name}</td>
-                          <td className="p-3 font-mono">{st.elev} m</td>
-                          <td className="p-3 font-mono text-slate-500">{st.dist}</td>
-                          <td className="p-3 font-mono text-slate-600">{st.bias}</td>
-                          <td className="p-3 text-right font-mono font-bold text-emerald-700">+{st.gain}</td>
+                          <td className="p-3 font-bold text-slate-900">{st.station || st.name}</td>
+                          <td className="p-3 font-mono">{st.elevation_m || st.elev} m</td>
+                          <td className="p-3 font-mono text-slate-500">{st.distance_km ? `${st.distance_km} km` : st.dist}</td>
+                          <td className="p-3 text-right font-mono font-bold text-emerald-700">+{st.mae_reduction || st.gain}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -713,19 +790,19 @@ export default function MLShowcasePage() {
                   <div className="grid grid-cols-2 gap-2 text-center text-xs">
                     <div className="bg-emerald-100/70 p-3 rounded-xl border border-emerald-200">
                       <span className="text-[10px] text-emerald-800 font-bold block uppercase">True Positives</span>
-                      <strong className="text-lg font-black text-emerald-950 font-mono">342</strong>
+                      <strong className="text-lg font-black text-emerald-950 font-mono">{cm.true_positives}</strong>
                     </div>
                     <div className="bg-rose-50 p-3 rounded-xl border border-rose-200">
                       <span className="text-[10px] text-rose-800 font-bold block uppercase">False Positives</span>
-                      <strong className="text-lg font-black text-rose-950 font-mono">28</strong>
+                      <strong className="text-lg font-black text-rose-950 font-mono">{cm.false_positives}</strong>
                     </div>
                     <div className="bg-rose-50 p-3 rounded-xl border border-rose-200">
                       <span className="text-[10px] text-rose-800 font-bold block uppercase">False Negatives</span>
-                      <strong className="text-lg font-black text-rose-950 font-mono">21</strong>
+                      <strong className="text-lg font-black text-rose-950 font-mono">{cm.false_negatives}</strong>
                     </div>
                     <div className="bg-slate-200/70 p-3 rounded-xl border border-slate-300">
                       <span className="text-[10px] text-slate-800 font-bold block uppercase">True Negatives</span>
-                      <strong className="text-lg font-black text-slate-950 font-mono">889</strong>
+                      <strong className="text-lg font-black text-slate-950 font-mono">{cm.true_negatives}</strong>
                     </div>
                   </div>
                 </div>
@@ -747,7 +824,8 @@ export default function MLShowcasePage() {
               </div>
             </div>
           </div>
-        )}
+          )
+        })()}
       </main>
     </div>
   )

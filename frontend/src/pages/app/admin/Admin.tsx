@@ -395,6 +395,7 @@ export const AdminDashboard: React.FC = () => {
               {activeTab === 'advisories' && 'District Advisory Governance'}
               {activeTab === 'data-health' && 'Weather & Data Feeds Health'}
               {activeTab === 'model-health' && 'Microclimate Model Health & Fallback Engine'}
+              {activeTab === 'ml-lab' && 'Machine Learning Model Lab & Topographic Physics Engine'}
               {activeTab === 'map' && 'District Spatial Distribution Map'}
               {activeTab === 'audit' && 'System-Wide Governance Audit Log'}
               {activeTab === 'settings' && 'Pan-India Configuration & Multi-State Architecture'}
