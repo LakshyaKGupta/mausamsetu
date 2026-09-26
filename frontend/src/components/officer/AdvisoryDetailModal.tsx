@@ -4,11 +4,12 @@ import {
   X, CheckCircle, XCircle, Edit3,
   Droplets, Wind,
   Leaf, MapPin, Calendar, Info, Layers, Compass,
-  History, ShieldCheck, FileText, Radio, Activity, Check
+  History, ShieldCheck, FileText, Radio, Activity, Check, Download
 } from 'lucide-react'
 import { advisoryApi } from '@/api/client'
 import type { Advisory, AdvisoryAuditItem } from '@/types'
 import { cn, formatDate, cropEmoji } from '@/lib/utils'
+import { downloadAdvisoryPDF } from '@/utils/pdfGenerator'
 
 interface Props {
   advisoryId: number
@@ -107,12 +108,25 @@ export function AdvisoryDetailModal({ advisoryId, officerId, onClose, onReviewed
               </p>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="w-9 h-9 rounded-xl hover:bg-slate-200/60 flex items-center justify-center transition-colors text-slate-500"
-          >
-            <X size={18} />
-          </button>
+          <div className="flex items-center gap-2">
+            {advisory && (
+              <button
+                type="button"
+                onClick={() => downloadAdvisoryPDF(advisory)}
+                className="px-3 py-1.5 text-xs font-semibold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                title="Download official Agromet Advisory Bulletin as PDF"
+              >
+                <Download size={14} />
+                Download PDF
+              </button>
+            )}
+            <button
+              onClick={onClose}
+              className="w-9 h-9 rounded-xl hover:bg-slate-200/60 flex items-center justify-center transition-colors text-slate-500 cursor-pointer"
+            >
+              <X size={18} />
+            </button>
+          </div>
         </div>
 
         {loading ? (

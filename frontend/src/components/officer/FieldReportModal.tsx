@@ -1,8 +1,9 @@
 import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, ClipboardCheck, AlertTriangle, MapPin, Leaf, Camera } from 'lucide-react'
+import { X, ClipboardCheck, AlertTriangle, MapPin, Leaf, Camera, Download } from 'lucide-react'
 import { fieldReportApi } from '@/api/client'
 import type { PanchayatHierarchyItem } from '@/types'
+import { downloadSingleReportPDF } from '@/utils/pdfGenerator'
 
 interface Props {
   panchayats: PanchayatHierarchyItem[]
@@ -21,8 +22,18 @@ export function FieldReportModal({ panchayats, onClose, onCreated }: Props) {
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const officerData = (() => {
+    try {
+      return JSON.parse(localStorage.getItem('mausamsetu_officer') || '{}')
+    } catch {
+      return {}
+    }
+  })()
+  const officerName = officerData.name || 'Rajesh Sharma'
+  const districtName = officerData.district || 'Nagpur'
+
+  const handleSubmit = async (e?: React.FormEvent, downloadPdf = false) => {
+    if (e) e.preventDefault()
     if (!notes.trim()) {
       setError('Please provide observation notes.')
       return
@@ -30,7 +41,8 @@ export function FieldReportModal({ panchayats, onClose, onCreated }: Props) {
     setSubmitting(true)
     setError('')
     try {
-      await fieldReportApi.create({
+      const selectedPanchayat = panchayats.find((p) => p.id === panchayatId)
+      const res = await fieldReportApi.create({
         officer_id: 1,
         panchayat_id: panchayatId,
         crop,
@@ -43,6 +55,26 @@ export function FieldReportModal({ panchayats, onClose, onCreated }: Props) {
         description: notes,
         action_recommended: actionRecommended || undefined,
       } as any)
+
+      if (downloadPdf) {
+        downloadSingleReportPDF(
+          {
+            id: res?.id || Math.floor(1000 + Math.random() * 9000),
+            panchayat_id: panchayatId,
+            panchayat_name: selectedPanchayat?.name || 'Kalmeshwar',
+            crop,
+            crop_stage: cropStage,
+            category,
+            severity,
+            observation_notes: notes,
+            action_recommended: actionRecommended,
+            created_at: new Date().toISOString(),
+          },
+          officerName,
+          districtName
+        )
+      }
+
       onCreated()
       onClose()
     } catch (err: any) {
@@ -174,18 +206,28 @@ export function FieldReportModal({ panchayats, onClose, onCreated }: Props) {
               />
             </div>
 
-            <div className="pt-2 flex items-center justify-end gap-2 border-t border-slate-100">
+            <div className="pt-3 flex flex-wrap items-center justify-end gap-2 border-t border-slate-100">
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 font-medium"
+                className="px-3.5 py-2 rounded-xl text-slate-600 hover:bg-slate-100 font-medium cursor-pointer"
               >
                 Cancel
               </button>
               <button
+                type="button"
+                disabled={submitting}
+                onClick={() => handleSubmit(undefined, true)}
+                className="px-3.5 py-2 text-xs font-semibold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer"
+                title="Save this observation to database and immediately download official PDF"
+              >
+                <Download size={13} />
+                Save & Download PDF
+              </button>
+              <button
                 type="submit"
                 disabled={submitting}
-                className="btn-primary py-2 px-5 text-xs font-bold"
+                className="btn-primary py-2 px-4 text-xs font-bold cursor-pointer"
               >
                 {submitting ? 'Submitting...' : 'Save Field Report'}
               </button>

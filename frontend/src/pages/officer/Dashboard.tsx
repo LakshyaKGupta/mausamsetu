@@ -5,7 +5,7 @@ import {
   TrendingUp, Users, Send, AlertTriangle, RefreshCw,
   ChevronRight, Filter, Search, ShieldCheck, Activity,
   CloudRain, Wind, Droplets, Thermometer, Plus, FileText,
-  Compass, Map as MapIcon, History, Radio, Layers, X
+  Compass, Map as MapIcon, History, Radio, Layers, X, Download
 } from 'lucide-react'
 import { advisoryApi, officerApi, fieldReportApi, geographyApi } from '@/api/client'
 import type {
@@ -19,6 +19,7 @@ import { cn, confidenceLevel, cropEmoji, formatDate } from '@/lib/utils'
 import { GramWeatherDemo } from '@/components/shared/GramWeatherDemo'
 import { AdvisoryDetailModal } from '@/components/officer/AdvisoryDetailModal'
 import { FieldReportModal } from '@/components/officer/FieldReportModal'
+import { downloadSingleReportPDF, downloadAllReportsPDF } from '@/utils/pdfGenerator'
 
 type SubView =
   | 'dashboard'
@@ -49,6 +50,15 @@ export default function OfficerDashboard() {
   // Current logged in officer identity (Rajesh Sharma, Kalmeshwar Block, Nagpur)
   const officerId = 1
   const blockName = 'Kalmeshwar'
+  const districtName = 'Nagpur'
+  const officerData = (() => {
+    try {
+      return JSON.parse(localStorage.getItem('mausamsetu_officer') || '{}')
+    } catch {
+      return {}
+    }
+  })()
+  const officerName = officerData.name || 'Rajesh Sharma'
 
   const fetchData = async () => {
     setRefreshing(true)
@@ -673,54 +683,97 @@ export default function OfficerDashboard() {
         {/* SUBVIEW 5: FIELD REPORTS */}
         {activeTab === 'reports' && (
           <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-100 pb-4 gap-3">
               <div>
                 <h3 className="font-bold text-slate-900 text-base">Field Extension Observations</h3>
                 <p className="text-xs text-slate-500">Ground truth logged by agricultural officers in the field</p>
               </div>
-              <button
-                onClick={() => setShowReportModal(true)}
-                className="btn-primary text-xs py-2 px-3.5 flex items-center gap-1.5"
-              >
-                <Plus size={14} />
-                + Record Observation
-              </button>
+              <div className="flex items-center gap-2">
+                {fieldReports.length > 0 && (
+                  <button
+                    onClick={() => downloadAllReportsPDF(fieldReports as any, officerName, blockName, districtName)}
+                    className="px-3.5 py-2 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                    title="Download consolidated report register as PDF"
+                  >
+                    <Download size={14} className="text-slate-600" />
+                    Download All (PDF)
+                  </button>
+                )}
+                <button
+                  onClick={() => setShowReportModal(true)}
+                  className="btn-primary text-xs py-2 px-3.5 flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Plus size={14} />
+                  + Record Observation
+                </button>
+              </div>
             </div>
 
             <div className="space-y-3">
-              {fieldReports.map((report) => (
-                <div key={report.id} className="p-4 bg-slate-50 border border-slate-200 rounded-xl">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <span className="font-bold text-slate-900 text-xs">
-                        {report.panchayat_name} GP
-                      </span>
-                      <span className="text-xs text-slate-500 capitalize">• {report.crop}</span>
-                      <span
-                        className={cn(
-                          'text-[10px] font-bold uppercase px-2 py-0.5 rounded',
-                          report.severity === 'high'
-                            ? 'bg-rose-100 text-rose-800'
-                            : report.severity === 'medium'
-                            ? 'bg-amber-100 text-amber-800'
-                            : 'bg-slate-200 text-slate-700'
+              {fieldReports.length === 0 ? (
+                <div className="text-center py-12 text-slate-400 text-xs">
+                  No field reports logged yet. Click "+ Record Observation" to log ground observations.
+                </div>
+              ) : (
+                fieldReports.map((report) => (
+                  <div
+                    key={report.id}
+                    className="p-4 bg-slate-50 hover:bg-white border border-slate-200 hover:border-slate-300 rounded-xl transition-all shadow-2xs"
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-slate-900 text-xs">
+                          {report.panchayat_name || 'Kalmeshwar'} GP
+                        </span>
+                        <span className="text-xs text-slate-500 capitalize">• {report.crop}</span>
+                        {report.crop_stage && (
+                          <span className="text-[11px] text-slate-400">({report.crop_stage})</span>
                         )}
-                      >
-                        {report.severity}
+                        <span
+                          className={cn(
+                            'text-[10px] font-bold uppercase px-2 py-0.5 rounded',
+                            report.severity === 'high' || report.severity === 'critical'
+                              ? 'bg-rose-100 text-rose-800'
+                              : report.severity === 'medium'
+                              ? 'bg-amber-100 text-amber-800'
+                              : 'bg-emerald-100 text-emerald-800'
+                          )}
+                        >
+                          {report.severity}
+                        </span>
+                      </div>
+                      <span className="text-[11px] font-mono text-slate-400">
+                        {formatDate(report.created_at)}
                       </span>
                     </div>
-                    <span className="text-[11px] font-mono text-slate-400">
-                      {formatDate(report.created_at)}
-                    </span>
-                  </div>
-                  <p className="text-xs text-slate-700 mb-2">{report.observation_notes}</p>
-                  {report.action_recommended && (
-                    <p className="text-[11px] text-brand-800 bg-emerald-50/80 p-2 rounded border border-emerald-100 font-medium">
-                      Recommended Action: {report.action_recommended}
+
+                    <p className="text-xs text-slate-700 mb-2 leading-relaxed">
+                      {report.observation_notes || (report as any).description}
                     </p>
-                  )}
-                </div>
-              ))}
+
+                    {report.action_recommended && (
+                      <p className="text-[11px] text-brand-800 bg-emerald-50/80 p-2.5 rounded-lg border border-emerald-100 font-medium mb-3">
+                        <strong className="font-bold text-emerald-900">Recommended Action:</strong>{' '}
+                        {report.action_recommended}
+                      </p>
+                    )}
+
+                    <div className="flex items-center justify-between pt-2.5 mt-2 border-t border-slate-200/70">
+                      <span className="text-[10px] text-slate-400 font-mono">
+                        REF: FR-{String(report.id).padStart(4, '0')}
+                      </span>
+                      <button
+                        onClick={() => downloadSingleReportPDF(report as any, officerName, districtName)}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-emerald-700 hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg transition-colors cursor-pointer"
+                        title="Download official Field Inspection Report as PDF"
+                      >
+                        <Download size={13} />
+                        Download Report (PDF)
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         )}
