@@ -87,17 +87,28 @@ export const AppLayout: React.FC = () => {
     panchayatName = officerData.block || 'कलमेश्वर'
   } else if (role === 'admin') {
     panchayatName =
-      lang === 'en' ? 'District HQ' : lang === 'mr' ? 'जिल्हा मुख्यालय' : 'ज़िला मुख्यालय'
+      adminData.district && adminData.district !== 'Nagpur'
+        ? adminData.district
+        : lang === 'en'
+        ? 'All-India'
+        : 'अखिल भारतीय'
   }
 
   // Translated location names for display with Gram Panchayat priority
   const getLocationDisplay = () => {
     if (role === 'admin') {
+      const dist =
+        adminData.district && adminData.district !== 'Nagpur' && adminData.district !== 'All-India'
+          ? adminData.district
+          : null
+      if (dist) {
+        return `🇮🇳 ${dist} · ${lang === 'en' ? 'Administration' : 'प्रशासन'}`
+      }
       return lang === 'en'
-        ? `Nagpur · District HQ`
+        ? `🇮🇳 All-India · Central Portal`
         : lang === 'mr'
-        ? `नागपूर · जिल्हा मुख्यालय`
-        : `नागपुर · ज़िला मुख्यालय`
+        ? `🇮🇳 अखिल भारतीय · मध्यवर्ती पोर्टल`
+        : `🇮🇳 अखिल भारतीय · केंद्रीय पोर्टल`
     }
 
     if (role === 'officer') {

@@ -35,7 +35,7 @@ export const LoginForm: React.FC = () => {
   
   // Institutional State
   const [username, setUsername] = useState(() => {
-    if (initialRole === 'admin') return 'MS-ADMIN-HQ'
+    if (initialRole === 'admin') return 'MS-ADMIN-INDIA'
     if (initialRole === 'officer') return 'MS-OFFICER-001'
     return ''
   })
@@ -49,7 +49,7 @@ export const LoginForm: React.FC = () => {
   useEffect(() => {
     if (initialRole === 'officer' || initialRole === 'admin') {
       setAuthMode('institutional')
-      if (initialRole === 'admin' && !username) setUsername('MS-ADMIN-HQ')
+      if (initialRole === 'admin' && !username) setUsername('MS-ADMIN-INDIA')
       if (initialRole === 'officer' && !username) setUsername('MS-OFFICER-001')
     }
   }, [initialRole])
@@ -142,10 +142,10 @@ export const LoginForm: React.FC = () => {
       const fallbackData = {
         access_token: `demo_${demoRole}_token_${Date.now()}`,
         role: demoRole,
-        name: demoRole === 'admin' ? 'District Collector Nagpur' : demoRole === 'officer' ? 'Pravin Deshmukh (AAO)' : 'Ramesh Patil',
-        district: 'नागपुर',
-        block: 'कलमेश्वर',
-        panchayat: 'धापेवाड़ा'
+        name: demoRole === 'admin' ? 'National Agromet Administration' : demoRole === 'officer' ? 'Pravin Deshmukh (AAO)' : 'Ramesh Patil',
+        district: demoRole === 'admin' ? 'All-India' : 'नागपुर',
+        block: demoRole === 'admin' ? 'Central Command' : 'कलमेश्वर',
+        panchayat: demoRole === 'admin' ? 'Pan-India Operations' : 'धापेवाड़ा'
       }
       handleSuccessfulLogin(fallbackData)
     } finally {
@@ -287,7 +287,7 @@ export const LoginForm: React.FC = () => {
                   type="text"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  placeholder="e.g. MS-OFFICER-001 or MS-ADMIN-HQ"
+                  placeholder="e.g. MS-ADMIN-INDIA or MS-OFFICER-001"
                   autoFocus
                   className="w-full py-2.5 px-3.5 bg-white border border-[#D1D5DB] rounded-xl text-sm text-[#111814] placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#126B3A] focus:border-transparent transition-all"
                 />
@@ -420,7 +420,7 @@ export const LoginForm: React.FC = () => {
               <ShieldCheck size={16} />
             </div>
             <span className="text-xs font-bold text-purple-900">Admin</span>
-            <span className="text-[10px] text-purple-600 font-medium">Nagpur HQ</span>
+            <span className="text-[10px] text-purple-600 font-medium">All India</span>
           </button>
         </div>
       </div>

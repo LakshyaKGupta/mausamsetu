@@ -172,8 +172,8 @@ def login(body: UnifiedLoginRequest, db: Session = Depends(get_db)):
             access_token=token,
             role="admin",
             user_id=user.id,
-            name=profile.name if profile else "Admin",
-            district=profile.district_scope if profile else "Nagpur",
+            name=profile.name if profile else "National Admin",
+            district=profile.district_scope if profile and profile.district_scope else "All-India",
         )
     elif user.role == UserRole.officer:
         profile = user.officer_profile
@@ -374,10 +374,10 @@ def get_demo_session(role: str, db: Session = Depends(get_db)):
     """Instant demo persona generator for SIH hackathon evaluation."""
     role = role.lower()
     if role == "admin":
-        user = db.query(User).filter(User.username == "MS-ADMIN-NGP-001").first()
+        user = db.query(User).filter(User.username.in_(["MS-ADMIN-INDIA", "MS-ADMIN-HQ", "MS-ADMIN-NGP-001"])).first()
         user_id = user.id if user else 999
-        name = user.admin_profile.name if user and user.admin_profile else "Dr. P. K. Deshmukh"
-        district = user.admin_profile.district_scope if user and user.admin_profile else "Nagpur"
+        name = user.admin_profile.name if user and user.admin_profile else "National Agromet Administration"
+        district = user.admin_profile.district_scope if user and user.admin_profile and user.admin_profile.district_scope else "All-India"
         token = _create_token(user_id=user_id, role="admin")
         return UnifiedLoginResponse(
             access_token=token,
