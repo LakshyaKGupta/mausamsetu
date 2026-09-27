@@ -162,7 +162,8 @@ export default function FarmerHome() {
   const [loading, setLoading] = useState(true)
   const [showWhy, setShowWhy] = useState(false)
 
-  const getLocation = (): SelectedLocation | null => {
+  // Reactive location state – updates when navbar location picker fires
+  const [currentLoc, setCurrentLoc] = useState<SelectedLocation | null>(() => {
     if (outlet?.selectedLocation) return outlet.selectedLocation
     try {
       const stored = localStorage.getItem('mausamsetu_selected_location')
@@ -170,9 +171,36 @@ export default function FarmerHome() {
     } catch {
       return null
     }
-  }
+  })
 
-  const loc = getLocation()
+  // Sync from outlet (parent state) when it changes
+  useEffect(() => {
+    if (outlet?.selectedLocation) {
+      setCurrentLoc(outlet.selectedLocation)
+    }
+  }, [outlet?.selectedLocation])
+
+  // Listen for location change events from any source (navbar, GPS, etc.)
+  useEffect(() => {
+    const handleLocChange = (e: any) => {
+      const newLoc = e.detail as SelectedLocation | null
+      if (newLoc) {
+        setCurrentLoc(newLoc)
+      } else {
+        // Re-read from localStorage if detail is empty
+        try {
+          const stored = localStorage.getItem('mausamsetu_selected_location')
+          setCurrentLoc(stored ? JSON.parse(stored) : null)
+        } catch {
+          setCurrentLoc(null)
+        }
+      }
+    }
+    window.addEventListener('mausamsetu_location_change', handleLocChange)
+    return () => window.removeEventListener('mausamsetu_location_change', handleLocChange)
+  }, [])
+
+  const loc = currentLoc
   const farmerData = (() => {
     try {
       return JSON.parse(localStorage.getItem('mausamsetu_farmer') || '{}')
@@ -183,7 +211,8 @@ export default function FarmerHome() {
   const activeLon = loc?.lon || 78.895
   const locationName = gpDetails.panchayatName
 
-  const loadData = () => {
+  // Fetch weather + advice whenever location or language changes
+  useEffect(() => {
     setLoading(true)
 
     // Fetch live weather with Gram Panchayat priority
@@ -217,13 +246,6 @@ export default function FarmerHome() {
       })
       .catch(() => {})
       .finally(() => setLoading(false))
-  }
-
-  useEffect(() => {
-    loadData()
-    const handleLocChange = (e: any) => loadData()
-    window.addEventListener('mausamsetu_location_change', handleLocChange)
-    return () => window.removeEventListener('mausamsetu_location_change', handleLocChange)
   }, [activeLat, activeLon, lang])
 
   const [detectingGps, setDetectingGps] = useState(false)
@@ -318,36 +340,39 @@ export default function FarmerHome() {
       <div className="max-w-2xl mx-auto px-4 pt-4 space-y-4">
 
         {/* ─── Official Gram Panchayat Hero Banner (Core Mission) ─── */}
-        <div className="bg-gradient-to-br from-emerald-850 via-teal-900 to-slate-900 text-white rounded-3xl p-4 sm:p-5 shadow-md border border-emerald-700/60 relative overflow-hidden">
-          <div className="absolute -right-6 -bottom-8 opacity-10 text-9xl pointer-events-none select-none">
+        <div
+          style={{ background: 'linear-gradient(135deg, #064e3b 0%, #065f46 45%, #022c22 100%)' }}
+          className="rounded-3xl p-5 sm:p-6 text-white shadow-xl border-2 border-emerald-500/50 relative overflow-hidden"
+        >
+          <div className="absolute -right-6 -bottom-8 opacity-15 text-9xl pointer-events-none select-none">
             🏛️
           </div>
 
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative z-10">
-            <div className="flex items-start gap-3.5">
-              <div className="w-12 h-12 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-2xl shadow-inner flex-shrink-0">
+            <div className="flex items-start gap-4">
+              <div className="w-14 h-14 rounded-2xl bg-emerald-500/30 backdrop-blur-md border border-emerald-300/40 flex items-center justify-center text-3xl shadow-lg flex-shrink-0 text-white">
                 🏛️
               </div>
               <div>
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-[10px] uppercase tracking-wider font-extrabold px-2.5 py-0.5 rounded-full bg-emerald-400/25 text-emerald-200 border border-emerald-400/30">
+                  <span className="text-[11px] uppercase tracking-wider font-extrabold px-3 py-0.5 rounded-full bg-emerald-400/30 text-emerald-100 border border-emerald-300/50 shadow-xs">
                     {lang === 'hi' ? 'आधिकारिक ग्राम पंचायत' : lang === 'mr' ? 'अधिकृत ग्रामपंचायत' : 'Official Gram Panchayat'}
                   </span>
-                  <span className="text-[10px] font-mono text-emerald-300/80 bg-black/25 px-2 py-0.5 rounded-md">
+                  <span className="text-[11px] font-mono font-bold text-emerald-200 bg-black/40 px-2.5 py-0.5 rounded-md border border-emerald-400/30">
                     {gpDetails.lgdCode}
                   </span>
                   {loc?.is_gps && (
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500 text-white flex items-center gap-1 shadow-2xs">
+                    <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-400 text-emerald-950 flex items-center gap-1 shadow-xs">
                       ✓ GPS Verified
                     </span>
                   )}
                 </div>
 
-                <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white mt-1">
+                <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-white mt-1.5 drop-shadow-sm">
                   {gpDetails.heroTitle}
                 </h2>
 
-                <p className="text-xs text-emerald-100/90 font-medium mt-0.5 flex flex-wrap items-center gap-x-2">
+                <p className="text-sm text-emerald-100 font-medium mt-1 flex flex-wrap items-center gap-x-2.5">
                   <span>
                     {lang === 'hi'
                       ? `ब्लॉक: ${gpDetails.blockName}`
@@ -355,7 +380,7 @@ export default function FarmerHome() {
                       ? `तालुका: ${gpDetails.blockName}`
                       : `Block: ${gpDetails.blockName}`}
                   </span>
-                  <span>·</span>
+                  <span className="text-emerald-300">·</span>
                   <span>
                     {lang === 'hi'
                       ? `ज़िला: ${gpDetails.districtName}`
@@ -363,18 +388,18 @@ export default function FarmerHome() {
                       ? `जिल्हा: ${gpDetails.districtName}`
                       : `District: ${gpDetails.districtName}`}
                   </span>
-                  <span>·</span>
-                  <span>{gpDetails.stateName}</span>
+                  <span className="text-emerald-300">·</span>
+                  <span className="font-semibold text-emerald-200">{gpDetails.stateName}</span>
                 </p>
               </div>
             </div>
 
             <button
               onClick={() => outlet?.openLocationModal?.()}
-              className="self-start sm:self-center px-3.5 py-2 rounded-xl bg-white/15 hover:bg-white/25 active:scale-95 border border-white/20 text-white text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer backdrop-blur-sm shadow-xs"
+              className="self-start sm:self-center px-4 py-2.5 rounded-xl bg-white/20 hover:bg-white/30 active:scale-95 border border-white/30 text-white text-xs sm:text-sm font-bold flex items-center gap-2 transition-all cursor-pointer backdrop-blur-md shadow-md hover:shadow-lg"
               title="स्थान व ग्राम पंचायत बदलें"
             >
-              <MapPin size={13} className="text-emerald-300" />
+              <MapPin size={15} className="text-emerald-300" />
               <span>
                 {lang === 'hi'
                   ? 'ग्राम पंचायत बदलें'

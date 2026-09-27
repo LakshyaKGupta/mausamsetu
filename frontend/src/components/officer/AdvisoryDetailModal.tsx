@@ -33,15 +33,19 @@ export function AdvisoryDetailModal({ advisoryId, officerId, onClose, onReviewed
   const [mainTab, setMainTab] = useState<'review' | 'audit'>('review')
 
   useEffect(() => {
+    setLoading(true)
     Promise.all([
       advisoryApi.get(advisoryId),
       advisoryApi.audit(advisoryId).catch(() => ({ advisory_id: advisoryId, panchayat_name: '', crop: '', status: 'draft', history: [] }))
     ]).then(([advData, auditData]) => {
       setAdvisory(advData)
       setAuditTrail(auditData.history || [])
-      setEditedHi(advData.content_hi)
-      setEditedEn(advData.content_en)
+      setEditedHi(advData.content_hi || '')
+      setEditedEn(advData.content_en || '')
       setEditedMr(advData.content_mr || '')
+      setLoading(false)
+    }).catch((err) => {
+      console.error('Failed to load advisory:', err)
       setLoading(false)
     })
   }, [advisoryId])
@@ -454,7 +458,17 @@ export function AdvisoryDetailModal({ advisoryId, officerId, onClose, onReviewed
               )}
             </div>
           </div>
-        ) : null}
+        ) : (
+          <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
+            <p className="text-sm font-semibold text-slate-700">Unable to load advisory details.</p>
+            <button
+              onClick={onClose}
+              className="mt-4 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-xs font-bold text-slate-700 rounded-xl cursor-pointer"
+            >
+              Close
+            </button>
+          </div>
+        )}
 
         {/* Action Footer: Approve / Modify & Approve / Reject */}
         {advisory && advisory.status === 'pending' && mainTab === 'review' && (

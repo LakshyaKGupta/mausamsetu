@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
-import { Search, MapPin, X, Check, Loader2, Sparkles, Navigation, LocateFixed, Clock, ShieldCheck, Compass } from 'lucide-react'
+import { Search, MapPin, X, Check, Loader2, Navigation, LocateFixed, Clock, ShieldCheck, Compass } from 'lucide-react'
 import { weatherApi } from '@/api/client'
 import type { Language } from '@/types'
 
@@ -567,7 +567,7 @@ export const LocationSearchModal: React.FC<LocationSearchModalProps> = ({
               {/* Official Gram Panchayats List */}
               <div>
                 <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-emerald-700 px-1 mb-2">
-                  <Sparkles size={12} className="text-emerald-600" />
+                  <ShieldCheck size={13} className="text-emerald-600" />
                   <span>{t.presetsTitle}</span>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">

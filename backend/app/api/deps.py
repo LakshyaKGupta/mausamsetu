@@ -25,6 +25,7 @@ def get_auth_context(
     authorization: Optional[str] = Header(None),
     x_demo_role: Optional[str] = Header(None, alias="X-Demo-Role"),
     x_officer_id: Optional[int] = Header(None, alias="X-Officer-Id"),
+    x_admin_scope: Optional[str] = Header(None, alias="X-Admin-Scope"),
     officer_id: Optional[int] = Query(None),
     db: Session = Depends(get_db),
 ) -> AuthContext:
@@ -44,12 +45,13 @@ def get_auth_context(
                 block="Kalmeshwar",
             )
         elif role == "admin":
+            is_national = bool(x_admin_scope and x_admin_scope.lower() in ["national", "all-india", "central"])
             return AuthContext(
                 user_id=999,
                 role="admin",
                 name="Demo Admin",
-                district="Nagpur",
-                block="District Operations HQ",
+                district="All-India" if is_national else "Nagpur",
+                block="National Operations HQ" if is_national else "District Operations HQ",
             )
         elif role == "officer":
             target_id = x_officer_id or officer_id or 1

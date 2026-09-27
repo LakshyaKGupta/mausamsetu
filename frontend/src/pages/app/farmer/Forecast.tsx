@@ -8,10 +8,13 @@ import {
   Wind,
   Zap,
   Calendar,
-  MapPin,
   ChevronDown,
   ChevronUp,
-  Loader2
+  Loader2,
+  Play,
+  Pause,
+  CloudLightning,
+  CloudDrizzle
 } from 'lucide-react'
 import { weatherApi } from '@/api/client'
 import type { Language } from '@/types'
@@ -189,6 +192,169 @@ function getRainBar(mm: number): { width: string; color: string } {
   return { width: '100%', color: 'bg-blue-600' }
 }
 
+// Animated 24-hour weather player component
+function WeatherTimelinePlayer({ forecasts, lang }: { forecasts: HourlyForecast[], lang: Language }) {
+  const [playheadIdx, setPlayheadIdx] = useState(0)
+  const [isPlaying, setIsPlaying] = useState(false)
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const scrollRef = useRef<HTMLDivElement>(null)
+
+  // Take first 24 hourly slots max
+  const slots = forecasts.slice(0, 24)
+  if (slots.length === 0) return null
+
+  // Sky gradient by hour
+  const getSkyGradient = (h: number) => {
+    if (h >= 5 && h < 7) return 'from-orange-200 via-amber-100 to-sky-200'   // dawn
+    if (h >= 7 && h < 11) return 'from-sky-300 via-sky-200 to-sky-100'        // morning
+    if (h >= 11 && h < 15) return 'from-sky-400 via-sky-300 to-sky-200'       // noon
+    if (h >= 15 && h < 18) return 'from-sky-300 via-amber-100 to-orange-200'  // afternoon
+    if (h >= 18 && h < 20) return 'from-orange-400 via-pink-300 to-purple-300' // sunset
+    return 'from-indigo-900 via-slate-800 to-slate-700'                        // night
+  }
+
+  const getIcon = (condition: string, size = 22) => {
+    switch (condition) {
+      case 'rainy': return <CloudRain size={size} className="text-blue-300" />
+      case 'cloudy': return <Cloud size={size} className="text-slate-300" />
+      case 'partly_cloudy': return <Cloud size={size} className="text-amber-200" />
+      case 'thunderstorm': return <CloudLightning size={size} className="text-yellow-300" />
+      case 'drizzle': return <CloudDrizzle size={size} className="text-sky-300" />
+      case 'sunny':
+      default: return <Sun size={size} className="text-yellow-200" />
+    }
+  }
+
+  useEffect(() => {
+    if (isPlaying) {
+      timerRef.current = setInterval(() => {
+        setPlayheadIdx(prev => {
+          const next = (prev + 1) % slots.length
+          // scroll thumb into view
+          const el = scrollRef.current?.children[next] as HTMLElement
+          el?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' })
+          return next
+        })
+      }, 800)
+    } else {
+      if (timerRef.current) clearInterval(timerRef.current)
+    }
+    return () => { if (timerRef.current) clearInterval(timerRef.current) }
+  }, [isPlaying, slots.length])
+
+  const active = slots[playheadIdx]
+  const activeHour = active ? new Date(active.time).getHours() : 12
+  const skyGrad = getSkyGradient(activeHour)
+  const isNight = activeHour < 5 || activeHour >= 20
+
+  const formatHour = (timeStr: string) => {
+    const h = new Date(timeStr).getHours()
+    const ampm = h >= 12 ? (lang === 'en' ? 'PM' : 'बज.') : (lang === 'en' ? 'AM' : 'बज.')
+    const h12 = h % 12 || 12
+    return `${h12}${ampm}`
+  }
+
+  return (
+    <div className={cn('rounded-2xl overflow-hidden border border-slate-200 shadow-md bg-gradient-to-br', skyGrad, 'transition-all duration-700')}>
+      {/* Sky panel */}
+      <div className="relative px-5 pt-4 pb-3 flex items-center justify-between">
+        {/* Big active icon */}
+        <div className="flex flex-col items-center gap-1">
+          <div className={cn('transition-all duration-500', isPlaying && 'animate-bounce')}>
+            {getIcon(active?.condition || 'sunny', 40)}
+          </div>
+          <span className={cn('text-xs font-bold', isNight ? 'text-slate-200' : 'text-slate-800')}>
+            {active ? `${new Date(active.time).getHours()}:00` : '--'}
+          </span>
+        </div>
+
+        {/* Active slot stats */}
+        <div className="flex flex-col gap-1 text-right">
+          <span className={cn('text-2xl font-black', isNight ? 'text-white' : 'text-slate-900')}>
+            {active?.temperature_c !== null ? `${active?.temperature_c}°C` : '--'}
+          </span>
+          <div className="flex items-center gap-3 justify-end">
+            {(active?.precipitation_mm ?? 0) > 0 && (
+              <span className={cn('text-xs font-semibold', isNight ? 'text-blue-200' : 'text-blue-700')}>
+                💧 {active?.precipitation_mm}mm
+              </span>
+            )}
+            <span className={cn('text-xs font-semibold', isNight ? 'text-slate-200' : 'text-slate-600')}>
+              {active?.humidity_pct}% RH
+            </span>
+          </div>
+        </div>
+
+        {/* Play/Pause */}
+        <button
+          onClick={() => setIsPlaying(p => !p)}
+          className={cn(
+            'absolute top-3 right-4 w-9 h-9 rounded-full flex items-center justify-center transition-all shadow-lg',
+            isNight ? 'bg-white/20 hover:bg-white/30 text-white' : 'bg-black/15 hover:bg-black/25 text-slate-800'
+          )}
+        >
+          {isPlaying ? <Pause size={16} /> : <Play size={16} />}
+        </button>
+      </div>
+
+      {/* Timeline scroll strip */}
+      <div
+        ref={scrollRef}
+        className="flex gap-1.5 overflow-x-auto px-4 pb-4 scrollbar-hide"
+        style={{ scrollbarWidth: 'none' }}
+      >
+        {slots.map((fc, i) => {
+          const h = new Date(fc.time).getHours()
+          const isActive = i === playheadIdx
+          return (
+            <button
+              key={fc.time}
+              onClick={() => { setPlayheadIdx(i); setIsPlaying(false) }}
+              className={cn(
+                'flex-shrink-0 flex flex-col items-center gap-1 rounded-xl px-2.5 py-2 min-w-[52px] transition-all',
+                isActive
+                  ? isNight
+                    ? 'bg-white/25 scale-110 ring-2 ring-white/50'
+                    : 'bg-black/15 scale-110 ring-2 ring-black/20'
+                  : isNight
+                    ? 'hover:bg-white/10'
+                    : 'hover:bg-black/8'
+              )}
+            >
+              <span className={cn('text-[10px] font-bold', isNight ? 'text-slate-200' : 'text-slate-700')}>
+                {formatHour(fc.time)}
+              </span>
+              <div className="text-base">{getIcon(fc.condition, 16)}</div>
+              {fc.precipitation_mm > 0 && (
+                <span className={cn('text-[9px] font-bold', isNight ? 'text-blue-200' : 'text-blue-600')}>
+                  {fc.precipitation_mm}mm
+                </span>
+              )}
+              <span className={cn('text-[10px] font-semibold', isNight ? 'text-white' : 'text-slate-800')}>
+                {fc.temperature_c}°
+              </span>
+            </button>
+          )
+        })}
+      </div>
+
+      {/* Rain probability bar */}
+      {active && active.precipitation_probability_pct > 0 && (
+        <div className={cn('px-4 pb-3 text-xs font-semibold flex items-center gap-2', isNight ? 'text-blue-200' : 'text-blue-700')}>
+          <span>🌧️ {lang === 'en' ? 'Rain chance' : 'बारिश की संभावना'}:</span>
+          <div className="flex-1 h-1.5 rounded-full bg-white/30 overflow-hidden">
+            <div
+              className="h-full rounded-full bg-blue-400 transition-all duration-500"
+              style={{ width: `${active.precipitation_probability_pct}%` }}
+            />
+          </div>
+          <span>{active.precipitation_probability_pct}%</span>
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function FarmerForecastPage() {
   const outlet = useOutletContext<any>()
   const lang: Language = outlet?.lang || (localStorage.getItem('mausamsetu_lang') as Language) || 'hi'
@@ -286,6 +452,11 @@ export default function FarmerForecastPage() {
             </button>
           ))}
         </div>
+
+        {/* Animated 24h Weather Timeline Player */}
+        {!loading && forecasts.length > 0 && (
+          <WeatherTimelinePlayer forecasts={forecasts} lang={lang} />
+        )}
 
         {/* Loading */}
         {loading && (

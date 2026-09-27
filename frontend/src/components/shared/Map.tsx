@@ -172,8 +172,8 @@ export default function Map({ geoJson, lat, lon, zoom = 7 }: MapProps) {
         )}
         {(activeBasemap === 'nic-terrain' || activeBasemap === 'land-use' || activeBasemap === 'india-aspiration') && (
           <TileLayer
-            url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Terrain_Base/MapServer/tile/{z}/{y}/{x}"
-            attribution="&copy; Esri"
+            url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}"
+            attribution="&copy; Esri &mdash; Topo & Terrain"
           />
         )}
 

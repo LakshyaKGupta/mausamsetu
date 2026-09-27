@@ -1,7 +1,7 @@
 """Pydantic schemas for MausamSetu API."""
 
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any, Optional, Union
 
 from pydantic import BaseModel, ConfigDict
 
@@ -113,7 +113,7 @@ class AdvisoryOut(BaseModel):
     model_diff_mm: Optional[float] = -0.7
     reliability_tier: Optional[str] = "HIGH"
     terrain_factors: Optional[dict[str, Any]] = None
-    ml_explanation: Optional[dict[str, Any]] = None
+    ml_explanation: Optional[Union[dict[str, Any], str]] = None
     weather_snapshot: Optional[dict[str, Any]] = None
     is_imd_fallback: bool
     status: AdvisoryStatus

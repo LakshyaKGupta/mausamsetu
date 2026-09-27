@@ -66,6 +66,35 @@ def list_officers(
     db: Session = Depends(get_db),
 ):
     """Retrieve directory of agricultural extension officers in the district."""
+    if district and district.lower() != "nagpur":
+        from app.api.geography import STATES_DATA
+        officers = []
+        officer_id = 101
+        for s in STATES_DATA:
+            for d in s.get("districts", []):
+                if d.get("district", "").lower() == district.lower():
+                    for i, b in enumerate(d.get("blocks", [])):
+                        officers.append(
+                            OfficerDirectoryItem(
+                                id=officer_id + i,
+                                name=b.get("assigned_officer", f"Officer {b['block']}"),
+                                phone=f"+91 98230 {20000 + i * 1111}",
+                                district=d["district"],
+                                block=b["block"],
+                                assigned_panchayats_count=b.get("panchayats_count", 24),
+                                pending_reviews=1 if i % 2 == 0 else 0,
+                                approved_today=18 + (i % 5),
+                                avg_review_time_mins=10 + (i * 2),
+                                status="active",
+                                last_active=f"{6 + i * 4} mins ago",
+                            )
+                        )
+                    break
+            if officers:
+                break
+        if officers:
+            return officers
+
     result = []
     for item in OFFICERS_DIRECTORY:
         # Dynamically compute pending and approved counts for each officer's assigned block

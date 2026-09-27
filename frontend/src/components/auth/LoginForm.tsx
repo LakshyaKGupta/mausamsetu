@@ -10,7 +10,6 @@ import {
   Lock, 
   Eye, 
   EyeOff, 
-  Sparkles,
   Smartphone,
   Check
 } from 'lucide-react'
@@ -143,9 +142,9 @@ export const LoginForm: React.FC = () => {
         access_token: `demo_${demoRole}_token_${Date.now()}`,
         role: demoRole,
         name: demoRole === 'admin' ? 'National Agromet Administration' : demoRole === 'officer' ? 'Pravin Deshmukh (AAO)' : 'Ramesh Patil',
-        district: demoRole === 'admin' ? 'All-India' : 'नागपुर',
-        block: demoRole === 'admin' ? 'Central Command' : 'कलमेश्वर',
-        panchayat: demoRole === 'admin' ? 'Pan-India Operations' : 'धापेवाड़ा'
+        district: 'India',
+        block: 'India',
+        panchayat: 'India'
       }
       handleSuccessfulLogin(fallbackData)
     } finally {
@@ -159,7 +158,7 @@ export const LoginForm: React.FC = () => {
       <div className="mb-6">
         <div className="flex items-center justify-between mb-2">
           <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-[#126B3A] bg-[#ECFDF5] border border-[#A7F3D0] px-2.5 py-0.5 rounded-full uppercase tracking-wider">
-            <Sparkles size={11} className="text-[#10B981]" />
+            <ShieldCheck size={11} className="text-[#10B981]" />
             MausamSetu Portal
           </span>
           <span className="text-[11px] text-[#66736B] font-medium">Secure Access</span>
@@ -388,39 +387,36 @@ export const LoginForm: React.FC = () => {
           <button
             type="button"
             onClick={() => handleQuickDemo('farmer')}
-            className="flex flex-col items-center justify-center p-2.5 rounded-xl border border-[#D1E0D5] bg-[#F7FAF7] hover:bg-[#EEF5EF] hover:border-[#126B3A] transition-all text-center cursor-pointer group shadow-2xs active:scale-95"
+            className="flex flex-col items-center justify-center p-3 rounded-xl border border-[#D1E0D5] bg-[#F7FAF7] hover:bg-[#EEF5EF] hover:border-[#126B3A] transition-all text-center cursor-pointer group shadow-2xs active:scale-95"
           >
-            <div className="w-7 h-7 rounded-lg bg-[#E8F5E9] text-[#126B3A] flex items-center justify-center mb-1 group-hover:scale-110 transition-transform">
-              <Sprout size={16} />
+            <div className="w-8 h-8 rounded-lg bg-[#E8F5E9] text-[#126B3A] flex items-center justify-center mb-1.5 group-hover:scale-110 transition-transform">
+              <Sprout size={18} />
             </div>
             <span className="text-xs font-bold text-[#111814]">Farmer</span>
-            <span className="text-[10px] text-[#66736B] font-medium">Dhapewada</span>
           </button>
 
           {/* Officer Demo */}
           <button
             type="button"
             onClick={() => handleQuickDemo('officer')}
-            className="flex flex-col items-center justify-center p-2.5 rounded-xl border border-[#D1E0D5] bg-[#F7FAF7] hover:bg-[#EEF5EF] hover:border-[#126B3A] transition-all text-center cursor-pointer group shadow-2xs active:scale-95"
+            className="flex flex-col items-center justify-center p-3 rounded-xl border border-[#D1E0D5] bg-[#F7FAF7] hover:bg-[#EEF5EF] hover:border-[#126B3A] transition-all text-center cursor-pointer group shadow-2xs active:scale-95"
           >
-            <div className="w-7 h-7 rounded-lg bg-[#E0F2FE] text-[#0284C7] flex items-center justify-center mb-1 group-hover:scale-110 transition-transform">
-              <UserCheck size={16} />
+            <div className="w-8 h-8 rounded-lg bg-[#E0F2FE] text-[#0284C7] flex items-center justify-center mb-1.5 group-hover:scale-110 transition-transform">
+              <UserCheck size={18} />
             </div>
             <span className="text-xs font-bold text-[#111814]">Officer</span>
-            <span className="text-[10px] text-[#66736B] font-medium">Kalmeshwar</span>
           </button>
 
           {/* Admin Demo */}
           <button
             type="button"
             onClick={() => handleQuickDemo('admin')}
-            className="flex flex-col items-center justify-center p-2.5 rounded-xl border border-purple-200 bg-purple-50/50 hover:bg-purple-50 hover:border-purple-600 transition-all text-center cursor-pointer group shadow-2xs active:scale-95"
+            className="flex flex-col items-center justify-center p-3 rounded-xl border border-purple-200 bg-purple-50/50 hover:bg-purple-50 hover:border-purple-600 transition-all text-center cursor-pointer group shadow-2xs active:scale-95"
           >
-            <div className="w-7 h-7 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center mb-1 group-hover:scale-110 transition-transform">
-              <ShieldCheck size={16} />
+            <div className="w-8 h-8 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center mb-1.5 group-hover:scale-110 transition-transform">
+              <ShieldCheck size={18} />
             </div>
             <span className="text-xs font-bold text-purple-900">Admin</span>
-            <span className="text-[10px] text-purple-600 font-medium">All India</span>
           </button>
         </div>
       </div>

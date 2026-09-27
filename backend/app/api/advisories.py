@@ -105,14 +105,14 @@ def _serialize_advisory(advisory: Advisory, db: Session) -> AdvisoryOut:
             "station_calibration": "AWS #104 (Nagpur Rural)",
             "terrain_roughness": "Moderate valley floor",
         },
-        ml_explanation=advisory.ml_explanation,
+        ml_explanation={"summary": advisory.ml_explanation} if isinstance(advisory.ml_explanation, str) else advisory.ml_explanation,
         weather_snapshot=advisory.weather_snapshot,
-        is_imd_fallback=advisory.is_imd_fallback,
+        is_imd_fallback=bool(advisory.is_imd_fallback),
         status=advisory.status,
         officer_note=advisory.officer_note,
         approved_at=advisory.approved_at,
         sent_at=advisory.sent_at,
-        created_at=advisory.created_at,
+        created_at=advisory.created_at or datetime.utcnow(),
         panchayat_name=panchayat.name if panchayat else None,
         officer_name=officer.name if officer else "Rajesh Sharma",
     )
@@ -284,35 +284,36 @@ def get_district_operations_summary(
         ),
     ]
 
-    from app.api.geography import STATES_DATA
-    custom_blocks = []
-    for s in STATES_DATA:
-        for d in s["districts"]:
-            if d["district"].lower() == target_district.lower():
-                for b in d.get("blocks", []):
-                    custom_blocks.append(
-                        BlockSummaryItem(
-                            block=b["block"],
-                            total_panchayats=b.get("panchayats_count", 20),
-                            verified_today=18,
-                            pending_review=2,
-                            stale_count=0,
-                            avg_error_mm="±0.9 mm",
-                            assigned_officer=b.get("assigned_officer", "Agromet Extension Officer"),
+    if target_district.lower() != "nagpur":
+        from app.api.geography import STATES_DATA
+        custom_blocks = []
+        for s in STATES_DATA:
+            for d in s["districts"]:
+                if d["district"].lower() == target_district.lower():
+                    for b in d.get("blocks", []):
+                        custom_blocks.append(
+                            BlockSummaryItem(
+                                block=b["block"],
+                                total_panchayats=b.get("panchayats_count", 20),
+                                verified_today=18,
+                                pending_review=2,
+                                stale_count=0,
+                                avg_error_mm="±0.9 mm",
+                                assigned_officer=b.get("assigned_officer", "Agromet Extension Officer"),
+                            )
                         )
-                    )
+                    break
+            if custom_blocks:
                 break
-        if custom_blocks:
-            break
 
-    if custom_blocks:
-        blocks = custom_blocks
-    elif target_district.lower() != "nagpur":
-        blocks = [
-            BlockSummaryItem(block=f"{target_district} Central", total_panchayats=24, verified_today=20, pending_review=2, stale_count=0, avg_error_mm="±0.8 mm", assigned_officer="Agromet Officer"),
-            BlockSummaryItem(block=f"{target_district} North", total_panchayats=20, verified_today=18, pending_review=1, stale_count=0, avg_error_mm="±1.0 mm", assigned_officer="Extension Officer"),
-            BlockSummaryItem(block=f"{target_district} South", total_panchayats=18, verified_today=16, pending_review=2, stale_count=1, avg_error_mm="±1.1 mm", assigned_officer="Block Coordinator"),
-        ]
+        if custom_blocks:
+            blocks = custom_blocks
+        else:
+            blocks = [
+                BlockSummaryItem(block=f"{target_district} Central", total_panchayats=24, verified_today=20, pending_review=2, stale_count=0, avg_error_mm="±0.8 mm", assigned_officer="Agromet Officer"),
+                BlockSummaryItem(block=f"{target_district} North", total_panchayats=20, verified_today=18, pending_review=1, stale_count=0, avg_error_mm="±1.0 mm", assigned_officer="Extension Officer"),
+                BlockSummaryItem(block=f"{target_district} South", total_panchayats=18, verified_today=16, pending_review=2, stale_count=1, avg_error_mm="±1.1 mm", assigned_officer="Block Coordinator"),
+            ]
 
     total_panchayats_calc = sum(b.total_panchayats for b in blocks) if blocks else 78
     total_blocks_calc = len(blocks) if blocks else 4

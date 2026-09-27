@@ -1,4 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react'
+import { MapContainer, TileLayer, Marker, Popup, useMap, Circle } from 'react-leaflet'
+import L from 'leaflet'
+import 'leaflet/dist/leaflet.css'
+
+// Fix default icon paths broken by webpack
+// @ts-ignore
+delete L.Icon.Default.prototype._getIconUrl
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+})
 import {
   ShieldCheck, Database, Cpu, CheckCircle2, AlertTriangle,
   BarChart2, Server, MapPin, RefreshCw, Layers, Clock,
@@ -21,6 +33,1007 @@ import type {
 } from '@/types'
 import { cn, formatDate } from '@/lib/utils'
 
+// ---------------------------------------------------------------------------
+// Geographic coordinate lookup for map drilldown
+// ---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
+// Geographic data & coordinate lookup for India-wide multi-tier map drilldown
+// ---------------------------------------------------------------------------
+interface SpatialGP {
+  name: string
+  lat: number
+  lng: number
+  elevation_m: number
+  status: 'verified' | 'pending'
+}
+
+interface SpatialBlock {
+  name: string
+  lat: number
+  lng: number
+  gpsCount: number
+  farmers: number
+  aws: string
+  officer: string
+  advisories: string
+  status: 'live' | 'ready'
+  panchayats: SpatialGP[]
+}
+
+interface SpatialDistrict {
+  name: string
+  lat: number
+  lng: number
+  status: 'live' | 'ready'
+  blocksCount: number
+  gps: number
+  note: string
+  crops: string
+  farmers: string
+  blocks: SpatialBlock[]
+}
+
+interface SpatialState {
+  state: string
+  lat: number
+  lng: number
+  zoom: number
+  status: 'live' | 'ready'
+  coverage: string
+  crops: string
+  districts: SpatialDistrict[]
+}
+
+const ALL_STATES_SPATIAL: SpatialState[] = [
+  {
+    state: 'Maharashtra',
+    lat: 19.7, lng: 75.7, zoom: 7, status: 'live',
+    coverage: 'Nagpur Lead Pilot (6 Blocks, 78 GPs, 24 AWS Nodes)',
+    crops: 'Soybean, Cotton, Orange, Gram',
+    districts: [
+      {
+        name: 'Nagpur', lat: 21.15, lng: 79.09, status: 'live', blocksCount: 6, gps: 78,
+        note: 'Lead Pilot: Kalmeshwar, Katol, Saoner, Hingna, Umred, Ramtek',
+        crops: 'Soybean, Cotton, Orange', farmers: '5,420',
+        blocks: [
+          {
+            name: 'Kalmeshwar', lat: 21.38, lng: 78.96, gpsCount: 24, farmers: 1842,
+            aws: 'AWS #104, #105, #106', officer: 'Rajesh Sharma', advisories: '2 Pending Review', status: 'live',
+            panchayats: [
+              { name: 'Dhapewada', lat: 21.38, lng: 78.93, elevation_m: 312, status: 'pending' },
+              { name: 'Kalmeshwar', lat: 21.40, lng: 78.97, elevation_m: 328, status: 'verified' },
+              { name: 'Mohpa', lat: 21.42, lng: 78.89, elevation_m: 345, status: 'pending' },
+              { name: 'Borgaon', lat: 21.35, lng: 78.98, elevation_m: 305, status: 'verified' },
+              { name: 'Amgaon', lat: 21.37, lng: 79.01, elevation_m: 318, status: 'verified' },
+              { name: 'Khadki', lat: 21.33, lng: 78.92, elevation_m: 310, status: 'verified' },
+            ]
+          },
+          {
+            name: 'Katol', lat: 21.27, lng: 78.60, gpsCount: 18, farmers: 1420,
+            aws: 'AWS #108 (Katol East)', officer: 'Anil Thakre', advisories: 'All Disseminated', status: 'live',
+            panchayats: [
+              { name: 'Katol GP', lat: 21.27, lng: 78.60, elevation_m: 417, status: 'verified' },
+              { name: 'Dhanori GP', lat: 21.29, lng: 78.56, elevation_m: 425, status: 'verified' },
+              { name: 'Peth GP', lat: 21.24, lng: 78.64, elevation_m: 402, status: 'verified' },
+              { name: 'Metpanjra GP', lat: 21.22, lng: 78.58, elevation_m: 410, status: 'verified' },
+            ]
+          },
+          {
+            name: 'Saoner', lat: 21.40, lng: 78.93, gpsCount: 16, farmers: 1210,
+            aws: 'AWS #109 (Saoner Rural)', officer: 'Vikas Deshmukh', advisories: 'All Disseminated', status: 'live',
+            panchayats: [
+              { name: 'Saoner GP', lat: 21.40, lng: 78.93, elevation_m: 332, status: 'verified' },
+              { name: 'Kanholibara GP', lat: 21.43, lng: 78.87, elevation_m: 340, status: 'verified' },
+              { name: 'Rohna GP', lat: 21.37, lng: 78.91, elevation_m: 325, status: 'verified' },
+            ]
+          },
+          {
+            name: 'Hingna', lat: 21.10, lng: 78.88, gpsCount: 14, farmers: 1100,
+            aws: 'AWS #110 (Hingna MIDC)', officer: 'Sunita Patil', advisories: 'All Disseminated', status: 'live',
+            panchayats: [
+              { name: 'Hingna GP', lat: 21.10, lng: 78.88, elevation_m: 315, status: 'verified' },
+              { name: 'Wanadongri GP', lat: 21.09, lng: 78.94, elevation_m: 310, status: 'verified' },
+              { name: 'Raipur GP', lat: 21.12, lng: 78.85, elevation_m: 320, status: 'verified' },
+            ]
+          },
+          {
+            name: 'Umred', lat: 20.86, lng: 79.33, gpsCount: 16, farmers: 950,
+            aws: 'AWS #111 (Umred Plains)', officer: 'Rajesh Sharma (Acting)', advisories: 'All Disseminated', status: 'live',
+            panchayats: [
+              { name: 'Umred GP', lat: 20.86, lng: 79.33, elevation_m: 290, status: 'verified' },
+              { name: 'Sirsi GP', lat: 20.89, lng: 79.37, elevation_m: 295, status: 'verified' },
+              { name: 'Belgaon GP', lat: 20.83, lng: 79.29, elevation_m: 288, status: 'verified' },
+            ]
+          },
+          {
+            name: 'Ramtek', lat: 21.39, lng: 79.32, gpsCount: 12, farmers: 790,
+            aws: 'AWS #112 (Ramtek Hills)', officer: 'Pooja Raut', advisories: 'All Disseminated', status: 'live',
+            panchayats: [
+              { name: 'Ramtek GP', lat: 21.39, lng: 79.32, elevation_m: 345, status: 'verified' },
+              { name: 'Mansar GP', lat: 21.41, lng: 79.28, elevation_m: 330, status: 'verified' },
+              { name: 'Nagardhan GP', lat: 21.36, lng: 79.31, elevation_m: 338, status: 'verified' },
+            ]
+          }
+        ]
+      },
+      {
+        name: 'Nashik', lat: 20.01, lng: 73.79, status: 'ready', blocksCount: 2, gps: 53,
+        note: 'Plateau slope & vineyards (598m elev model calibrated)',
+        crops: 'Grapes, Onion, Tomato', farmers: '4,150',
+        blocks: [
+          {
+            name: 'Dindori', lat: 20.20, lng: 73.83, gpsCount: 25, farmers: 1520,
+            aws: 'AWS #201 (Dindori Valley)', officer: 'Nitin Bhamre', advisories: 'Telemetry Ready', status: 'ready',
+            panchayats: [
+              { name: 'Dindori GP', lat: 20.20, lng: 73.83, elevation_m: 620, status: 'verified' },
+              { name: 'Vani GP', lat: 20.25, lng: 73.89, elevation_m: 645, status: 'verified' },
+              { name: 'Khedgaon GP', lat: 20.17, lng: 73.78, elevation_m: 605, status: 'verified' },
+            ]
+          },
+          {
+            name: 'Niphad', lat: 20.08, lng: 74.12, gpsCount: 28, farmers: 1890,
+            aws: 'AWS #202 (Niphad Agromet)', officer: 'Sachin Patil', advisories: 'Telemetry Ready', status: 'ready',
+            panchayats: [
+              { name: 'Niphad GP', lat: 20.08, lng: 74.12, elevation_m: 560, status: 'verified' },
+              { name: 'Lasalgaon GP', lat: 20.14, lng: 74.23, elevation_m: 575, status: 'verified' },
+              { name: 'Pimpalgaon GP', lat: 20.17, lng: 73.98, elevation_m: 580, status: 'verified' },
+            ]
+          }
+        ]
+      },
+      {
+        name: 'Pune', lat: 18.52, lng: 73.86, status: 'ready', blocksCount: 2, gps: 54,
+        note: 'Rainshadow transition agro-zone with sugarcane and vegetable clusters',
+        crops: 'Sugarcane, Wheat, Vegetables', farmers: '3,800',
+        blocks: [
+          {
+            name: 'Baramati', lat: 18.15, lng: 74.58, gpsCount: 30, farmers: 2100,
+            aws: 'AWS #301 (Baramati Krishi)', officer: 'Amol Jagtap', advisories: 'Telemetry Ready', status: 'ready',
+            panchayats: [
+              { name: 'Baramati GP', lat: 18.15, lng: 74.58, elevation_m: 538, status: 'verified' },
+              { name: 'Malegaon BK GP', lat: 18.18, lng: 74.51, elevation_m: 545, status: 'verified' },
+              { name: 'Supa GP', lat: 18.23, lng: 74.45, elevation_m: 560, status: 'verified' },
+            ]
+          },
+          {
+            name: 'Junnar', lat: 19.21, lng: 73.88, gpsCount: 24, farmers: 1700,
+            aws: 'AWS #302 (Junnar Ghats)', officer: 'Sneha More', advisories: 'Telemetry Ready', status: 'ready',
+            panchayats: [
+              { name: 'Junnar GP', lat: 19.21, lng: 73.88, elevation_m: 689, status: 'verified' },
+              { name: 'Otur GP', lat: 19.26, lng: 73.92, elevation_m: 695, status: 'verified' },
+              { name: 'Narayangaon GP', lat: 19.12, lng: 73.97, elevation_m: 650, status: 'verified' },
+            ]
+          }
+        ]
+      },
+      {
+        name: 'Wardha', lat: 20.75, lng: 78.60, status: 'ready', blocksCount: 2, gps: 41,
+        note: 'Vidarbha cotton & pulse belt with black cotton soil',
+        crops: 'Cotton, Soybean, Arhar', farmers: '2,900',
+        blocks: [
+          {
+            name: 'Deoli', lat: 20.65, lng: 78.48, gpsCount: 22, farmers: 1450,
+            aws: 'AWS #401 (Deoli South)', officer: 'Pradeep Rane', advisories: 'Rules Mapped', status: 'ready',
+            panchayats: [
+              { name: 'Deoli GP', lat: 20.65, lng: 78.48, elevation_m: 240, status: 'verified' },
+              { name: 'Sonegaon GP', lat: 20.68, lng: 78.52, elevation_m: 245, status: 'verified' },
+              { name: 'Vijaygopal GP', lat: 20.61, lng: 78.42, elevation_m: 235, status: 'verified' },
+            ]
+          },
+          {
+            name: 'Arvi', lat: 20.98, lng: 78.23, gpsCount: 19, farmers: 1450,
+            aws: 'AWS #402 (Arvi Hills)', officer: 'Kavita Shinde', advisories: 'Rules Mapped', status: 'ready',
+            panchayats: [
+              { name: 'Arvi GP', lat: 20.98, lng: 78.23, elevation_m: 260, status: 'verified' },
+              { name: 'Kharangana GP', lat: 20.93, lng: 78.27, elevation_m: 255, status: 'verified' },
+              { name: 'Rohana GP', lat: 21.03, lng: 78.18, elevation_m: 270, status: 'verified' },
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    state: 'Punjab',
+    lat: 31.15, lng: 75.34, zoom: 7, status: 'ready',
+    coverage: 'Ludhiana & Patiala (PAU Agromet & LGD Mapped)',
+    crops: 'Wheat, Paddy, Maize, Cotton',
+    districts: [
+      {
+        name: 'Ludhiana', lat: 30.90, lng: 75.85, status: 'ready', blocksCount: 2, gps: 52,
+        note: 'Central Plain wheat & paddy belt (PAU agro-meteorological station)',
+        crops: 'Wheat, Paddy, Maize', farmers: '6,200',
+        blocks: [
+          {
+            name: 'Jagraon', lat: 30.78, lng: 75.48, gpsCount: 28, farmers: 2400,
+            aws: 'AWS #501 (PAU Jagraon)', officer: 'Gurpreet Singh', advisories: 'LGD Mapped', status: 'ready',
+            panchayats: [
+              { name: 'Jagraon GP', lat: 30.78, lng: 75.48, elevation_m: 240, status: 'verified' },
+              { name: 'Sidhwan Bet GP', lat: 30.88, lng: 75.45, elevation_m: 235, status: 'verified' },
+              { name: 'Raikot GP', lat: 30.65, lng: 75.60, elevation_m: 248, status: 'verified' },
+            ]
+          },
+          {
+            name: 'Khanna', lat: 30.70, lng: 76.22, gpsCount: 24, farmers: 2100,
+            aws: 'AWS #502 (Khanna Grain Hub)', officer: 'Harpreet Kaur', advisories: 'LGD Mapped', status: 'ready',
+            panchayats: [
+              { name: 'Khanna GP', lat: 30.70, lng: 76.22, elevation_m: 254, status: 'verified' },
+              { name: 'Payal GP', lat: 30.72, lng: 76.05, elevation_m: 250, status: 'verified' },
+              { name: 'Samrala GP', lat: 30.83, lng: 76.19, elevation_m: 258, status: 'verified' },
+            ]
+          }
+        ]
+      },
+      {
+        name: 'Bathinda', lat: 30.21, lng: 74.95, status: 'ready', blocksCount: 1, gps: 22,
+        note: 'South-western cotton-wheat belt with canal command',
+        crops: 'Cotton, Wheat, Mustard', farmers: '5,100',
+        blocks: [
+          {
+            name: 'Talwandi Sabo', lat: 29.98, lng: 75.08, gpsCount: 22, farmers: 2200,
+            aws: 'AWS #505 (Damdama Sahib)', officer: 'Manjit Dhillon', advisories: 'Rules Mapped', status: 'ready',
+            panchayats: [
+              { name: 'Talwandi Sabo GP', lat: 29.98, lng: 75.08, elevation_m: 210, status: 'verified' },
+              { name: 'Rama Mandi GP', lat: 29.93, lng: 75.02, elevation_m: 205, status: 'verified' },
+              { name: 'Maur GP', lat: 30.08, lng: 75.24, elevation_m: 212, status: 'verified' },
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    state: 'Haryana',
+    lat: 29.06, lng: 76.08, zoom: 7, status: 'ready',
+    coverage: 'Karnal & Hisar (ICAR & CCSHAU Agromet nodes)',
+    crops: 'Basmati Rice, Wheat, Mustard, Sugarcane',
+    districts: [
+      {
+        name: 'Karnal', lat: 29.69, lng: 76.99, status: 'ready', blocksCount: 2, gps: 48,
+        note: 'National Dairy Research & Basmati Export Hub',
+        crops: 'Basmati Rice, Wheat', farmers: '5,800',
+        blocks: [
+          {
+            name: 'Nilokheri', lat: 29.83, lng: 76.92, gpsCount: 26, farmers: 2100,
+            aws: 'AWS #601 (Nilokheri ICAR)', officer: 'Virender Malik', advisories: 'LGD Mapped', status: 'ready',
+            panchayats: [
+              { name: 'Nilokheri GP', lat: 29.83, lng: 76.92, elevation_m: 250, status: 'verified' },
+              { name: 'Taraori GP', lat: 29.80, lng: 76.93, elevation_m: 252, status: 'verified' },
+              { name: 'Nissing GP', lat: 29.69, lng: 76.82, elevation_m: 249, status: 'verified' },
+            ]
+          },
+          {
+            name: 'Gharaunda', lat: 29.53, lng: 76.97, gpsCount: 22, farmers: 1950,
+            aws: 'AWS #602 (Indo-Israel Veg Center)', officer: 'Rakesh Dahiya', advisories: 'LGD Mapped', status: 'ready',
+            panchayats: [
+              { name: 'Gharaunda GP', lat: 29.53, lng: 76.97, elevation_m: 248, status: 'verified' },
+              { name: 'Kohand GP', lat: 29.50, lng: 76.99, elevation_m: 247, status: 'verified' },
+              { name: 'Chaura GP', lat: 29.56, lng: 77.01, elevation_m: 246, status: 'verified' },
+            ]
+          }
+        ]
+      },
+      {
+        name: 'Hisar', lat: 29.15, lng: 75.72, status: 'ready', blocksCount: 1, gps: 25,
+        note: 'CCSHAU Agricultural University node and semi-arid dryland research',
+        crops: 'Mustard, Cotton, Wheat', farmers: '4,900',
+        blocks: [
+          {
+            name: 'Hansi', lat: 29.10, lng: 75.97, gpsCount: 25, farmers: 2300,
+            aws: 'AWS #603 (Hansi Plains)', officer: 'Satish Punia', advisories: 'LGD Mapped', status: 'ready',
+            panchayats: [
+              { name: 'Hansi GP', lat: 29.10, lng: 75.97, elevation_m: 218, status: 'verified' },
+              { name: 'Barwala GP', lat: 29.38, lng: 75.91, elevation_m: 222, status: 'verified' },
+              { name: 'Narnaund GP', lat: 29.22, lng: 76.14, elevation_m: 219, status: 'verified' },
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    state: 'Madhya Pradesh',
+    lat: 23.47, lng: 77.94, zoom: 6, status: 'ready',
+    coverage: 'Indore & Ujjain (Malwa Plateau prime pulse & oilseed bowl)',
+    crops: 'Soybean, Wheat, Chickpea, Mustard',
+    districts: [
+      {
+        name: 'Indore', lat: 22.72, lng: 75.86, status: 'ready', blocksCount: 2, gps: 60,
+        note: 'Malwa plateau prime black cotton soil and soybean processing hub',
+        crops: 'Soybean, Wheat, Chickpea', farmers: '5,600',
+        blocks: [
+          {
+            name: 'Depalpur', lat: 22.85, lng: 75.55, gpsCount: 32, farmers: 2400,
+            aws: 'AWS #701 (Depalpur Malwa)', officer: 'Anurag Chouhan', advisories: 'LGD Mapped', status: 'ready',
+            panchayats: [
+              { name: 'Depalpur GP', lat: 22.85, lng: 75.55, elevation_m: 540, status: 'verified' },
+              { name: 'Betma GP', lat: 22.68, lng: 75.61, elevation_m: 552, status: 'verified' },
+              { name: 'Gautampura GP', lat: 22.98, lng: 75.52, elevation_m: 535, status: 'verified' },
+            ]
+          },
+          {
+            name: 'Sanwer', lat: 22.98, lng: 75.83, gpsCount: 28, farmers: 2150,
+            aws: 'AWS #702 (Sanwer Mandi)', officer: 'Pooja Patel', advisories: 'LGD Mapped', status: 'ready',
+            panchayats: [
+              { name: 'Sanwer GP', lat: 22.98, lng: 75.83, elevation_m: 530, status: 'verified' },
+              { name: 'Chandrawatiganj GP', lat: 23.08, lng: 75.78, elevation_m: 525, status: 'verified' },
+              { name: 'Barotha GP', lat: 22.92, lng: 75.91, elevation_m: 542, status: 'verified' },
+            ]
+          }
+        ]
+      },
+      {
+        name: 'Ujjain', lat: 23.18, lng: 75.79, status: 'ready', blocksCount: 1, gps: 24,
+        note: 'Kshipra river basin pulses & wheat agro-climatic subzone',
+        crops: 'Soybean, Gram, Wheat', farmers: '4,700',
+        blocks: [
+          {
+            name: 'Ghatiya', lat: 23.28, lng: 75.80, gpsCount: 24, farmers: 1900,
+            aws: 'AWS #703 (Ghatiya KVK)', officer: 'Mohan Verma', advisories: 'LGD Mapped', status: 'ready',
+            panchayats: [
+              { name: 'Ghatiya GP', lat: 23.28, lng: 75.80, elevation_m: 495, status: 'verified' },
+              { name: 'Unhel GP', lat: 23.35, lng: 75.56, elevation_m: 488, status: 'verified' },
+              { name: 'Tarana GP', lat: 23.33, lng: 76.04, elevation_m: 502, status: 'verified' },
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    state: 'Karnataka',
+    lat: 15.31, lng: 75.71, zoom: 7, status: 'ready',
+    coverage: 'Mandya & Mysuru (Kaveri Basin Sugarcane & Paddy Belt)',
+    crops: 'Sugarcane, Paddy, Ragi, Maize',
+    districts: [
+      {
+        name: 'Mandya', lat: 12.52, lng: 76.90, status: 'ready', blocksCount: 2, gps: 48,
+        note: 'Kaveri irrigation basin sugarcane & paddy belt with high density canal telemetry',
+        crops: 'Sugarcane, Paddy, Ragi', farmers: '6,100',
+        blocks: [
+          {
+            name: 'Pandavapura', lat: 12.49, lng: 76.67, gpsCount: 26, farmers: 2300,
+            aws: 'AWS #801 (KRS Dam Node)', officer: 'Ramesh Gowda', advisories: 'LGD Mapped', status: 'ready',
+            panchayats: [
+              { name: 'Pandavapura GP', lat: 12.49, lng: 76.67, elevation_m: 692, status: 'verified' },
+              { name: 'Melukote GP', lat: 12.66, lng: 76.65, elevation_m: 760, status: 'verified' },
+              { name: 'Kennalu GP', lat: 12.46, lng: 76.71, elevation_m: 680, status: 'verified' },
+            ]
+          },
+          {
+            name: 'Maddur', lat: 12.58, lng: 77.05, gpsCount: 22, farmers: 2100,
+            aws: 'AWS #802 (Maddur Plains)', officer: 'Suresh Kumar', advisories: 'LGD Mapped', status: 'ready',
+            panchayats: [
+              { name: 'Maddur GP', lat: 12.58, lng: 77.05, elevation_m: 662, status: 'verified' },
+              { name: 'Besagarahalli GP', lat: 12.53, lng: 77.10, elevation_m: 655, status: 'verified' },
+              { name: 'Koppa GP', lat: 12.63, lng: 77.01, elevation_m: 670, status: 'verified' },
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    state: 'Uttar Pradesh',
+    lat: 26.85, lng: 80.95, zoom: 6, status: 'ready',
+    coverage: 'Varanasi & Lucknow (Middle Gangetic Alluvium Belt)',
+    crops: 'Wheat, Rice, Sugarcane, Potato, Mustard',
+    districts: [
+      {
+        name: 'Varanasi', lat: 25.32, lng: 82.97, status: 'ready', blocksCount: 2, gps: 56,
+        note: 'Middle Gangetic alluvium vegetable & wheat cluster with high ground truth stations',
+        crops: 'Wheat, Paddy, Vegetables', farmers: '6,800',
+        blocks: [
+          {
+            name: 'Pindra', lat: 25.48, lng: 82.85, gpsCount: 26, farmers: 2500,
+            aws: 'AWS #901 (Babatpur Airport AWS)', officer: 'Ashok Pandey', advisories: 'LGD Mapped', status: 'ready',
+            panchayats: [
+              { name: 'Pindra GP', lat: 25.48, lng: 82.85, elevation_m: 83, status: 'verified' },
+              { name: 'Phulpur GP', lat: 25.55, lng: 82.87, elevation_m: 85, status: 'verified' },
+              { name: 'Sindhora GP', lat: 25.59, lng: 82.83, elevation_m: 86, status: 'verified' },
+            ]
+          },
+          {
+            name: 'Araziline', lat: 25.27, lng: 82.88, gpsCount: 30, farmers: 2350,
+            aws: 'AWS #902 (Raja Talab)', officer: 'Sunil Yadav', advisories: 'LGD Mapped', status: 'ready',
+            panchayats: [
+              { name: 'Araziline GP', lat: 25.27, lng: 82.88, elevation_m: 81, status: 'verified' },
+              { name: 'Mirzamurad GP', lat: 25.24, lng: 82.80, elevation_m: 80, status: 'verified' },
+              { name: 'Rohania GP', lat: 25.28, lng: 82.93, elevation_m: 82, status: 'verified' },
+            ]
+          }
+        ]
+      },
+      {
+        name: 'Lucknow', lat: 26.85, lng: 80.95, status: 'ready', blocksCount: 1, gps: 25,
+        note: 'Central UP horticulture & wheat belt (CISH node)',
+        crops: 'Mango, Wheat, Mustard', farmers: '5,400',
+        blocks: [
+          {
+            name: 'Bakshi Ka Talab', lat: 27.02, lng: 80.92, gpsCount: 25, farmers: 2100,
+            aws: 'AWS #903 (BKT Agromet)', officer: 'Manoj Tiwari', advisories: 'LGD Mapped', status: 'ready',
+            panchayats: [
+              { name: 'Bakshi Ka Talab GP', lat: 27.02, lng: 80.92, elevation_m: 125, status: 'verified' },
+              { name: 'Itaunja GP', lat: 27.08, lng: 80.89, elevation_m: 128, status: 'verified' },
+              { name: 'Asti GP', lat: 26.98, lng: 80.94, elevation_m: 123, status: 'verified' },
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    state: 'Rajasthan',
+    lat: 27.02, lng: 74.22, zoom: 6, status: 'ready',
+    coverage: 'Jaipur & Kota (Semi-arid Mustard, Gram & Soybean Bowl)',
+    crops: 'Mustard, Chickpea, Pearl Millet, Soybean',
+    districts: [
+      {
+        name: 'Jaipur', lat: 26.91, lng: 75.79, status: 'ready', blocksCount: 2, gps: 52,
+        note: 'Semi-arid mustard & chickpea pulse bowl with calibrated soil moisture sensors',
+        crops: 'Mustard, Chickpea, Bajra', farmers: '5,900',
+        blocks: [
+          {
+            name: 'Chomu', lat: 27.17, lng: 75.72, gpsCount: 28, farmers: 2400,
+            aws: 'AWS #1001 (Chomu Mandi)', officer: 'Bhupender Meena', advisories: 'LGD Mapped', status: 'ready',
+            panchayats: [
+              { name: 'Chomu GP', lat: 27.17, lng: 75.72, elevation_m: 435, status: 'verified' },
+              { name: 'Morija GP', lat: 27.21, lng: 75.75, elevation_m: 438, status: 'verified' },
+              { name: 'Samod GP', lat: 27.24, lng: 75.82, elevation_m: 452, status: 'verified' },
+            ]
+          },
+          {
+            name: 'Sanganer', lat: 26.80, lng: 75.77, gpsCount: 24, farmers: 2100,
+            aws: 'AWS #1002 (Sanganer South)', officer: 'Radhe Sharma', advisories: 'LGD Mapped', status: 'ready',
+            panchayats: [
+              { name: 'Sanganer GP', lat: 26.80, lng: 75.77, elevation_m: 425, status: 'verified' },
+              { name: 'Watika GP', lat: 26.74, lng: 75.84, elevation_m: 420, status: 'verified' },
+              { name: 'Muhana GP', lat: 26.77, lng: 75.71, elevation_m: 428, status: 'verified' },
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    state: 'Gujarat',
+    lat: 22.26, lng: 71.19, zoom: 7, status: 'ready',
+    coverage: 'Rajkot & Anand (Saurashtra Groundnut & Cotton Heartland)',
+    crops: 'Cotton, Groundnut, Castor, Wheat',
+    districts: [
+      {
+        name: 'Rajkot', lat: 22.30, lng: 70.80, status: 'ready', blocksCount: 1, gps: 27,
+        note: 'Saurashtra groundnut & Bt-cotton heartland with automated weather stations',
+        crops: 'Groundnut, Cotton, Castor', farmers: '6,300',
+        blocks: [
+          {
+            name: 'Gondal', lat: 21.97, lng: 70.80, gpsCount: 27, farmers: 2550,
+            aws: 'AWS #1101 (Gondal Yard)', officer: 'Pravin Jadeja', advisories: 'LGD Mapped', status: 'ready',
+            panchayats: [
+              { name: 'Gondal GP', lat: 21.97, lng: 70.80, elevation_m: 132, status: 'verified' },
+              { name: 'Kotda Sangani GP', lat: 21.94, lng: 70.93, elevation_m: 145, status: 'verified' },
+              { name: 'Gomta GP', lat: 21.88, lng: 70.78, elevation_m: 128, status: 'verified' },
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    state: 'Bihar',
+    lat: 25.09, lng: 85.31, zoom: 7, status: 'ready',
+    coverage: 'Patna & Samastipur (North Bihar Alluvium & RPCAU Pusa Hub)',
+    crops: 'Rice, Wheat, Maize, Pulses',
+    districts: [
+      {
+        name: 'Patna', lat: 25.59, lng: 85.14, status: 'ready', blocksCount: 1, gps: 26,
+        note: 'Son-Ganga alluvial convergence zone with multi-crop intensive farming',
+        crops: 'Rice, Wheat, Maize', farmers: '5,700',
+        blocks: [
+          {
+            name: 'Bihta', lat: 25.57, lng: 84.87, gpsCount: 26, farmers: 2350,
+            aws: 'AWS #1201 (Bihta Agromet)', officer: 'Arvind Kumar', advisories: 'LGD Mapped', status: 'ready',
+            panchayats: [
+              { name: 'Bihta GP', lat: 25.57, lng: 84.87, elevation_m: 55, status: 'verified' },
+              { name: 'Parev GP', lat: 25.55, lng: 84.82, elevation_m: 53, status: 'verified' },
+              { name: 'Lai GP', lat: 25.62, lng: 84.89, elevation_m: 56, status: 'verified' },
+            ]
+          }
+        ]
+      }
+    ]
+  }
+]
+
+// Fast coordinate dictionary fallback for any queried location
+const GEO_COORDS: Record<string, { lat: number; lng: number; zoom: number; label: string }> = {
+  'India': { lat: 22.5, lng: 80.0, zoom: 4, label: '🇮🇳 India' }
+}
+
+// Populate GEO_COORDS dynamically from ALL_STATES_SPATIAL
+ALL_STATES_SPATIAL.forEach((st) => {
+  GEO_COORDS[st.state] = { lat: st.lat, lng: st.lng, zoom: st.zoom, label: st.state }
+  st.districts.forEach((d) => {
+    GEO_COORDS[d.name] = { lat: d.lat, lng: d.lng, zoom: 10, label: `${d.name} District` }
+    d.blocks.forEach((b) => {
+      GEO_COORDS[b.name] = { lat: b.lat, lng: b.lng, zoom: 12, label: `${b.name} Block` }
+    })
+  })
+})
+
+// Leaflet fly-to helper used inside a MapContainer child
+const MapFlyTo: React.FC<{ lat: number; lng: number; zoom: number }> = ({ lat, lng, zoom }) => {
+  const map = useMap()
+  useEffect(() => {
+    map.flyTo([lat, lng], zoom, { animate: true, duration: 1.2 })
+  }, [lat, lng, zoom, map])
+  return null
+}
+
+// ---------------------------------------------------------------------------
+// MapDrilldownTab – the full split-panel map component
+// ---------------------------------------------------------------------------
+interface MapDrilldownTabProps {
+  spatialTier: 'india' | 'state' | 'district' | 'block'
+  setSpatialTier: (t: 'india' | 'state' | 'district' | 'block') => void
+  drillState: string
+  setDrillState: (s: string) => void
+  drillDistrict: string
+  setDrillDistrict: (d: string) => void
+  drillBlock: string
+  setDrillBlock: (b: string) => void
+  panchayats: PanchayatHierarchyItem[]
+  setSelectedPanchayat: (p: PanchayatHierarchyItem | null) => void
+}
+
+const MapDrilldownTab: React.FC<MapDrilldownTabProps> = ({
+  spatialTier, setSpatialTier, drillState, setDrillState,
+  drillDistrict, setDrillDistrict, drillBlock, setDrillBlock,
+  panchayats, setSelectedPanchayat
+}) => {
+  // Find current selected state, district, and block objects
+  const currentState = ALL_STATES_SPATIAL.find((s) => s.state === drillState) || ALL_STATES_SPATIAL[0]
+  const currentDistrict = currentState.districts.find((d) => d.name === drillDistrict) || currentState.districts[0]
+  const currentBlock = currentDistrict.blocks.find((b) => b.name === drillBlock) || currentDistrict.blocks[0]
+
+  // Determine current map center & zoom based on tier
+  const mapTarget = (() => {
+    if (spatialTier === 'block') {
+      return { lat: currentBlock.lat, lng: currentBlock.lng, zoom: 12 }
+    }
+    if (spatialTier === 'district') {
+      return { lat: currentDistrict.lat, lng: currentDistrict.lng, zoom: 10 }
+    }
+    if (spatialTier === 'state') {
+      return { lat: currentState.lat, lng: currentState.lng, zoom: currentState.zoom }
+    }
+    return { lat: 22.5, lng: 80.0, zoom: 4 }
+  })()
+
+  // Handler for state card click
+  const handleSelectState = (stateName: string) => {
+    const st = ALL_STATES_SPATIAL.find((s) => s.state === stateName)
+    if (st) {
+      setDrillState(st.state)
+      const firstDist = st.districts[0]
+      if (firstDist) {
+        setDrillDistrict(firstDist.name)
+        if (firstDist.blocks[0]) {
+          setDrillBlock(firstDist.blocks[0].name)
+        }
+      }
+      setSpatialTier('state')
+    }
+  }
+
+  // Handler for district card or marker click
+  const handleSelectDistrict = (distName: string) => {
+    const dist = currentState.districts.find((d) => d.name === distName)
+    if (dist) {
+      setDrillDistrict(dist.name)
+      if (dist.blocks[0]) {
+        setDrillBlock(dist.blocks[0].name)
+      }
+      setSpatialTier('district')
+    }
+  }
+
+  // Handler for block card or marker click
+  const handleSelectBlock = (blkName: string) => {
+    const blk = currentDistrict.blocks.find((b) => b.name === blkName)
+    if (blk) {
+      setDrillBlock(blk.name)
+      setSpatialTier('block')
+    }
+  }
+
+  return (
+    <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-xs space-y-4">
+      {/* Header & Breadcrumb */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
+        <div>
+          <h3 className="font-bold text-slate-900 text-base">Multi-Tier Spatial Drilldown Map</h3>
+          <p className="text-xs text-slate-500 mt-0.5">Click any state, district, or block to zoom map to that region</p>
+        </div>
+        {/* Breadcrumb */}
+        <div className="flex items-center gap-1.5 text-xs font-bold bg-slate-50 p-1.5 rounded-xl border border-slate-200 flex-wrap">
+          <button
+            onClick={() => setSpatialTier('india')}
+            className={cn('px-2.5 py-1 rounded-lg transition-colors cursor-pointer', spatialTier === 'india' ? 'bg-brand-600 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900')}
+          >🇮🇳 India</button>
+          <span className="text-slate-300">/</span>
+          <button
+            onClick={() => {
+              if (spatialTier !== 'india') setSpatialTier('state')
+            }}
+            className={cn('px-2.5 py-1 rounded-lg transition-colors cursor-pointer', spatialTier === 'state' ? 'bg-brand-600 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900', spatialTier === 'india' && 'opacity-40 cursor-default')}
+          >{drillState}</button>
+          <span className="text-slate-300">/</span>
+          <button
+            onClick={() => {
+              if (spatialTier === 'block' || spatialTier === 'district') setSpatialTier('district')
+            }}
+            className={cn('px-2.5 py-1 rounded-lg transition-colors cursor-pointer', spatialTier === 'district' ? 'bg-brand-600 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900', (spatialTier === 'india' || spatialTier === 'state') && 'opacity-40 cursor-default')}
+          >{drillDistrict} Dist</button>
+          <span className="text-slate-300">/</span>
+          <button
+            onClick={() => {
+              if (spatialTier === 'block') setSpatialTier('block')
+            }}
+            className={cn('px-2.5 py-1 rounded-lg transition-colors cursor-pointer', spatialTier === 'block' ? 'bg-brand-600 text-white shadow-2xs' : 'text-slate-500 hover:text-slate-900', spatialTier !== 'block' && 'opacity-40 cursor-default')}
+          >{drillBlock} Block</button>
+        </div>
+      </div>
+
+      {/* SPLIT LAYOUT: Cards + Live Map */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+
+        {/* LEFT: Drilldown Cards */}
+        <div className="space-y-4 overflow-y-auto max-h-[540px] pr-1">
+
+          {/* LEVEL 1: INDIA (States List) */}
+          {spatialTier === 'india' && (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between text-xs text-slate-500">
+                <span className="font-semibold">9 Agrarian States — Click to Inspect</span>
+                <span className="flex items-center gap-1 font-semibold text-emerald-700">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block"/>1 Live Pilot &nbsp;
+                  <span className="w-2 h-2 rounded-full bg-amber-500 inline-block"/>8 Ready
+                </span>
+              </div>
+              {ALL_STATES_SPATIAL.map((st) => (
+                <div
+                  key={st.state}
+                  onClick={() => handleSelectState(st.state)}
+                  className={cn(
+                    'p-4 rounded-2xl border transition-all cursor-pointer hover:shadow-md flex items-center justify-between gap-3',
+                    st.state === drillState
+                      ? 'bg-brand-50/60 border-brand-300'
+                      : st.status === 'live'
+                      ? 'bg-emerald-50/40 border-emerald-300 hover:border-emerald-400'
+                      : 'bg-white border-slate-200 hover:border-slate-300'
+                  )}
+                >
+                  <div>
+                    <strong className="text-sm text-slate-900">{st.state}</strong>
+                    <p className="text-[11px] text-slate-500 mt-0.5">{st.coverage}</p>
+                    <p className="text-[10px] text-slate-400 mt-0.5">Crops: {st.crops}</p>
+                  </div>
+                  <div className="flex flex-col items-end gap-1 shrink-0">
+                    <span className={cn(
+                      'text-[10px] font-bold px-2 py-0.5 rounded-full',
+                      st.status === 'live' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
+                    )}>
+                      {st.status === 'live' ? '🟢 Live' : '🟡 Ready'}
+                    </span>
+                    <span className="text-[10px] text-slate-500">{st.districts.length} Districts</span>
+                    <span className="text-[10px] text-brand-700 font-semibold flex items-center gap-0.5">
+                      Open Map <ChevronRight size={11}/>
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* LEVEL 2: STATE (Districts List) */}
+          {spatialTier === 'state' && (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between text-xs">
+                <span className="font-semibold text-slate-700">
+                  {currentState.state} — Districts ({currentState.districts.length})
+                </span>
+                <button
+                  onClick={() => setSpatialTier('india')}
+                  className="text-brand-700 font-bold hover:underline cursor-pointer"
+                >
+                  ← Back to All India
+                </button>
+              </div>
+              {currentState.districts.map((d) => (
+                <div
+                  key={d.name}
+                  onClick={() => handleSelectDistrict(d.name)}
+                  className={cn(
+                    'p-4 rounded-2xl border transition-all cursor-pointer hover:shadow-md flex items-center justify-between gap-3',
+                    d.name === drillDistrict
+                      ? 'bg-brand-50/70 border-brand-300'
+                      : d.status === 'live'
+                      ? 'bg-emerald-50/40 border-emerald-300 hover:border-emerald-400'
+                      : 'bg-white border-slate-200 hover:border-slate-300'
+                  )}
+                >
+                  <div>
+                    <strong className="text-sm text-slate-900">{d.name} District</strong>
+                    <p className="text-[11px] text-slate-500 mt-0.5">{d.note}</p>
+                    <p className="text-[10px] text-slate-400 mt-0.5">Farmers: {d.farmers} · Crops: {d.crops}</p>
+                  </div>
+                  <div className="flex flex-col items-end gap-1 shrink-0">
+                    <span className={cn(
+                      'text-[10px] font-bold px-2 py-0.5 rounded-full',
+                      d.status === 'live' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
+                    )}>
+                      {d.status === 'live' ? '🟢 Live Pilot' : '🟡 Arch Ready'}
+                    </span>
+                    <span className="text-[10px] text-slate-500">{d.blocks.length} Blocks · {d.gps} GPs</span>
+                    <span className="text-[10px] text-brand-700 font-semibold flex items-center gap-0.5">
+                      Open Map <ChevronRight size={11}/>
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* LEVEL 3: DISTRICT (Blocks List) */}
+          {spatialTier === 'district' && (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between text-xs">
+                <span className="font-semibold text-slate-700">
+                  {currentDistrict.name} District — Blocks ({currentDistrict.blocks.length})
+                </span>
+                <button
+                  onClick={() => setSpatialTier('state')}
+                  className="text-brand-700 font-bold hover:underline cursor-pointer"
+                >
+                  ← Back to {currentState.state}
+                </button>
+              </div>
+              {currentDistrict.blocks.map((b) => (
+                <div
+                  key={b.name}
+                  onClick={() => handleSelectBlock(b.name)}
+                  className={cn(
+                    'p-4 rounded-2xl border transition-all cursor-pointer hover:shadow-md flex items-center justify-between gap-3',
+                    b.name === drillBlock
+                      ? 'bg-brand-50/70 border-brand-300'
+                      : b.status === 'live'
+                      ? 'bg-emerald-50/40 border-emerald-300 hover:border-emerald-400'
+                      : 'bg-white border-slate-200 hover:border-slate-300'
+                  )}
+                >
+                  <div>
+                    <strong className="text-sm text-slate-900">{b.name} Block</strong>
+                    <p className="text-[11px] text-slate-500 mt-0.5">{b.aws}</p>
+                    <p className="text-[11px] text-slate-400">Officer: {b.officer}</p>
+                  </div>
+                  <div className="flex flex-col items-end gap-1 shrink-0">
+                    <span className={cn(
+                      'text-[10px] font-bold px-2 py-0.5 rounded-full',
+                      b.status === 'live' ? 'bg-emerald-100 text-emerald-800' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                    )}>
+                      {b.status === 'live' ? '🟢 Live' : '🟢 Ready'}
+                    </span>
+                    <span className="text-[10px] text-slate-500">{b.gpsCount} GPs · {b.farmers} farmers</span>
+                    <span className="text-[10px] text-brand-700 font-semibold flex items-center gap-0.5">
+                      Open Map <ChevronRight size={11}/>
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* LEVEL 4: BLOCK (Gram Panchayats List) */}
+          {spatialTier === 'block' && (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between text-xs">
+                <div>
+                  <span className="font-semibold text-slate-700">
+                    {currentBlock.name} Block — Gram Panchayats
+                  </span>
+                  <span className="text-[10px] text-slate-400 ml-2">Officer: {currentBlock.officer}</span>
+                </div>
+                <button
+                  onClick={() => setSpatialTier('district')}
+                  className="text-brand-700 font-bold hover:underline cursor-pointer"
+                >
+                  ← Back to {currentDistrict.name}
+                </button>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2.5">
+                {(currentBlock.panchayats.length > 0 ? currentBlock.panchayats : panchayats).map((p: any) => {
+                  const isPending = p.status === 'pending' || p.name === 'Dhapewada' || p.name === 'Mohpa'
+                  return (
+                    <div
+                      key={p.name}
+                      onClick={() => {
+                        const item: PanchayatHierarchyItem = {
+                          id: p.id || Math.floor(Math.random() * 1000) + 1,
+                          name: p.name.replace(' GP', ''),
+                          block: currentBlock.name,
+                          district: currentDistrict.name,
+                          state: currentState.state,
+                          elevation_m: p.elevation_m || 312,
+                          registered_farmers: p.farmers || 180,
+                          primary_crops: ['Soybean', 'Wheat'],
+                          telemetry_status: isPending ? 'STALE' : 'FRESH',
+                          last_sync: '10 mins ago',
+                          officer_name: currentBlock.officer
+                        }
+                        setSelectedPanchayat(item)
+                      }}
+                      className={cn(
+                        'p-3 rounded-2xl border text-center cursor-pointer transition-all hover:scale-105 shadow-2xs',
+                        isPending ? 'bg-amber-50/80 border-amber-300' : 'bg-emerald-50/50 border-emerald-200'
+                      )}
+                    >
+                      <MapPin size={15} className={cn('mx-auto mb-1', isPending ? 'text-amber-600' : 'text-emerald-700')} />
+                      <strong className="block text-xs text-slate-900 truncate">{p.name}</strong>
+                      <span className="text-[10px] text-slate-500 font-mono">{p.elevation_m || 312}m elev</span>
+                      <span className={cn(
+                        'text-[9px] font-bold px-1.5 py-0.5 rounded uppercase mt-1 inline-block',
+                        isPending ? 'bg-amber-200 text-amber-900' : 'bg-emerald-200 text-emerald-900'
+                      )}>
+                        {isPending ? 'Pending' : 'Verified'}
+                      </span>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* RIGHT: Live Leaflet Map */}
+        <div className="rounded-2xl overflow-hidden border border-slate-200 shadow-sm" style={{ height: '540px' }}>
+          <MapContainer
+            center={[mapTarget.lat, mapTarget.lng]}
+            zoom={mapTarget.zoom}
+            style={{ height: '100%', width: '100%' }}
+            scrollWheelZoom={true}
+          >
+            <TileLayer
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+            />
+            {/* Smoothly fly map to whatever region is selected */}
+            <MapFlyTo lat={mapTarget.lat} lng={mapTarget.lng} zoom={mapTarget.zoom} />
+
+            {/* INDIA LEVEL: State Markers */}
+            {spatialTier === 'india' &&
+              ALL_STATES_SPATIAL.map((st) => (
+                <Marker
+                  key={st.state}
+                  position={[st.lat, st.lng]}
+                  eventHandlers={{
+                    click: () => handleSelectState(st.state)
+                  }}
+                >
+                  <Popup>
+                    <div className="p-1">
+                      <strong className="text-sm font-bold text-slate-900">{st.state}</strong>
+                      <p className="text-xs text-slate-600 mt-1">{st.coverage}</p>
+                      <p className="text-xs text-slate-500 mt-0.5">Crops: {st.crops}</p>
+                      <button
+                        onClick={() => handleSelectState(st.state)}
+                        className="mt-2 text-xs font-bold text-white bg-brand-600 px-3 py-1 rounded-lg w-full cursor-pointer hover:bg-brand-700"
+                      >
+                        Inspect Districts →
+                      </button>
+                    </div>
+                  </Popup>
+                </Marker>
+              ))}
+
+            {/* STATE LEVEL: District Markers for Selected State */}
+            {spatialTier === 'state' &&
+              currentState.districts.map((d) => (
+                <Marker
+                  key={d.name}
+                  position={[d.lat, d.lng]}
+                  eventHandlers={{
+                    click: () => handleSelectDistrict(d.name)
+                  }}
+                >
+                  <Popup>
+                    <div className="p-1">
+                      <strong className="text-sm font-bold text-slate-900">{d.name} District</strong>
+                      <p className="text-xs text-slate-600 mt-1">{d.note}</p>
+                      <p className="text-xs text-slate-500 mt-0.5">{d.blocks.length} Blocks · {d.gps} Gram Panchayats</p>
+                      <button
+                        onClick={() => handleSelectDistrict(d.name)}
+                        className="mt-2 text-xs font-bold text-white bg-brand-600 px-3 py-1 rounded-lg w-full cursor-pointer hover:bg-brand-700"
+                      >
+                        Open Blocks Map →
+                      </button>
+                    </div>
+                  </Popup>
+                </Marker>
+              ))}
+
+            {/* DISTRICT LEVEL: Block Markers for Selected District */}
+            {spatialTier === 'district' &&
+              currentDistrict.blocks.map((b) => (
+                <Marker
+                  key={b.name}
+                  position={[b.lat, b.lng]}
+                  eventHandlers={{
+                    click: () => handleSelectBlock(b.name)
+                  }}
+                >
+                  <Popup>
+                    <div className="p-1">
+                      <strong className="text-sm font-bold text-slate-900">{b.name} Block</strong>
+                      <p className="text-xs text-slate-600 mt-1">Telemetry: {b.aws}</p>
+                      <p className="text-xs text-slate-500">Officer: {b.officer}</p>
+                      <button
+                        onClick={() => handleSelectBlock(b.name)}
+                        className="mt-2 text-xs font-bold text-white bg-brand-600 px-3 py-1 rounded-lg w-full cursor-pointer hover:bg-brand-700"
+                      >
+                        View {b.gpsCount} Panchayats →
+                      </button>
+                    </div>
+                  </Popup>
+                </Marker>
+              ))}
+
+            {/* BLOCK LEVEL: Gram Panchayat Markers + Coverage Circles for Selected Block */}
+            {spatialTier === 'block' &&
+              (currentBlock.panchayats.length > 0 ? currentBlock.panchayats : [
+                { name: `${currentBlock.name} GP`, lat: currentBlock.lat, lng: currentBlock.lng, elevation_m: 320, status: 'verified' as const }
+              ]).map((m, i) => (
+                <React.Fragment key={i}>
+                  <Circle
+                    center={[m.lat, m.lng]}
+                    radius={650}
+                    color="#10b981"
+                    fillOpacity={0.16}
+                    weight={1.5}
+                  />
+                  <Marker position={[m.lat, m.lng]}>
+                    <Popup>
+                      <div className="p-1">
+                        <strong className="text-sm font-bold text-slate-900">{m.name}</strong>
+                        <p className="text-xs text-slate-600 mt-0.5">Elevation: {m.elevation_m}m (SRTM 90m)</p>
+                        <p className="text-xs text-emerald-700 font-semibold mt-0.5">🟢 Telemetry Active</p>
+                        <p className="text-[11px] text-slate-400 mt-1">Assigned: {currentBlock.officer}</p>
+                      </div>
+                    </Popup>
+                  </Marker>
+                </React.Fragment>
+              ))}
+          </MapContainer>
+        </div>
+      </div>
+
+      {/* Map Legend */}
+      <div className="flex items-center gap-4 text-xs text-slate-500 pt-2 border-t border-slate-100 flex-wrap">
+        <span className="flex items-center gap-1.5 font-semibold">
+          <span className="w-3 h-3 rounded-full bg-emerald-500 inline-block"/>Live Pilot Area
+        </span>
+        <span className="flex items-center gap-1.5 font-semibold">
+          <span className="w-3 h-3 rounded-full bg-amber-400 inline-block"/>Architecture Ready
+        </span>
+        <span className="flex items-center gap-1.5 font-semibold">
+          <span className="w-3 h-3 rounded-full border-2 border-emerald-500 inline-block"/>GP Coverage (650m Microclimate)
+        </span>
+        <span className="ml-auto text-[11px] text-slate-400">Map data © OpenStreetMap contributors</span>
+      </div>
+    </div>
+  )
+}
 type AdminTab =
   | 'overview'
   | 'panchayats'
@@ -77,7 +1090,7 @@ export const AdminDashboard: React.FC = () => {
   const [calcHumidity, setCalcHumidity] = useState<number>(72)
 
   // Multi-tier spatial drilldown state
-  const [spatialTier, setSpatialTier] = useState<'india' | 'state' | 'district' | 'block'>('block')
+  const [spatialTier, setSpatialTier] = useState<'india' | 'state' | 'district' | 'block'>('india')
   const [drillState, setDrillState] = useState<string>('Maharashtra')
   const [drillDistrict, setDrillDistrict] = useState<string>('Nagpur')
   const [drillBlock, setDrillBlock] = useState<string>('Kalmeshwar')
@@ -238,6 +1251,47 @@ export const AdminDashboard: React.FC = () => {
 
   useEffect(() => {
     loadData()
+
+    // Listen for global location changes from the navbar location picker
+    const handleLocChange = async (e: any) => {
+      const newLoc = e.detail
+      if (!newLoc) return
+
+      const newState = newLoc.state || selectedState
+      const newDistrict = newLoc.district || selectedDistrict
+      const newBlock = newLoc.block || 'all'
+
+      // Update admin selectors to match the chosen location
+      setSelectedState(newState)
+      setSelectedDistrict(newDistrict)
+      setDrillState(newState)
+      setDrillDistrict(newDistrict)
+      setFilterBlock(newBlock)
+      setDrillBlock(newBlock)
+
+      // Fetch fresh blocks list for the new district
+      try {
+        const blks = await geographyApi.getBlocks(newDistrict).catch(() => [])
+        if (blks && blks.length > 0) {
+          setAvailableBlocks(blks.map((b: any) => b.block))
+        }
+        const stateObj = states.find(
+          (s) => s.state.toLowerCase() === newState.toLowerCase() || s.code.toLowerCase() === newState.toLowerCase()
+        )
+        const stateCode = stateObj?.code || 'MH'
+        const dists = await geographyApi.getDistricts(stateCode).catch(() => [])
+        if (dists && dists.length > 0) {
+          setAvailableDistricts(dists.map((d: any) => d.district))
+        }
+      } catch (e) {
+        console.error('Admin location sync error:', e)
+      }
+
+      // Reload all data for the new location
+      loadData(newDistrict, newBlock, newState)
+    }
+    window.addEventListener('mausamsetu_location_change', handleLocChange)
+    return () => window.removeEventListener('mausamsetu_location_change', handleLocChange)
   }, [])
 
   const handleReassign = async () => {
@@ -1434,288 +2488,18 @@ export const AdminDashboard: React.FC = () => {
 
         {/* TAB 7: MULTI-TIER SPATIAL DRILLDOWN MAP */}
         {activeTab === 'map' && (
-          <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-xs space-y-6">
-            {/* Header & Breadcrumb Navigation */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
-              <div>
-                <h3 className="font-bold text-slate-900 text-base">Multi-Tier Spatial Dissemination & Coverage Architecture</h3>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  Honest operational status: Live operational pilot vs. Pan-India architecture ready
-                </p>
-              </div>
-
-              {/* Breadcrumb Bar */}
-              <div className="flex items-center gap-1.5 text-xs font-bold bg-slate-50 p-1.5 rounded-xl border border-slate-200">
-                <button
-                  onClick={() => setSpatialTier('india')}
-                  className={cn(
-                    'px-2.5 py-1 rounded-lg transition-colors',
-                    spatialTier === 'india' ? 'bg-brand-600 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900'
-                  )}
-                >
-                  🇮🇳 India
-                </button>
-                <span className="text-slate-300">/</span>
-                <button
-                  onClick={() => setSpatialTier('state')}
-                  className={cn(
-                    'px-2.5 py-1 rounded-lg transition-colors',
-                    spatialTier === 'state' ? 'bg-brand-600 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900'
-                  )}
-                >
-                  {drillState}
-                </button>
-                <span className="text-slate-300">/</span>
-                <button
-                  onClick={() => setSpatialTier('district')}
-                  className={cn(
-                    'px-2.5 py-1 rounded-lg transition-colors',
-                    spatialTier === 'district' ? 'bg-brand-600 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900'
-                  )}
-                >
-                  {drillDistrict} Dist
-                </button>
-                <span className="text-slate-300">/</span>
-                <button
-                  onClick={() => setSpatialTier('block')}
-                  className={cn(
-                    'px-2.5 py-1 rounded-lg transition-colors',
-                    spatialTier === 'block' ? 'bg-brand-600 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900'
-                  )}
-                >
-                  {drillBlock} Block
-                </button>
-              </div>
-            </div>
-
-            {/* LEVEL 1: ALL-INDIA STATES VIEW */}
-            {spatialTier === 'india' && (
-              <div className="space-y-4">
-                <div className="flex items-center justify-between text-xs text-slate-500">
-                  <span>Showing 9 Agrarian States Configured in MausamSetu</span>
-                  <div className="flex items-center gap-3">
-                    <span className="flex items-center gap-1 font-semibold text-emerald-800">
-                      <span className="w-2 h-2 rounded-full bg-emerald-500" /> 1 Live Operational Pilot
-                    </span>
-                    <span className="flex items-center gap-1 font-semibold text-amber-800">
-                      <span className="w-2 h-2 rounded-full bg-amber-500" /> 8 Architecture Ready
-                    </span>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
-                  {[
-                    { state: 'Maharashtra', capital: 'Mumbai', dists: 36, status: 'live', coverage: 'Nagpur District (78 GPs, 24 AWS Nodes)', farmers: '5,420 Live', crops: 'Soybean, Cotton, Orange' },
-                    { state: 'Punjab', capital: 'Chandigarh', dists: 23, status: 'ready', coverage: 'Ludhiana & Patiala (LGD mapped)', farmers: 'Ready', crops: 'Wheat, Paddy' },
-                    { state: 'Haryana', capital: 'Chandigarh', dists: 22, status: 'ready', coverage: 'Karnal & Hisar (Rules mapped)', farmers: 'Ready', crops: 'Basmati, Mustard' },
-                    { state: 'Madhya Pradesh', capital: 'Bhopal', dists: 55, status: 'ready', coverage: 'Indore & Ujjain (Malwa Plateau)', farmers: 'Ready', crops: 'Soybean, Wheat' },
-                    { state: 'Karnataka', capital: 'Bengaluru', dists: 31, status: 'ready', coverage: 'Mandya & Mysuru (Kaveri Basin)', farmers: 'Ready', crops: 'Sugarcane, Paddy' },
-                    { state: 'Uttar Pradesh', capital: 'Lucknow', dists: 75, status: 'ready', coverage: 'Varanasi & Lucknow (Gangetic)', farmers: 'Ready', crops: 'Wheat, Sugarcane' },
-                    { state: 'Rajasthan', capital: 'Jaipur', dists: 50, status: 'ready', coverage: 'Kota & Jaipur (Semi-arid)', farmers: 'Ready', crops: 'Mustard, Chickpea' },
-                    { state: 'Gujarat', capital: 'Gandhinagar', dists: 33, status: 'ready', coverage: 'Anand & Rajkot (Saurashtra)', farmers: 'Ready', crops: 'Cotton, Groundnut' },
-                    { state: 'Bihar', capital: 'Patna', dists: 38, status: 'ready', coverage: 'Samastipur & Patna (North Bihar)', farmers: 'Ready', crops: 'Maize, Paddy' },
-                  ].map((st) => (
-                    <div
-                      key={st.state}
-                      onClick={() => {
-                        setDrillState(st.state)
-                        setSpatialTier('state')
-                      }}
-                      className={cn(
-                        'p-4 rounded-2xl border transition-all cursor-pointer hover:shadow-md space-y-2',
-                        st.status === 'live'
-                          ? 'bg-emerald-50/50 border-emerald-300 hover:border-emerald-400'
-                          : 'bg-white border-slate-200 hover:border-slate-300'
-                      )}
-                    >
-                      <div className="flex items-center justify-between">
-                        <strong className="text-sm font-bold text-slate-900">{st.state}</strong>
-                        <span
-                          className={cn(
-                            'text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1',
-                            st.status === 'live'
-                              ? 'bg-emerald-100 text-emerald-800'
-                              : 'bg-amber-100 text-amber-800'
-                          )}
-                        >
-                          <span className={cn('w-1.5 h-1.5 rounded-full', st.status === 'live' ? 'bg-emerald-600' : 'bg-amber-600')} />
-                          {st.status === 'live' ? '🟢 Live Pilot' : '🟡 Architecture Ready'}
-                        </span>
-                      </div>
-                      <p className="text-xs text-slate-600">{st.coverage}</p>
-                      <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
-                        <span>Crops: <strong className="text-slate-700">{st.crops}</strong></span>
-                        <span className="font-semibold text-brand-700 flex items-center gap-0.5">
-                          Inspect <ChevronRight size={12} />
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* LEVEL 2: STATE DISTRICTS VIEW */}
-            {spatialTier === 'state' && (
-              <div className="space-y-4">
-                <div className="flex items-center justify-between text-xs text-slate-500">
-                  <span>{drillState} Districts Overview</span>
-                  <button
-                    onClick={() => setSpatialTier('india')}
-                    className="text-brand-700 font-bold hover:underline"
-                  >
-                    ← Back to India
-                  </button>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
-                  {[
-                    { name: 'Nagpur', status: 'live', blocks: 6, gps: 78, note: 'Lead Pilot: Kalmeshwar, Katol, Saoner, Hingna, Umred, Ramtek' },
-                    { name: 'Nashik', status: 'ready', blocks: 15, gps: 1920, note: 'Plateau slope & vineyards (598m elev model calibrated)' },
-                    { name: 'Pune', status: 'ready', blocks: 14, gps: 1860, note: 'Rainshadow transition agro-zone' },
-                    { name: 'Satara', status: 'ready', blocks: 11, gps: 1720, note: 'Western Ghats slope & Mahabaleshwar ridge' },
-                    { name: 'Wardha', status: 'ready', blocks: 8, gps: 980, note: 'Vidarbha cotton belt' },
-                    { name: 'Jalgaon', status: 'ready', blocks: 15, gps: 1510, note: 'Tapi alluvial basin' },
-                    { name: 'Akola', status: 'ready', blocks: 7, gps: 870, note: 'Purna alluvial basin' },
-                    { name: 'Solapur', status: 'ready', blocks: 11, gps: 1150, note: 'Drought-prone dryland pulse belt' },
-                  ].map((d) => (
-                    <div
-                      key={d.name}
-                      onClick={() => {
-                        setDrillDistrict(d.name)
-                        setSpatialTier('district')
-                      }}
-                      className={cn(
-                        'p-4 rounded-2xl border transition-all cursor-pointer hover:shadow-md space-y-2',
-                        d.status === 'live'
-                          ? 'bg-emerald-50/50 border-emerald-300 hover:border-emerald-400'
-                          : 'bg-white border-slate-200 hover:border-slate-300'
-                      )}
-                    >
-                      <div className="flex items-center justify-between">
-                        <strong className="text-sm font-bold text-slate-900">{d.name} District</strong>
-                        <span
-                          className={cn(
-                            'text-[10px] font-bold px-2 py-0.5 rounded-full',
-                            d.status === 'live' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
-                          )}
-                        >
-                          {d.status === 'live' ? '🟢 Live Pilot' : '🟡 Arch Ready'}
-                        </span>
-                      </div>
-                      <p className="text-xs text-slate-600">{d.note}</p>
-                      <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
-                        <span>{d.gps} Panchayats</span>
-                        <span className="font-semibold text-brand-700 flex items-center gap-0.5">
-                          Drill down <ChevronRight size={12} />
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* LEVEL 3: DISTRICT BLOCKS VIEW */}
-            {spatialTier === 'district' && (
-              <div className="space-y-4">
-                <div className="flex items-center justify-between text-xs text-slate-500">
-                  <span>{drillDistrict} District Blocks Overview</span>
-                  <button
-                    onClick={() => setSpatialTier('state')}
-                    className="text-brand-700 font-bold hover:underline"
-                  >
-                    ← Back to {drillState}
-                  </button>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
-                  {[
-                    { name: 'Kalmeshwar', status: 'live', gps: 24, farmers: 1842, aws: 'AWS #104, #105, #106', advisories: '2 Pending Review', officer: 'Rajesh Sharma' },
-                    { name: 'Katol', status: 'live', gps: 18, farmers: 1420, aws: 'AWS #108 (Katol East)', advisories: 'All Disseminated', officer: 'Anil Thakre' },
-                    { name: 'Saoner', status: 'live', gps: 16, farmers: 1210, aws: 'AWS #109 (Saoner Rural)', advisories: 'All Disseminated', officer: 'Vikas Deshmukh' },
-                    { name: 'Hingna', status: 'live', gps: 14, farmers: 1100, aws: 'AWS #110 (Hingna MIDC)', advisories: 'All Disseminated', officer: 'Sunita Patil' },
-                    { name: 'Umred', status: 'live', gps: 16, farmers: 950, aws: 'AWS #111 (Umred Plains)', advisories: 'All Disseminated', officer: 'Rajesh Sharma (Acting)' },
-                    { name: 'Ramtek', status: 'live', gps: 12, farmers: 790, aws: 'AWS #112 (Ramtek Hills)', advisories: 'All Disseminated', officer: 'Pooja Raut' },
-                  ].map((b) => (
-                    <div
-                      key={b.name}
-                      onClick={() => {
-                        setDrillBlock(b.name)
-                        setSpatialTier('block')
-                      }}
-                      className="p-4 rounded-2xl border bg-emerald-50/40 border-emerald-200 hover:border-emerald-400 transition-all cursor-pointer hover:shadow-md space-y-2"
-                    >
-                      <div className="flex items-center justify-between">
-                        <strong className="text-sm font-bold text-slate-900">{b.name} Block</strong>
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
-                          🟢 Live Pilot
-                        </span>
-                      </div>
-                      <div className="text-xs text-slate-600 space-y-1">
-                        <p>Telemetry: <strong className="text-slate-800">{b.aws}</strong></p>
-                        <p>Extension Officer: <strong className="text-slate-800">{b.officer}</strong></p>
-                      </div>
-                      <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px]">
-                        <span className="text-amber-800 font-semibold">{b.advisories}</span>
-                        <span className="font-semibold text-brand-700 flex items-center gap-0.5">
-                          View {b.gps} GPs <ChevronRight size={12} />
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* LEVEL 4: BLOCK PANCHAYATS VIEW */}
-            {spatialTier === 'block' && (
-              <div className="space-y-4">
-                <div className="flex items-center justify-between text-xs text-slate-500">
-                  <div className="flex items-center gap-3">
-                    <span className="font-bold text-slate-800">{drillBlock} Block Panchayats (24 GPs)</span>
-                    <span className="text-[11px] font-semibold text-emerald-800 bg-emerald-100 px-2.5 py-0.5 rounded-full">
-                      🟢 All 24 Telemetry Connected
-                    </span>
-                  </div>
-                  <button
-                    onClick={() => setSpatialTier('district')}
-                    className="text-brand-700 font-bold hover:underline"
-                  >
-                    ← Back to {drillDistrict} Blocks
-                  </button>
-                </div>
-
-                <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3">
-                  {panchayats.map((p) => {
-                    const isPending = p.name === 'Dhapewada' || p.name === 'Kalmeshwar' || p.name === 'Mohpa'
-                    return (
-                      <div
-                        key={p.id}
-                        onClick={() => setSelectedPanchayat(p)}
-                        className={cn(
-                          'p-3 rounded-2xl border text-center cursor-pointer transition-all hover:scale-105 shadow-2xs',
-                          isPending ? 'bg-amber-50/80 border-amber-300' : 'bg-emerald-50/50 border-emerald-200'
-                        )}
-                      >
-                        <MapPin size={16} className={cn('mx-auto mb-1', isPending ? 'text-amber-600' : 'text-emerald-700')} />
-                        <strong className="block text-xs text-slate-900 truncate">{p.name} GP</strong>
-                        <span className="text-[10px] text-slate-500 font-mono block">{p.elevation_m || 312}m</span>
-                        <span
-                          className={cn(
-                            'text-[9px] font-bold px-1.5 py-0.5 rounded uppercase mt-1 inline-block',
-                            isPending ? 'bg-amber-200 text-amber-900' : 'bg-emerald-200 text-emerald-900'
-                          )}
-                        >
-                          {isPending ? 'Pending' : 'Verified'}
-                        </span>
-                      </div>
-                    )
-                  })}
-                </div>
-              </div>
-            )}
-          </div>
+          <MapDrilldownTab
+            spatialTier={spatialTier}
+            setSpatialTier={setSpatialTier}
+            drillState={drillState}
+            setDrillState={setDrillState}
+            drillDistrict={drillDistrict}
+            setDrillDistrict={setDrillDistrict}
+            drillBlock={drillBlock}
+            setDrillBlock={setDrillBlock}
+            panchayats={panchayats}
+            setSelectedPanchayat={setSelectedPanchayat}
+          />
         )}
 
         {/* TAB 8: AUDIT LOG */}

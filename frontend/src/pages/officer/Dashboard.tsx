@@ -16,7 +16,7 @@ import type {
   PanchayatHierarchyItem
 } from '@/types'
 import { cn, confidenceLevel, cropEmoji, formatDate } from '@/lib/utils'
-import { GramWeatherDemo } from '@/components/shared/GramWeatherDemo'
+import { OfficerBlockMap } from '@/components/officer/OfficerBlockMap'
 import { AdvisoryDetailModal } from '@/components/officer/AdvisoryDetailModal'
 import { FieldReportModal } from '@/components/officer/FieldReportModal'
 import { downloadSingleReportPDF, downloadAllReportsPDF } from '@/utils/pdfGenerator'
@@ -47,10 +47,7 @@ export default function OfficerDashboard() {
   const [showBroadcastModal, setShowBroadcastModal] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
 
-  // Current logged in officer identity (Rajesh Sharma, Kalmeshwar Block, Nagpur)
-  const officerId = 1
-  const blockName = 'Kalmeshwar'
-  const districtName = 'Nagpur'
+  // Current logged in officer identity – reactive to location changes
   const officerData = (() => {
     try {
       return JSON.parse(localStorage.getItem('mausamsetu_officer') || '{}')
@@ -58,13 +55,42 @@ export default function OfficerDashboard() {
       return {}
     }
   })()
+
+  // Reactive location: read from the global selected location (navbar picker)
+  const getSelectedLoc = () => {
+    try {
+      const stored = localStorage.getItem('mausamsetu_selected_location')
+      return stored ? JSON.parse(stored) : null
+    } catch {
+      return null
+    }
+  }
+
+  const [selectedLoc, setSelectedLoc] = useState<any>(getSelectedLoc)
+  const officerId = officerData.id || 1
   const officerName = officerData.name || 'Rajesh Sharma'
+  const blockName = selectedLoc?.block || officerData.block || 'Kalmeshwar'
+  const districtName = selectedLoc?.district || officerData.district || 'Nagpur'
+
+  // Listen for location change events from navbar / GPS
+  useEffect(() => {
+    const handleLocChange = (e: any) => {
+      const newLoc = e.detail
+      if (newLoc) {
+        setSelectedLoc(newLoc)
+      } else {
+        setSelectedLoc(getSelectedLoc())
+      }
+    }
+    window.addEventListener('mausamsetu_location_change', handleLocChange)
+    return () => window.removeEventListener('mausamsetu_location_change', handleLocChange)
+  }, [])
 
   const fetchData = async () => {
     setRefreshing(true)
     try {
       const [advData, statsData, dashData, reportsData, panchayatData] = await Promise.all([
-        advisoryApi.list({ status: filter !== 'all' ? filter : undefined }),
+        advisoryApi.list(),
         advisoryApi.stats(blockName),
         officerApi.getDashboard(officerId).catch(() => null),
         fieldReportApi.list({ block: blockName }).catch(() => []),
@@ -85,13 +111,16 @@ export default function OfficerDashboard() {
 
   useEffect(() => {
     fetchData()
-  }, [filter])
+  }, [blockName, districtName])
 
-  const filteredAdvisories = advisories.filter(
-    (a) =>
+  const filteredAdvisories = advisories.filter((a) => {
+    const matchesSearch =
+      !search ||
       a.panchayat_name?.toLowerCase().includes(search.toLowerCase()) ||
       a.crop.toLowerCase().includes(search.toLowerCase())
-  )
+    const matchesStatus = filter === 'all' || a.status === filter
+    return matchesSearch && matchesStatus
+  })
 
   const handleReviewed = () => {
     setSelectedId(null)
@@ -418,7 +447,7 @@ export default function OfficerDashboard() {
               </div>
 
               <div className="space-y-3">
-                {filteredAdvisories.slice(0, 3).map((advisory, i) => (
+                {advisories.filter((a) => a.status === 'pending').slice(0, 3).map((advisory) => (
                   <AdvisoryRow
                     key={advisory.id}
                     advisory={advisory}
@@ -781,32 +810,49 @@ export default function OfficerDashboard() {
         {/* SUBVIEW 6: APPROVED ADVISORIES */}
         {activeTab === 'approved' && (
           <div className="space-y-4">
-            <div className="bg-white p-4 rounded-2xl border border-slate-200">
-              <h3 className="font-bold text-slate-900 text-sm mb-1">Approved & Published Advisories</h3>
-              <p className="text-xs text-slate-500">Official verified guidance delivered to farmers</p>
+            <div className="bg-white p-4 rounded-2xl border border-slate-200 flex items-center justify-between flex-wrap gap-2">
+              <div>
+                <h3 className="font-bold text-slate-900 text-sm mb-1">Approved & Published Advisories</h3>
+                <p className="text-xs text-slate-500">Official verified guidance delivered to farmers</p>
+              </div>
+              <span className="text-xs font-bold text-emerald-800 bg-emerald-100 px-3 py-1 rounded-full">
+                {advisories.filter((a) => a.status === 'approved' || a.status === 'sent').length} Published
+              </span>
             </div>
-            <div className="space-y-3">
-              {advisories
-                .filter((a) => a.status === 'approved' || a.status === 'sent')
-                .map((advisory) => (
-                  <AdvisoryRow
-                    key={advisory.id}
-                    advisory={advisory}
-                    onReview={() => setSelectedId(advisory.id)}
-                  />
-                ))}
-            </div>
+            {advisories.filter((a) => a.status === 'approved' || a.status === 'sent').length === 0 ? (
+              <div className="text-center py-16 bg-white rounded-2xl border border-slate-200">
+                <p className="text-3xl mb-2">📋</p>
+                <p className="text-slate-500 font-semibold text-sm">No approved advisories yet</p>
+                <p className="text-xs text-slate-400 mt-1">Review pending advisories in the verification queue to publish them.</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {advisories
+                  .filter((a) => a.status === 'approved' || a.status === 'sent')
+                  .map((advisory) => (
+                    <AdvisoryRow
+                      key={advisory.id}
+                      advisory={advisory}
+                      onReview={() => setSelectedId(advisory.id)}
+                    />
+                  ))}
+              </div>
+            )}
           </div>
         )}
 
         {/* SUBVIEW 7: BLOCK MAP */}
         {activeTab === 'map' && (
           <div className="w-full h-full -m-6 md:-m-8 overflow-hidden">
-            <GramWeatherDemo
+            <OfficerBlockMap
               className="h-[calc(100vh-8.5rem)] min-h-[640px]"
-              initialLat={21.2333}
-              initialLon={78.9167}
-              initialZoom={11}
+              blockName={blockName}
+              districtName={districtName}
+              officerName={officerName}
+              panchayats={panchayats}
+              advisories={advisories}
+              onSelectPanchayat={(p) => setSelectedPanchayat(p)}
+              onReviewAdvisory={(id) => setSelectedId(id)}
             />
           </div>
         )}

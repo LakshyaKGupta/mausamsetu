@@ -18,6 +18,9 @@ api.interceptors.request.use((config) => {
       const user = JSON.parse(userJson)
       if (user.role) {
         config.headers['X-Demo-Role'] = user.role
+        if (user.role === 'admin') {
+          config.headers['X-Admin-Scope'] = 'national'
+        }
       }
       if (user.id && user.role === 'officer') {
         config.headers['X-Officer-Id'] = user.id
@@ -90,7 +93,8 @@ export const geographyApi = {
   getStates: () => api.get('/geography/states').then((r) => r.data),
   getDistricts: (state?: string) => api.get('/geography/districts', { params: state ? { state } : {} }).then((r) => r.data),
   getBlocks: (district?: string) => api.get('/geography/blocks', { params: district ? { district } : {} }).then((r) => r.data),
-  getPanchayats: (block?: string) => api.get('/geography/panchayats', { params: block ? { block } : {} }).then((r) => r.data),
+  getPanchayats: (block?: string, district?: string) =>
+    api.get('/geography/panchayats', { params: { ...(block ? { block } : {}), ...(district ? { district } : {}) } }).then((r) => r.data),
   getCrops: (state?: string) => api.get('/geography/crops', { params: state ? { state } : {} }).then((r) => r.data),
   searchLocations: (q: string) => api.get('/geography/search', { params: { q } }).then((r) => r.data),
 }

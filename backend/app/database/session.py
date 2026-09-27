@@ -1,21 +1,30 @@
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
-from sqlalchemy.orm import sessionmaker
 from app.core.config import settings
 
-db_url = settings.DATABASE_URL
-if db_url.startswith("postgresql://"):
-    db_url = db_url.replace("postgresql://", "postgresql+asyncpg://", 1)
-elif db_url.startswith("sqlite://") and not db_url.startswith("sqlite+aiosqlite://"):
-    db_url = db_url.replace("sqlite://", "sqlite+aiosqlite://", 1)
-
 try:
-    engine = create_async_engine(db_url, echo=False)
-except Exception:
-    engine = create_async_engine("sqlite+aiosqlite:///./mausamsetu.db", echo=False)
+    import aiosqlite  # noqa: F401
+    from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
+    from sqlalchemy.orm import sessionmaker
 
-AsyncSessionLocal = sessionmaker(
-    bind=engine, class_=AsyncSession, expire_on_commit=False
-)
+    db_url = settings.DATABASE_URL
+    if db_url.startswith("postgresql://"):
+        db_url = db_url.replace("postgresql://", "postgresql+asyncpg://", 1)
+    elif db_url.startswith("sqlite://") and not db_url.startswith("sqlite+aiosqlite://"):
+        db_url = db_url.replace("sqlite://", "sqlite+aiosqlite://", 1)
+
+    try:
+        engine = create_async_engine(db_url, echo=False)
+    except Exception:
+        engine = create_async_engine("sqlite+aiosqlite:///./mausamsetu.db", echo=False)
+
+    AsyncSessionLocal = sessionmaker(
+        bind=engine, class_=AsyncSession, expire_on_commit=False
+    )
+    HAVE_ASYNC_DB = True
+except Exception:
+    engine = None
+    AsyncSession = None
+    AsyncSessionLocal = None
+    HAVE_ASYNC_DB = False
 
 try:
     import greenlet
@@ -52,7 +61,7 @@ class DummyAsyncSession:
 
 
 async def get_db():
-    if not HAVE_GREENLET:
+    if not HAVE_ASYNC_DB or not HAVE_GREENLET or AsyncSessionLocal is None:
         yield DummyAsyncSession()
         return
     async with AsyncSessionLocal() as session:

@@ -343,28 +343,29 @@ def list_states():
 
 
 @router.get("/districts", response_model=list[DistrictItemOut])
-def list_districts(state_code: str = "MH"):
+def list_districts(state_code: Optional[str] = None, state: Optional[str] = None):
     """List districts within a state."""
-    state = next(
-        (s for s in STATES_DATA if s["code"].upper() == state_code.upper() or s["state"].lower() == state_code.lower()),
+    query_key = state or state_code or "MH"
+    state_found = next(
+        (s for s in STATES_DATA if s["code"].upper() == query_key.upper() or s["state"].lower() == query_key.lower()),
         None
     )
-    if not state:
+    if not state_found:
         # Return fallback districts list for any other queried Indian state
         return [
-            DistrictItemOut(district=f"{state_code} Central", state_code=state_code, blocks_count=4, panchayats_count=48),
-            DistrictItemOut(district=f"{state_code} North", state_code=state_code, blocks_count=4, panchayats_count=42),
-            DistrictItemOut(district=f"{state_code} South", state_code=state_code, blocks_count=4, panchayats_count=38),
+            DistrictItemOut(district=f"{query_key} Central", state_code=query_key, blocks_count=4, panchayats_count=48),
+            DistrictItemOut(district=f"{query_key} North", state_code=query_key, blocks_count=4, panchayats_count=42),
+            DistrictItemOut(district=f"{query_key} South", state_code=query_key, blocks_count=4, panchayats_count=38),
         ]
     
     return [
         DistrictItemOut(
             district=d["district"],
-            state_code=state["code"],
+            state_code=state_found["code"],
             blocks_count=len(d["blocks"]),
             panchayats_count=sum(b["panchayats_count"] for b in d["blocks"]),
         )
-        for d in state["districts"]
+        for d in state_found["districts"]
     ]
 
 

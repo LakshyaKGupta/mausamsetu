@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import {
   Thermometer, Droplets, Cloud, Wind, ChevronDown, ChevronUp,
   Info, ShieldCheck, ArrowDownRight, ArrowUpRight, Clock,
-  Sparkles, CheckCircle2, AlertTriangle, Activity
+  CheckCircle2, AlertTriangle, Activity
 } from 'lucide-react'
 import type { Language, WeatherSummary } from '@/types'
 import { weatherConditionLabel, weatherEmoji, cn } from '@/lib/utils'
