@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   CheckCircle, XCircle, Edit3, Clock, Leaf, MapPin,
   TrendingUp, Users, Send, AlertTriangle, RefreshCw,
-  ChevronRight, Filter, Search, ShieldCheck, Activity,
+  ChevronRight, ChevronLeft, Filter, Search, ShieldCheck, Activity,
   CloudRain, Wind, Droplets, Thermometer, Plus, FileText,
   Compass, Map as MapIcon, History, Radio, Layers, X, Download, ChevronDown
 } from 'lucide-react'
@@ -17,7 +17,7 @@ import type {
   PanchayatHierarchyItem
 } from '@/types'
 import { cn, confidenceLevel, cropEmoji, formatDate } from '@/lib/utils'
-import { OfficerBlockMap } from '@/components/officer/OfficerBlockMap'
+import { GramWeatherDemo } from '@/components/shared/GramWeatherDemo'
 import { AdvisoryDetailModal } from '@/components/officer/AdvisoryDetailModal'
 import { FieldReportModal } from '@/components/officer/FieldReportModal'
 import { downloadSingleReportPDF, downloadAllReportsPDF } from '@/utils/pdfGenerator'
@@ -76,6 +76,12 @@ export default function OfficerDashboard() {
   const officerInitials = officerName.split(' ').filter(Boolean).map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() || 'AO'
   const officerShortName = officerName.split(' ')[0] + (officerName.split(' ')[1] ? ` ${officerName.split(' ')[1][0]}.` : '')
 
+  // Pagination states (strict 10 items per page with page controls to prevent infinite scroll)
+  const [approvedPage, setApprovedPage] = useState(1)
+  const [queuePage, setQueuePage] = useState(1)
+  const [panchayatPage, setPanchayatPage] = useState(1)
+  const ITEMS_PER_PAGE = 10
+
   const handleSelectLocation = (loc: SelectedLocation) => {
     setSelectedLoc(loc)
     localStorage.setItem('mausamsetu_selected_location', JSON.stringify(loc))
@@ -120,8 +126,15 @@ export default function OfficerDashboard() {
   }
 
   useEffect(() => {
+    setApprovedPage(1)
+    setQueuePage(1)
+    setPanchayatPage(1)
     fetchData()
   }, [blockName, districtName])
+
+  useEffect(() => {
+    setQueuePage(1)
+  }, [filter, search])
 
   const filteredAdvisories = advisories.filter((a) => {
     const matchesSearch =
@@ -268,106 +281,110 @@ export default function OfficerDashboard() {
         />
 
         {/* Top Operational Bar */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
-          <div>
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="text-[11px] uppercase font-bold text-emerald-800 tracking-wider bg-emerald-100 px-2.5 py-0.5 rounded-full">
-                {blockName} Block Operations
-              </span>
-              <button
-                onClick={() => setShowLocationModal(true)}
-                className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-950 bg-white hover:bg-emerald-50 border border-emerald-300 px-2.5 py-1 rounded-lg shadow-2xs transition-all cursor-pointer group"
-                title="Change jurisdiction block or district"
-              >
-                <MapPin size={12} className="text-emerald-700 group-hover:scale-110 transition-transform" />
-                <span>{blockName}, {districtName}</span>
-                <ChevronDown size={12} className="text-slate-400 group-hover:text-emerald-700" />
-              </button>
-              <span className="text-xs text-slate-400 hidden sm:inline">• Live Synced</span>
+        <div className="space-y-3 mb-5">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+            <div>
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-[11px] uppercase font-bold text-emerald-800 tracking-wider bg-emerald-100 px-2.5 py-0.5 rounded-full">
+                  {blockName} Block Operations
+                </span>
+                <button
+                  onClick={() => setShowLocationModal(true)}
+                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-950 bg-white hover:bg-emerald-50 border border-emerald-300 px-2.5 py-1 rounded-lg shadow-2xs transition-all cursor-pointer group"
+                  title="Change jurisdiction block or district"
+                >
+                  <MapPin size={12} className="text-emerald-700 group-hover:scale-110 transition-transform" />
+                  <span>{blockName}, {districtName}</span>
+                  <ChevronDown size={12} className="text-slate-400 group-hover:text-emerald-700" />
+                </button>
+                <span className="text-xs text-slate-400 hidden sm:inline">• Live Synced</span>
+              </div>
+              <h1 className="text-2xl font-display font-bold text-slate-900 mt-1 capitalize leading-tight">
+                {activeTab === 'dashboard' && 'Extension Operations Dashboard'}
+                {activeTab === 'queue' && 'Advisory Verification Queue'}
+                {activeTab === 'panchayats' && 'Jurisdiction Panchayats'}
+                {activeTab === 'weather' && 'Local Weather Watch & Telemetry'}
+                {activeTab === 'reports' && 'Field Extension Observations'}
+                {activeTab === 'approved' && 'Verified Advisories Archive'}
+                {activeTab === 'map' && `${blockName} Spatial Block Map`}
+                {activeTab === 'audit' && 'Governance Audit Log'}
+              </h1>
             </div>
-            <h1 className="text-2xl font-display font-bold text-slate-900 mt-1 capitalize">
-              {activeTab === 'dashboard' && 'Extension Operations Dashboard'}
-              {activeTab === 'queue' && 'Advisory Verification Queue'}
-              {activeTab === 'panchayats' && 'Jurisdiction Panchayats'}
-              {activeTab === 'weather' && 'Local Weather Watch & Telemetry'}
-              {activeTab === 'reports' && 'Field Extension Observations'}
-              {activeTab === 'approved' && 'Verified Advisories Archive'}
-              {activeTab === 'map' && `${blockName} Spatial Block Map`}
-              {activeTab === 'audit' && 'Governance Audit Log'}
-            </h1>
 
-            {/* Quick Block Switcher Strip */}
-            <div className="flex items-center gap-1.5 mt-2.5 overflow-x-auto no-scrollbar py-0.5">
-              <span className="text-[10px] uppercase font-bold text-slate-400 mr-1 flex-shrink-0">Switch Block:</span>
-              {[
-                { block: 'Kalmeshwar', district: 'Nagpur' },
-                { block: 'Ramtek', district: 'Nagpur' },
-                { block: 'Katol', district: 'Nagpur' },
-                { block: 'Saoner', district: 'Nagpur' },
-                { block: 'Hingna', district: 'Nagpur' },
-                { block: 'Baramati', district: 'Pune' },
-                { block: 'Junnar', district: 'Pune' },
-                { block: 'Jagraon', district: 'Ludhiana' },
-              ].map((b) => {
-                const isActive = blockName.toLowerCase() === b.block.toLowerCase()
-                return (
-                  <button
-                    key={b.block}
-                    onClick={() => {
-                      const newLoc = {
-                        name: b.block,
-                        panchayat: b.block,
-                        block: b.block,
-                        district: b.district,
-                        state: b.district === 'Ludhiana' ? 'Punjab' : 'Maharashtra',
-                        lat: b.block === 'Baramati' ? 18.15 : b.block === 'Jagraon' ? 30.78 : 21.28,
-                        lon: b.block === 'Baramati' ? 74.58 : b.block === 'Jagraon' ? 75.48 : 78.89,
-                        display_label: `🏛️ ${b.block} Block · ${b.district}`
-                      }
-                      handleSelectLocation(newLoc as any)
-                    }}
-                    className={cn(
-                      'text-[11px] font-semibold px-2.5 py-0.5 rounded-full border transition-all flex-shrink-0 cursor-pointer',
-                      isActive
-                        ? 'bg-emerald-700 text-white border-emerald-800 shadow-2xs font-bold'
-                        : 'bg-white text-slate-600 border-slate-200 hover:border-emerald-300 hover:text-emerald-800'
-                    )}
-                  >
-                    {b.block} ({b.district})
-                  </button>
-                )
-              })}
+            {/* Action buttons: Sleek, unified bar on both mobile & desktop */}
+            <div className="flex items-center gap-2 w-full md:w-auto">
               <button
-                onClick={() => setShowLocationModal(true)}
-                className="text-[11px] font-bold text-emerald-700 hover:underline px-2 py-0.5 flex-shrink-0 cursor-pointer"
+                onClick={() => setShowBroadcastModal(true)}
+                className="flex-1 md:flex-initial text-xs py-2 px-3 sm:px-3.5 flex items-center justify-center gap-1.5 shadow-xs bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-white rounded-xl font-bold transition-all min-h-[38px] whitespace-nowrap cursor-pointer"
               >
-                + Search Any Location...
+                <Radio size={14} className="animate-pulse flex-shrink-0" />
+                <span>Emergency Broadcast</span>
+              </button>
+              <button
+                onClick={() => setShowReportModal(true)}
+                className="flex-1 md:flex-initial btn-primary text-xs py-2 px-3 sm:px-3.5 flex items-center justify-center gap-1.5 shadow-xs min-h-[38px] whitespace-nowrap cursor-pointer"
+              >
+                <Plus size={14} className="flex-shrink-0" />
+                <span>File Field Report</span>
+              </button>
+              <button
+                onClick={fetchData}
+                disabled={refreshing}
+                className="px-3 py-2 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-300 rounded-xl transition-colors flex items-center justify-center gap-1.5 shadow-2xs min-h-[38px] cursor-pointer flex-shrink-0"
+                title="Refresh Jurisdiction Stream"
+              >
+                <RefreshCw size={14} className={cn('text-slate-600', refreshing && 'animate-spin')} />
+                <span className="hidden sm:inline">Sync</span>
               </button>
             </div>
           </div>
 
-          <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 w-full sm:w-auto">
+          {/* Quick Block Switcher Strip (Clean full width bar without scrollbar bleed) */}
+          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1">
+            <span className="text-[10px] uppercase font-bold text-slate-400 mr-1 flex-shrink-0">Switch Block:</span>
+            {[
+              { block: 'Kalmeshwar', district: 'Nagpur' },
+              { block: 'Ramtek', district: 'Nagpur' },
+              { block: 'Katol', district: 'Nagpur' },
+              { block: 'Saoner', district: 'Nagpur' },
+              { block: 'Hingna', district: 'Nagpur' },
+              { block: 'Baramati', district: 'Pune' },
+              { block: 'Junnar', district: 'Pune' },
+              { block: 'Jagraon', district: 'Ludhiana' },
+            ].map((b) => {
+              const isActive = blockName.toLowerCase() === b.block.toLowerCase()
+              return (
+                <button
+                  key={b.block}
+                  onClick={() => {
+                    const newLoc = {
+                      name: b.block,
+                      panchayat: b.block,
+                      block: b.block,
+                      district: b.district,
+                      state: b.district === 'Ludhiana' ? 'Punjab' : 'Maharashtra',
+                      lat: b.block === 'Baramati' ? 18.15 : b.block === 'Jagraon' ? 30.78 : 21.28,
+                      lon: b.block === 'Baramati' ? 74.58 : b.block === 'Jagraon' ? 75.48 : 78.89,
+                      display_label: `🏛️ ${b.block} Block · ${b.district}`
+                    }
+                    handleSelectLocation(newLoc as any)
+                  }}
+                  className={cn(
+                    'text-[11px] font-semibold px-2.5 py-0.5 rounded-full border transition-all flex-shrink-0 cursor-pointer',
+                    isActive
+                      ? 'bg-emerald-700 text-white border-emerald-800 shadow-2xs font-bold'
+                      : 'bg-white text-slate-600 border-slate-200 hover:border-emerald-300 hover:text-emerald-800'
+                  )}
+                >
+                  {b.block} ({b.district})
+                </button>
+              )
+            })}
             <button
-              onClick={() => setShowBroadcastModal(true)}
-              className="flex-1 sm:flex-initial text-xs py-2 px-3 sm:px-3.5 flex items-center justify-center gap-1.5 shadow-sm bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-white rounded-xl font-bold transition-all min-h-[38px] whitespace-nowrap"
+              onClick={() => setShowLocationModal(true)}
+              className="text-[11px] font-bold text-emerald-700 hover:underline px-2 py-0.5 flex-shrink-0 cursor-pointer"
             >
-              <Radio size={14} className="animate-pulse" />
-              Emergency Broadcast
-            </button>
-            <button
-              onClick={() => setShowReportModal(true)}
-              className="flex-1 sm:flex-initial btn-primary text-xs py-2 px-3 sm:px-3.5 flex items-center justify-center gap-1.5 shadow-sm min-h-[38px] whitespace-nowrap"
-            >
-              <Plus size={14} />
-              File Field Report
-            </button>
-            <button
-              onClick={fetchData}
-              disabled={refreshing}
-              className="btn-secondary text-xs py-2 px-3 flex items-center justify-center gap-1.5 min-h-[38px]"
-            >
-              <RefreshCw size={14} className={cn(refreshing && 'animate-spin')} />
-              Sync
+              + Search Any Location...
             </button>
           </div>
         </div>
@@ -375,87 +392,97 @@ export default function OfficerDashboard() {
         {/* SUBVIEW 1: DASHBOARD */}
         {activeTab === 'dashboard' && (
           <div className="space-y-6">
-            {/* Top Operational Summary Header - Clustered into Semantic Groups */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-              {/* Group 1: Jurisdiction & Coverage Scope */}
-              <div className="lg:col-span-7 bg-white border border-slate-200 rounded-2xl p-4 shadow-xs">
-                <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2.5 flex items-center justify-between">
-                  <span>Block Jurisdiction & Coverage</span>
-                  <span className="text-slate-500 font-medium normal-case">LGD Verified Network</span>
+            {/* Top Operational Summary Header - Unified 7-Metric Balanced Grid */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
+              {/* 1. Jurisdiction */}
+              <div className="bg-white border border-slate-200 rounded-xl p-3.5 shadow-2xs flex flex-col justify-between">
+                <div>
+                  <span className="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">Jurisdiction</span>
+                  <span className="text-sm sm:text-base font-bold text-slate-900 block leading-tight mt-1" title={`${blockName} Block`}>
+                    {blockName} Block
+                  </span>
                 </div>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                  <div className="bg-slate-50 border border-slate-100 rounded-xl p-3">
-                    <span className="text-[10px] uppercase font-bold text-slate-400 block">Jurisdiction</span>
-                    <span className="text-base font-bold text-slate-900 block truncate" title={`${blockName} Block`}>
-                      {blockName} Block
-                    </span>
-                    <span className="text-[10px] text-slate-500 block truncate">{districtName} Dist</span>
-                  </div>
-                  <div
-                    onClick={() => setActiveTab('panchayats')}
-                    className="bg-slate-50 border border-slate-100 rounded-xl p-3 cursor-pointer hover:border-emerald-300 hover:bg-emerald-50/30 transition-all"
-                  >
-                    <span className="text-[10px] uppercase font-bold text-slate-400 block">Panchayats</span>
-                    <span className="text-base font-bold text-slate-900 block">
-                      {blockDashboard?.total_panchayats || panchayats.length || stats?.total_panchayats || 24}
-                    </span>
-                    <span className="text-[10px] text-emerald-700 font-medium block">In Block →</span>
-                  </div>
-                  <div className="bg-slate-50 border border-slate-100 rounded-xl p-3">
-                    <span className="text-[10px] uppercase font-bold text-slate-400 block">Farmers</span>
-                    <span className="text-base font-bold text-slate-900 block">
-                      {blockDashboard?.total_farmers ? blockDashboard.total_farmers.toLocaleString() : stats?.total_farmers ? stats.total_farmers.toLocaleString() : '1,842'}
-                    </span>
-                    <span className="text-[10px] text-slate-500 block">Registered</span>
-                  </div>
-                  <div className="bg-slate-50 border border-slate-100 rounded-xl p-3">
-                    <span className="text-[10px] uppercase font-bold text-slate-400 block">Active Crops</span>
-                    <span className="text-base font-bold text-slate-900 block">
-                      {blockDashboard?.active_crops_count ? `${blockDashboard.active_crops_count}` : '5'}
-                    </span>
-                    <span className="text-[10px] text-slate-500 block truncate">Soybean, Cotton..</span>
-                  </div>
-                </div>
+                <span className="text-[11px] text-slate-500 font-medium block mt-1">{districtName} Dist</span>
               </div>
 
-              {/* Group 2: Operational Triage & Dissemination */}
-              <div className="lg:col-span-5 bg-white border border-slate-200 rounded-2xl p-4 shadow-xs">
-                <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2.5 flex items-center justify-between">
-                  <span>Advisory Pipeline Velocity</span>
-                  <span className="text-slate-500 font-medium normal-case">Today's Cycle</span>
+              {/* 2. Panchayats */}
+              <div
+                onClick={() => setActiveTab('panchayats')}
+                className="bg-white border border-slate-200 rounded-xl p-3.5 shadow-2xs flex flex-col justify-between cursor-pointer hover:border-emerald-300 hover:bg-emerald-50/20 transition-all group"
+              >
+                <div>
+                  <span className="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">Panchayats</span>
+                  <span className="text-xl font-bold font-display text-slate-900 block mt-0.5">
+                    {blockDashboard?.total_panchayats || panchayats.length || stats?.total_panchayats || 24}
+                  </span>
                 </div>
-                <div className="grid grid-cols-3 gap-2.5">
-                  <div
-                    onClick={() => setActiveTab('queue')}
-                    className="bg-amber-50/70 border border-amber-200 rounded-xl p-3 cursor-pointer hover:border-amber-400 hover:shadow-xs transition-all"
-                  >
-                    <span className="text-[10px] uppercase font-bold text-amber-700 block">Pending Review</span>
-                    <span className="text-lg font-bold text-amber-900 block">
-                      {blockDashboard?.pending_advisories ?? stats?.pending_advisories ?? 2}
-                    </span>
-                    <span className="text-[10px] font-semibold text-amber-800 block">Immediate Action</span>
-                  </div>
-                  <div
-                    onClick={() => setActiveTab('approved')}
-                    className="bg-emerald-50/60 border border-emerald-200 rounded-xl p-3 cursor-pointer hover:border-emerald-300 hover:shadow-xs transition-all"
-                  >
-                    <span className="text-[10px] uppercase font-bold text-emerald-700 block">Approved Today</span>
-                    <span className="text-lg font-bold text-emerald-900 block">
-                      {blockDashboard?.approved_today ?? stats?.approved_today ?? 22}
-                    </span>
-                    <span className="text-[10px] text-emerald-800 font-semibold block">Disseminated</span>
-                  </div>
-                  <div
-                    onClick={() => setActiveTab('reports')}
-                    className="bg-sky-50/60 border border-sky-200 rounded-xl p-3 cursor-pointer hover:border-sky-300 hover:shadow-xs transition-all"
-                  >
-                    <span className="text-[10px] uppercase font-bold text-sky-700 block">Field Reports</span>
-                    <span className="text-lg font-bold text-sky-900 block">
-                      {fieldReports.length || blockDashboard?.field_reports_count || 2}
-                    </span>
-                    <span className="text-[10px] text-sky-800 font-semibold block">On Record</span>
-                  </div>
+                <span className="text-[11px] text-emerald-700 font-semibold block mt-1 group-hover:underline">In Block →</span>
+              </div>
+
+              {/* 3. Farmers */}
+              <div className="bg-white border border-slate-200 rounded-xl p-3.5 shadow-2xs flex flex-col justify-between">
+                <div>
+                  <span className="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">Farmers</span>
+                  <span className="text-xl font-bold font-display text-slate-900 block mt-0.5">
+                    {blockDashboard?.total_farmers ? blockDashboard.total_farmers.toLocaleString() : stats?.total_farmers ? stats.total_farmers.toLocaleString() : '1,842'}
+                  </span>
                 </div>
+                <span className="text-[11px] text-slate-500 font-medium block mt-1">Registered</span>
+              </div>
+
+              {/* 4. Active Crops */}
+              <div className="bg-white border border-slate-200 rounded-xl p-3.5 shadow-2xs flex flex-col justify-between">
+                <div>
+                  <span className="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">Active Crops</span>
+                  <span className="text-xl font-bold font-display text-slate-900 block mt-0.5">
+                    {blockDashboard?.active_crops_count ? `${blockDashboard.active_crops_count}` : '5'}
+                  </span>
+                </div>
+                <span className="text-[11px] text-slate-500 font-medium block mt-1 truncate" title="Soybean, Cotton..">
+                  Soybean, Cotton..
+                </span>
+              </div>
+
+              {/* 5. Pending Review */}
+              <div
+                onClick={() => setActiveTab('queue')}
+                className="bg-amber-50/70 border border-amber-200 rounded-xl p-3.5 shadow-2xs flex flex-col justify-between cursor-pointer hover:border-amber-400 hover:shadow-xs transition-all group"
+              >
+                <div>
+                  <span className="text-[10px] uppercase font-bold text-amber-800 block tracking-wider">Pending Review</span>
+                  <span className="text-xl font-bold font-display text-amber-900 block mt-0.5">
+                    {blockDashboard?.pending_advisories ?? stats?.pending_advisories ?? 2}
+                  </span>
+                </div>
+                <span className="text-[11px] font-semibold text-amber-800 block mt-1 group-hover:underline">Immediate Action</span>
+              </div>
+
+              {/* 6. Approved Today */}
+              <div
+                onClick={() => setActiveTab('approved')}
+                className="bg-emerald-50/70 border border-emerald-200 rounded-xl p-3.5 shadow-2xs flex flex-col justify-between cursor-pointer hover:border-emerald-400 hover:shadow-xs transition-all group"
+              >
+                <div>
+                  <span className="text-[10px] uppercase font-bold text-emerald-800 block tracking-wider">Approved Today</span>
+                  <span className="text-xl font-bold font-display text-emerald-900 block mt-0.5">
+                    {blockDashboard?.approved_today ?? stats?.approved_today ?? 22}
+                  </span>
+                </div>
+                <span className="text-[11px] font-semibold text-emerald-800 block mt-1 group-hover:underline">Disseminated</span>
+              </div>
+
+              {/* 7. Field Reports */}
+              <div
+                onClick={() => setActiveTab('reports')}
+                className="bg-sky-50/70 border border-sky-200 rounded-xl p-3.5 shadow-2xs flex flex-col justify-between cursor-pointer hover:border-sky-400 hover:shadow-xs transition-all group"
+              >
+                <div>
+                  <span className="text-[10px] uppercase font-bold text-sky-800 block tracking-wider">Field Reports</span>
+                  <span className="text-xl font-bold font-display text-sky-900 block mt-0.5">
+                    {fieldReports.length || blockDashboard?.field_reports_count || 2}
+                  </span>
+                </div>
+                <span className="text-[11px] font-semibold text-sky-800 block mt-1 group-hover:underline">On Record</span>
               </div>
             </div>
 
@@ -592,122 +619,219 @@ export default function OfficerDashboard() {
         )}
 
         {/* SUBVIEW 2: ADVISORY QUEUE */}
-        {activeTab === 'queue' && (
-          <div className="space-y-4">
-            {/* Filter and Search Bar */}
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-slate-200">
-              <div className="relative flex-1 w-full max-w-sm">
-                <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                <input
-                  className="input pl-9 text-xs w-full py-2"
-                  placeholder="Filter by panchayat or crop..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                />
-              </div>
+        {activeTab === 'queue' && (() => {
+          const totalQueuePages = Math.max(1, Math.ceil(filteredAdvisories.length / ITEMS_PER_PAGE))
+          const paginatedQueue = filteredAdvisories.slice((queuePage - 1) * ITEMS_PER_PAGE, queuePage * ITEMS_PER_PAGE)
 
-              <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl">
-                {['pending', 'approved', 'sent', 'all'].map((s) => (
-                  <button
-                    key={s}
-                    onClick={() => setFilter(s)}
-                    className={cn(
-                      'px-3.5 py-1.5 rounded-lg text-xs font-bold capitalize transition-all',
-                      filter === s
-                        ? 'bg-white text-slate-900 shadow-xs'
-                        : 'text-slate-600 hover:text-slate-900'
-                    )}
-                  >
-                    {s}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {loading ? (
-              <div className="flex items-center justify-center h-64">
-                <div className="w-8 h-8 border-2 border-brand-600 border-t-transparent rounded-full animate-spin" />
-              </div>
-            ) : filteredAdvisories.length === 0 ? (
-              <div className="text-center py-16 bg-white rounded-2xl border border-slate-200">
-                <p className="text-3xl mb-2">📋</p>
-                <p className="text-slate-500 font-semibold text-sm">No advisories matching current filter</p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {filteredAdvisories.map((advisory) => (
-                  <AdvisoryRow
-                    key={advisory.id}
-                    advisory={advisory}
-                    onReview={() => setSelectedId(advisory.id)}
+          return (
+            <div className="space-y-4">
+              {/* Filter and Search Bar */}
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-slate-200">
+                <div className="relative flex-1 w-full max-w-sm">
+                  <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input
+                    className="input pl-9 text-xs w-full py-2"
+                    placeholder="Filter by panchayat or crop..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
                   />
-                ))}
+                </div>
+
+                <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl">
+                  {['pending', 'approved', 'sent', 'all'].map((s) => (
+                    <button
+                      key={s}
+                      onClick={() => setFilter(s)}
+                      className={cn(
+                        'px-3.5 py-1.5 rounded-lg text-xs font-bold capitalize transition-all cursor-pointer',
+                        filter === s
+                          ? 'bg-white text-slate-900 shadow-xs'
+                          : 'text-slate-600 hover:text-slate-900'
+                      )}
+                    >
+                      {s}
+                    </button>
+                  ))}
+                </div>
               </div>
-            )}
-          </div>
-        )}
+
+              {loading ? (
+                <div className="flex items-center justify-center h-64">
+                  <div className="w-8 h-8 border-2 border-brand-600 border-t-transparent rounded-full animate-spin" />
+                </div>
+              ) : filteredAdvisories.length === 0 ? (
+                <div className="text-center py-16 bg-white rounded-2xl border border-slate-200">
+                  <p className="text-3xl mb-2">📋</p>
+                  <p className="text-slate-500 font-semibold text-sm">No advisories matching current filter</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {paginatedQueue.map((advisory) => (
+                    <AdvisoryRow
+                      key={advisory.id}
+                      advisory={advisory}
+                      onReview={() => setSelectedId(advisory.id)}
+                    />
+                  ))}
+
+                  {/* 10 Items Per Page Pagination Bar */}
+                  {totalQueuePages > 1 && (
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 bg-white p-3.5 rounded-xl border border-slate-200 text-xs">
+                      <span className="text-slate-500 font-medium">
+                        Showing <strong className="text-slate-800">{(queuePage - 1) * ITEMS_PER_PAGE + 1}</strong> – <strong className="text-slate-800">{Math.min(queuePage * ITEMS_PER_PAGE, filteredAdvisories.length)}</strong> of <strong className="text-slate-800">{filteredAdvisories.length}</strong> advisories
+                      </span>
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => setQueuePage((p) => Math.max(1, p - 1))}
+                          disabled={queuePage === 1}
+                          className="px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer flex items-center gap-1 font-semibold transition-colors"
+                        >
+                          <ChevronLeft size={14} />
+                          <span>Prev</span>
+                        </button>
+                        {Array.from({ length: totalQueuePages }, (_, i) => i + 1).map((pageNum) => (
+                          <button
+                            key={pageNum}
+                            onClick={() => setQueuePage(pageNum)}
+                            className={cn(
+                              'w-8 h-8 rounded-lg text-xs font-bold transition-all cursor-pointer',
+                              queuePage === pageNum
+                                ? 'bg-emerald-700 text-white shadow-2xs'
+                                : 'border border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
+                            )}
+                          >
+                            {pageNum}
+                          </button>
+                        ))}
+                        <button
+                          onClick={() => setQueuePage((p) => Math.min(totalQueuePages, p + 1))}
+                          disabled={queuePage === totalQueuePages}
+                          className="px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer flex items-center gap-1 font-semibold transition-colors"
+                        >
+                          <span>Next</span>
+                          <ChevronRight size={14} />
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )
+        })()}
 
         {/* SUBVIEW 3: PANCHAYATS VIEW */}
-        {activeTab === 'panchayats' && (
-          <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-4">
-              <div>
-                <h3 className="font-bold text-slate-900 text-base">Jurisdiction Panchayats (24 Gram Panchayats)</h3>
-                <p className="text-xs text-slate-500">Telemetry status and registered farmers in {blockName} block</p>
-              </div>
-              <span className="text-xs font-bold text-emerald-800 bg-emerald-100 px-3 py-1 rounded-full">
-                23/24 Fresh Telemetry
-              </span>
-            </div>
+        {activeTab === 'panchayats' && (() => {
+          const totalPanchayatPages = Math.max(1, Math.ceil(panchayats.length / ITEMS_PER_PAGE))
+          const paginatedPanchayats = panchayats.slice((panchayatPage - 1) * ITEMS_PER_PAGE, panchayatPage * ITEMS_PER_PAGE)
 
-            <div className="overflow-x-auto">
-              <table className="w-full text-xs text-left">
-                <thead>
-                  <tr className="bg-slate-50 text-slate-600 uppercase text-[10px] font-bold border-b border-slate-200">
-                    <th className="p-3">Gram Panchayat</th>
-                    <th className="p-3">Elevation</th>
-                    <th className="p-3">Farmers</th>
-                    <th className="p-3">Primary Crops</th>
-                    <th className="p-3">Data Freshness</th>
-                    <th className="p-3">Last Sync</th>
-                    <th className="p-3 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {panchayats.map((p) => (
-                    <tr key={p.id} className="hover:bg-slate-50 transition-colors">
-                      <td className="p-3 font-bold text-slate-900">{p.name} GP</td>
-                      <td className="p-3 text-slate-600">{p.elevation_m || 312} m</td>
-                      <td className="p-3 font-semibold text-slate-800">{p.registered_farmers ?? 84}</td>
-                      <td className="p-3 text-slate-600 capitalize">{(p.primary_crops || ['Soybean', 'Cotton']).join(', ')}</td>
-                      <td className="p-3">
-                        <span
-                          className={cn(
-                            'text-[10px] font-bold px-2 py-0.5 rounded-full',
-                            (p.telemetry_status || 'FRESH') === 'FRESH'
-                              ? 'bg-emerald-100 text-emerald-800'
-                              : 'bg-amber-100 text-amber-800'
-                          )}
-                        >
-                          {p.telemetry_status || 'FRESH'}
-                        </span>
-                      </td>
-                      <td className="p-3 text-slate-400 font-mono text-[11px]">{p.last_sync || '10:30 AM'}</td>
-                      <td className="p-3 text-right">
-                        <button
-                          onClick={() => setSelectedPanchayat(p)}
-                          className="text-xs font-bold text-brand-700 hover:underline"
-                        >
-                          Inspect GP
-                        </button>
-                      </td>
+          return (
+            <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                <div>
+                  <h3 className="font-bold text-slate-900 text-base">Jurisdiction Panchayats ({panchayats.length} Gram Panchayats)</h3>
+                  <p className="text-xs text-slate-500">Telemetry status and registered farmers in {blockName} block</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold text-emerald-800 bg-emerald-100 px-3 py-1 rounded-full">
+                    {panchayats.filter((p) => (p.telemetry_status || 'FRESH') === 'FRESH').length}/{panchayats.length} Fresh Telemetry
+                  </span>
+                  <span className="text-xs font-semibold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-full">
+                    Page {panchayatPage} of {totalPanchayatPages}
+                  </span>
+                </div>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs text-left">
+                  <thead>
+                    <tr className="bg-slate-50 text-slate-600 uppercase text-[10px] font-bold border-b border-slate-200">
+                      <th className="p-3">Gram Panchayat</th>
+                      <th className="p-3">Elevation</th>
+                      <th className="p-3">Farmers</th>
+                      <th className="p-3">Primary Crops</th>
+                      <th className="p-3">Data Freshness</th>
+                      <th className="p-3">Last Sync</th>
+                      <th className="p-3 text-right">Actions</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {paginatedPanchayats.map((p) => (
+                      <tr key={p.id} className="hover:bg-slate-50 transition-colors">
+                        <td className="p-3 font-bold text-slate-900">{p.name} GP</td>
+                        <td className="p-3 text-slate-600">{p.elevation_m || 312} m</td>
+                        <td className="p-3 font-semibold text-slate-800">{p.registered_farmers ?? 84}</td>
+                        <td className="p-3 text-slate-600 capitalize">{(p.primary_crops || ['Soybean', 'Cotton']).join(', ')}</td>
+                        <td className="p-3">
+                          <span
+                            className={cn(
+                              'text-[10px] font-bold px-2 py-0.5 rounded-full',
+                              (p.telemetry_status || 'FRESH') === 'FRESH'
+                                ? 'bg-emerald-100 text-emerald-800'
+                                : 'bg-amber-100 text-amber-800'
+                            )}
+                          >
+                            {p.telemetry_status || 'FRESH'}
+                          </span>
+                        </td>
+                        <td className="p-3 text-slate-400 font-mono text-[11px]">{p.last_sync || '10:30 AM'}</td>
+                        <td className="p-3 text-right">
+                          <button
+                            onClick={() => setSelectedPanchayat(p)}
+                            className="text-xs font-bold text-brand-700 hover:underline cursor-pointer"
+                          >
+                            Inspect GP
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* 10 Items Per Page Pagination Bar */}
+              {totalPanchayatPages > 1 && (
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-slate-100 text-xs">
+                  <span className="text-slate-500 font-medium">
+                    Showing <strong className="text-slate-800">{(panchayatPage - 1) * ITEMS_PER_PAGE + 1}</strong> – <strong className="text-slate-800">{Math.min(panchayatPage * ITEMS_PER_PAGE, panchayats.length)}</strong> of <strong className="text-slate-800">{panchayats.length}</strong> Gram Panchayats (10 per page)
+                  </span>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => setPanchayatPage((p) => Math.max(1, p - 1))}
+                      disabled={panchayatPage === 1}
+                      className="px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer flex items-center gap-1 font-semibold transition-colors"
+                    >
+                      <ChevronLeft size={14} />
+                      <span>Prev</span>
+                    </button>
+                    {Array.from({ length: totalPanchayatPages }, (_, i) => i + 1).map((pageNum) => (
+                      <button
+                        key={pageNum}
+                        onClick={() => setPanchayatPage(pageNum)}
+                        className={cn(
+                          'w-8 h-8 rounded-lg text-xs font-bold transition-all cursor-pointer',
+                          panchayatPage === pageNum
+                            ? 'bg-emerald-700 text-white shadow-2xs'
+                            : 'border border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
+                        )}
+                      >
+                        {pageNum}
+                      </button>
+                    ))}
+                    <button
+                      onClick={() => setPanchayatPage((p) => Math.min(totalPanchayatPages, p + 1))}
+                      disabled={panchayatPage === totalPanchayatPages}
+                      className="px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer flex items-center gap-1 font-semibold transition-colors"
+                    >
+                      <span>Next</span>
+                      <ChevronRight size={14} />
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
-          </div>
-        )}
+          )
+        })()}
 
         {/* SUBVIEW 4: WEATHER WATCH */}
         {activeTab === 'weather' && (
@@ -940,51 +1064,98 @@ export default function OfficerDashboard() {
         )}
 
         {/* SUBVIEW 6: APPROVED ADVISORIES */}
-        {activeTab === 'approved' && (
-          <div className="space-y-4">
-            <div className="bg-white p-4 rounded-2xl border border-slate-200 flex items-center justify-between flex-wrap gap-2">
-              <div>
-                <h3 className="font-bold text-slate-900 text-sm mb-1">Approved & Published Advisories</h3>
-                <p className="text-xs text-slate-500">Official verified guidance delivered to farmers</p>
+        {activeTab === 'approved' && (() => {
+          const approvedList = advisories.filter((a) => a.status === 'approved' || a.status === 'sent')
+          const totalApprovedPages = Math.max(1, Math.ceil(approvedList.length / ITEMS_PER_PAGE))
+          const paginatedApproved = approvedList.slice((approvedPage - 1) * ITEMS_PER_PAGE, approvedPage * ITEMS_PER_PAGE)
+
+          return (
+            <div className="space-y-4">
+              <div className="bg-white p-4 rounded-2xl border border-slate-200 flex items-center justify-between flex-wrap gap-2">
+                <div>
+                  <h3 className="font-bold text-slate-900 text-sm mb-1">Approved & Published Advisories</h3>
+                  <p className="text-xs text-slate-500">Official verified guidance delivered to farmers</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold text-emerald-800 bg-emerald-100 px-3 py-1 rounded-full">
+                    {approvedList.length} Published
+                  </span>
+                  <span className="text-xs font-semibold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-full">
+                    Page {approvedPage} of {totalApprovedPages}
+                  </span>
+                </div>
               </div>
-              <span className="text-xs font-bold text-emerald-800 bg-emerald-100 px-3 py-1 rounded-full">
-                {advisories.filter((a) => a.status === 'approved' || a.status === 'sent').length} Published
-              </span>
-            </div>
-            {advisories.filter((a) => a.status === 'approved' || a.status === 'sent').length === 0 ? (
-              <div className="text-center py-16 bg-white rounded-2xl border border-slate-200">
-                <p className="text-3xl mb-2">📋</p>
-                <p className="text-slate-500 font-semibold text-sm">No approved advisories yet</p>
-                <p className="text-xs text-slate-400 mt-1">Review pending advisories in the verification queue to publish them.</p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {advisories
-                  .filter((a) => a.status === 'approved' || a.status === 'sent')
-                  .map((advisory) => (
+
+              {approvedList.length === 0 ? (
+                <div className="text-center py-16 bg-white rounded-2xl border border-slate-200">
+                  <p className="text-3xl mb-2">📋</p>
+                  <p className="text-slate-500 font-semibold text-sm">No approved advisories yet</p>
+                  <p className="text-xs text-slate-400 mt-1">Review pending advisories in the verification queue to publish them.</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {paginatedApproved.map((advisory) => (
                     <AdvisoryRow
                       key={advisory.id}
                       advisory={advisory}
                       onReview={() => setSelectedId(advisory.id)}
                     />
                   ))}
-              </div>
-            )}
-          </div>
-        )}
+
+                  {/* 10 Items Per Page Pagination Bar */}
+                  {totalApprovedPages > 1 && (
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 bg-white p-3.5 rounded-xl border border-slate-200 text-xs">
+                      <span className="text-slate-500 font-medium">
+                        Showing <strong className="text-slate-800">{(approvedPage - 1) * ITEMS_PER_PAGE + 1}</strong> – <strong className="text-slate-800">{Math.min(approvedPage * ITEMS_PER_PAGE, approvedList.length)}</strong> of <strong className="text-slate-800">{approvedList.length}</strong> items (10 per page)
+                      </span>
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => setApprovedPage((p) => Math.max(1, p - 1))}
+                          disabled={approvedPage === 1}
+                          className="px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer flex items-center gap-1 font-semibold transition-colors"
+                        >
+                          <ChevronLeft size={14} />
+                          <span>Prev</span>
+                        </button>
+                        {Array.from({ length: totalApprovedPages }, (_, i) => i + 1).map((pageNum) => (
+                          <button
+                            key={pageNum}
+                            onClick={() => setApprovedPage(pageNum)}
+                            className={cn(
+                              'w-8 h-8 rounded-lg text-xs font-bold transition-all cursor-pointer',
+                              approvedPage === pageNum
+                                ? 'bg-emerald-700 text-white shadow-2xs'
+                                : 'border border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
+                            )}
+                          >
+                            {pageNum}
+                          </button>
+                        ))}
+                        <button
+                          onClick={() => setApprovedPage((p) => Math.min(totalApprovedPages, p + 1))}
+                          disabled={approvedPage === totalApprovedPages}
+                          className="px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer flex items-center gap-1 font-semibold transition-colors"
+                        >
+                          <span>Next</span>
+                          <ChevronRight size={14} />
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )
+        })()}
 
         {/* SUBVIEW 7: BLOCK MAP */}
         {activeTab === 'map' && (
-          <div className="w-full h-full -m-6 md:-m-8 overflow-hidden">
-            <OfficerBlockMap
-              className="h-[calc(100vh-8.5rem)] min-h-[640px]"
-              blockName={blockName}
-              districtName={districtName}
-              officerName={officerName}
-              panchayats={panchayats}
-              advisories={advisories}
-              onSelectPanchayat={(p) => setSelectedPanchayat(p)}
-              onReviewAdvisory={(id) => setSelectedId(id)}
+          <div className="w-full bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden h-[calc(100vh-13rem)] min-h-[580px] relative">
+            <GramWeatherDemo
+              className="w-full h-full"
+              initialLat={selectedLoc?.lat || 21.28}
+              initialLon={selectedLoc?.lon || 78.89}
+              initialZoom={11}
             />
           </div>
         )}

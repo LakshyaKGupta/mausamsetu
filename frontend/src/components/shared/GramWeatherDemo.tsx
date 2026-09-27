@@ -183,8 +183,9 @@ export const GramWeatherDemo: React.FC<{
       <button 
         onClick={() => setIsSidebarOpen(!isSidebarOpen)}
         className={`absolute top-1/3 -translate-y-1/2 z-[60] w-7 h-14 bg-white border border-slate-200 border-l-0 rounded-r-full shadow-[4px_0_10px_rgb(0,0,0,0.1)] flex items-center justify-center text-slate-500 hover:text-emerald-600 hover:bg-slate-50 transition-all duration-300 ${
-          isSidebarOpen ? "left-[360px]" : "left-0"
+          isSidebarOpen ? "left-[280px] sm:left-[360px]" : "left-0"
         }`}
+        aria-label="Toggle location drawer"
       >
         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d={isSidebarOpen ? "M15 19l-7-7 7-7" : "M9 5l7 7-7 7"} />
@@ -192,15 +193,15 @@ export const GramWeatherDemo: React.FC<{
       </button>
 
       {/* LEFT SIDEBAR (Collapsible) */}
-      <div className={`absolute top-0 left-0 h-[65vh] max-h-[600px] bg-white/95 backdrop-blur-md border-r border-b border-slate-200 rounded-br-2xl shadow-2xl transition-transform duration-300 z-[50] flex flex-col w-[360px] ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-        <div className="p-5 border-b border-slate-200 flex justify-between items-center bg-white rounded-tr-2xl">
+      <div className={`absolute top-0 left-0 h-[65vh] max-h-[600px] bg-white/95 backdrop-blur-md border-r border-b border-slate-200 rounded-br-2xl shadow-2xl transition-transform duration-300 z-[50] flex flex-col w-[280px] sm:w-[360px] max-w-[85vw] ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+        <div className="p-4 sm:p-5 border-b border-slate-200 flex justify-between items-center bg-white rounded-tr-2xl">
           <div className="flex items-center gap-2 text-emerald-700">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-            <h2 className="font-bold text-lg">Select Location</h2>
+            <h2 className="font-bold text-base sm:text-lg">Select Location</h2>
           </div>
         </div>
         
-        <div className="p-5 overflow-y-auto flex-grow scrollbar-thin scrollbar-thumb-slate-300">
+        <div className="p-4 sm:p-5 overflow-y-auto flex-grow scrollbar-thin scrollbar-thumb-slate-300">
           <LocationSelector 
             onSelectionChange={handleSelectionChange} 
             disabled={loading} 
@@ -217,7 +218,7 @@ export const GramWeatherDemo: React.FC<{
 
       {/* FORECAST BOTTOM RIGHT PANEL (Floating) */}
       {forecastData && (
-        <div className="absolute bottom-6 right-6 z-[40] w-[600px] max-w-[calc(100vw-32px)] bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col pointer-events-auto transition-all animate-in fade-in slide-in-from-bottom-8">
+        <div className="absolute bottom-2 sm:bottom-6 left-2 right-2 sm:left-auto sm:right-6 z-[40] sm:w-[600px] w-auto max-w-[calc(100vw-16px)] sm:max-w-[calc(100vw-32px)] bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col pointer-events-auto transition-all animate-in fade-in slide-in-from-bottom-8">
           
           {/* Header & Interval Tabs */}
           <div className="bg-slate-900 text-white p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">

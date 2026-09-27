@@ -146,7 +146,7 @@ export const AppLayout: React.FC = () => {
 
       {/* ── Single Unified Navigation Bar ── */}
       <header className="bg-white/95 backdrop-blur-md border-b border-[#E2E8E4] sticky top-0 z-40 shadow-xs pt-[env(safe-area-inset-top,0px)]">
-        <div className="max-w-7xl mx-auto px-2.5 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between gap-1 sm:gap-3">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between gap-1.5 sm:gap-3">
           {/* Brand Logo & Name */}
           <div className="flex items-center gap-1.5 sm:gap-3 flex-shrink-0">
             <Link to="/" className="flex items-center gap-1.5 sm:gap-2.5 group focus:outline-none" aria-label="MausamSetu">
@@ -191,7 +191,7 @@ export const AppLayout: React.FC = () => {
               aria-label="Change Location"
             >
               <MapPin size={12} className="text-[#126B3A] flex-shrink-0 group-hover:scale-110 transition-transform" />
-              <span className="truncate max-w-[90px] xs:max-w-[125px] sm:max-w-[200px]">{getLocationDisplay()}</span>
+              <span className="truncate max-w-[80px] xs:max-w-[115px] sm:max-w-[200px]">{getLocationDisplay()}</span>
               <ChevronDown size={11} className="text-[#126B3A]/70 group-hover:text-[#126B3A] flex-shrink-0" />
             </button>
           </div>
@@ -229,7 +229,7 @@ export const AppLayout: React.FC = () => {
             {/* Logout Button */}
             <button
               onClick={handleLogout}
-              className="text-xs font-medium text-red-600 hover:text-red-700 hover:bg-red-50 flex items-center p-1.5 sm:px-2.5 sm:py-1.5 rounded-lg sm:rounded-xl border border-transparent hover:border-red-200 transition-all cursor-pointer min-h-[28px] min-w-[28px] justify-center"
+              className="text-xs font-medium text-red-600 hover:text-red-700 hover:bg-red-50 flex items-center p-1.5 sm:px-2.5 sm:py-1.5 rounded-lg sm:rounded-xl border border-transparent hover:border-red-200 transition-all cursor-pointer min-h-[28px] justify-center flex-shrink-0"
               title="Logout"
               aria-label="Logout"
             >
