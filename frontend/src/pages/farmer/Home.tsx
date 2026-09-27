@@ -339,178 +339,113 @@ export default function FarmerHome() {
 
       <div className="max-w-2xl mx-auto px-4 pt-4 space-y-4">
 
-        {/* ─── Official Gram Panchayat Hero Banner (Core Mission) ─── */}
-        <div
-          style={{ background: 'linear-gradient(135deg, #064e3b 0%, #065f46 45%, #022c22 100%)' }}
-          className="rounded-3xl p-5 sm:p-6 text-white shadow-xl border-2 border-emerald-500/50 relative overflow-hidden"
-        >
-          <div className="absolute -right-6 -bottom-8 opacity-15 text-9xl pointer-events-none select-none">
-            🏛️
-          </div>
-
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative z-10">
-            <div className="flex items-start gap-4">
-              <div className="w-14 h-14 rounded-2xl bg-emerald-500/30 backdrop-blur-md border border-emerald-300/40 flex items-center justify-center text-3xl shadow-lg flex-shrink-0 text-white">
-                🏛️
-              </div>
-              <div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-[11px] uppercase tracking-wider font-extrabold px-3 py-0.5 rounded-full bg-emerald-400/30 text-emerald-100 border border-emerald-300/50 shadow-xs">
-                    {lang === 'hi' ? 'आधिकारिक ग्राम पंचायत' : lang === 'mr' ? 'अधिकृत ग्रामपंचायत' : 'Official Gram Panchayat'}
-                  </span>
-                  <span className="text-[11px] font-mono font-bold text-emerald-200 bg-black/40 px-2.5 py-0.5 rounded-md border border-emerald-400/30">
-                    {gpDetails.lgdCode}
-                  </span>
-                  {loc?.is_gps && (
-                    <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-400 text-emerald-950 flex items-center gap-1 shadow-xs">
-                      ✓ GPS Verified
-                    </span>
-                  )}
-                </div>
-
-                <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-white mt-1.5 drop-shadow-sm">
-                  {gpDetails.heroTitle}
-                </h2>
-
-                <p className="text-sm text-emerald-100 font-medium mt-1 flex flex-wrap items-center gap-x-2.5">
-                  <span>
-                    {lang === 'hi'
-                      ? `ब्लॉक: ${gpDetails.blockName}`
-                      : lang === 'mr'
-                      ? `तालुका: ${gpDetails.blockName}`
-                      : `Block: ${gpDetails.blockName}`}
-                  </span>
-                  <span className="text-emerald-300">·</span>
-                  <span>
-                    {lang === 'hi'
-                      ? `ज़िला: ${gpDetails.districtName}`
-                      : lang === 'mr'
-                      ? `जिल्हा: ${gpDetails.districtName}`
-                      : `District: ${gpDetails.districtName}`}
-                  </span>
-                  <span className="text-emerald-300">·</span>
-                  <span className="font-semibold text-emerald-200">{gpDetails.stateName}</span>
-                </p>
-              </div>
-            </div>
-
-            <button
-              onClick={() => outlet?.openLocationModal?.()}
-              className="self-start sm:self-center px-4 py-2.5 rounded-xl bg-white/20 hover:bg-white/30 active:scale-95 border border-white/30 text-white text-xs sm:text-sm font-bold flex items-center gap-2 transition-all cursor-pointer backdrop-blur-md shadow-md hover:shadow-lg"
-              title="स्थान व ग्राम पंचायत बदलें"
-            >
-              <MapPin size={15} className="text-emerald-300" />
-              <span>
-                {lang === 'hi'
-                  ? 'ग्राम पंचायत बदलें'
-                  : lang === 'mr'
-                  ? 'ग्रामपंचायत बदला'
-                  : 'Change GP'}
+        {/* ─── Unified Official Agromet Header Card ─── */}
+        <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs overflow-hidden">
+          {/* Top metadata strip */}
+          <div className="bg-slate-50/80 px-4 py-2 border-b border-slate-100 flex items-center justify-between gap-2 text-[11px]">
+            <div className="flex items-center gap-2 text-slate-600 font-medium">
+              <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="font-semibold text-slate-800">
+                {lang === 'hi' ? 'राष्ट्रीय कृषि-मौसम सेवा' : lang === 'mr' ? 'राष्ट्रीय कृषी-हवामान सेवा' : 'National Agromet Service'}
               </span>
-            </button>
+              <span className="text-slate-300">|</span>
+              <span>IMD · ICAR</span>
+            </div>
+            <div className="flex items-center gap-1.5 font-mono text-[10px] text-slate-500">
+              <span>LGD:</span>
+              <span className="font-bold text-slate-700 bg-slate-200/70 px-1.5 py-0.5 rounded">
+                {gpDetails.lgdCode}
+              </span>
+            </div>
           </div>
-        </div>
 
-        {/* ─── Greeting & Location Badge ─── */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-bold text-slate-900">
-              {t.greeting}, {outlet?.userName || (lang === 'hi' ? 'किसान' : lang === 'mr' ? 'शेतकरी' : 'Farmer')}!
-            </h1>
-            <button
-              onClick={() => outlet?.openLocationModal?.()}
-              className="flex items-center gap-1.5 text-xs text-slate-600 hover:text-emerald-700 font-semibold mt-1 px-2 py-0.5 -ml-2 rounded-lg hover:bg-emerald-50 transition-colors group cursor-pointer"
-              title="स्थान बदलें / Change Location"
-            >
-              <MapPin size={13} className="text-emerald-600 group-hover:scale-110 transition-transform" />
-              <span>{gpDetails.heroTitle}</span>
-              {gpDetails.districtName && <span>· {gpDetails.districtName}</span>}
-              {loc?.is_gps && (
-                <span className="text-[9px] font-bold bg-emerald-100 text-emerald-800 px-1 rounded">
-                  GPS
-                </span>
-              )}
-              <ChevronDown size={11} className="text-slate-400 group-hover:text-emerald-600" />
-            </button>
-          </div>
-          <div className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-1 rounded-lg border border-emerald-200">
-            🟢 LIVE
-          </div>
-        </div>
-
-        {/* ─── Live GPS Detection Hero Card / Prompt ─── */}
-        <div className={`p-3.5 rounded-2xl border transition-all ${
-          loc?.is_gps
-            ? 'bg-emerald-50/60 border-emerald-200'
-            : 'bg-gradient-to-r from-emerald-50 to-teal-50 border-emerald-300 shadow-xs'
-        }`}>
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div className="flex items-start sm:items-center gap-3">
-              <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${
-                loc?.is_gps ? 'bg-emerald-600 text-white' : 'bg-emerald-600 text-white animate-pulse'
-              }`}>
-                <LocateFixed size={18} />
-              </div>
-              <div>
-                <div className="text-xs sm:text-sm font-bold text-slate-900 flex items-center gap-1.5">
-                  <span>
-                    {loc?.is_gps
-                      ? (lang === 'hi' ? 'सटीक लाइव जीपीएस स्थान सक्रिय है' : lang === 'mr' ? 'अचूक थेट जीपीएस स्थान सक्रिय आहे' : 'Live Farm GPS Active')
-                      : (lang === 'hi' ? 'खेत का वास्तविक स्थान पहचानें' : lang === 'mr' ? 'शेताचे थेट स्थान ओळखा' : 'Detect Live Farm Location')}
-                  </span>
-                  {loc?.is_gps && (
-                    <span className="text-[10px] text-emerald-700 bg-emerald-100 font-bold px-1.5 py-0.2 rounded-md">
-                      ✓ {lang === 'hi' ? 'सटीक' : lang === 'mr' ? 'अचूक' : 'Accurate'}
-                    </span>
-                  )}
+          {/* Main Panchayat & Farmer greeting */}
+          <div className="p-4 sm:p-5">
+            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+              <div className="space-y-1">
+                <div className="text-xs font-semibold text-emerald-800">
+                  {t.greeting}, {outlet?.userName || (lang === 'hi' ? 'किसान मित्र' : lang === 'mr' ? 'शेतकरी मित्र' : 'Farmer')}!
                 </div>
-                <p className="text-[11px] text-slate-600">
-                  {loc?.is_gps
-                    ? `${loc.name}, ${loc.block || loc.district || ''} ${loc.accuracy_m ? `(सटीकता ±${loc.accuracy_m}m)` : ''}`
-                    : (lang === 'hi'
-                        ? 'अपनी ग्राम पंचायत का 1-घंटे का सटीक मौसम पाने के लिए जीपीएस से खोजें'
-                        : lang === 'mr'
-                        ? 'आपल्या ग्रामपंचायतीचे 1-तासाचे अचूक हवामान मिळवण्यासाठी जीपीएसने शोधा'
-                        : 'Detect your live farm GPS for hyper-local 1-hour forecasts')}
+                <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">
+                  {gpDetails.heroTitle}
+                </h1>
+                <p className="text-xs text-slate-500 flex flex-wrap items-center gap-x-2">
+                  <span>
+                    {lang === 'hi' ? `ब्लॉक: ${gpDetails.blockName}` : lang === 'mr' ? `तालुका: ${gpDetails.blockName}` : `Block: ${gpDetails.blockName}`}
+                  </span>
+                  <span className="text-slate-300">·</span>
+                  <span>
+                    {lang === 'hi' ? `ज़िला: ${gpDetails.districtName}` : lang === 'mr' ? `जिल्हा: ${gpDetails.districtName}` : `District: ${gpDetails.districtName}`}
+                  </span>
+                  <span className="text-slate-300">·</span>
+                  <span className="font-medium text-slate-700">{gpDetails.stateName}</span>
                 </p>
               </div>
+
+              {/* Action Toolbar */}
+              <div className="flex items-center gap-2 self-start sm:self-center flex-wrap">
+                <button
+                  onClick={handleDetectLiveLocation}
+                  disabled={detectingGps}
+                  className="px-3 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 active:scale-95 border border-emerald-200 text-emerald-900 text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50"
+                  title="जीपीएस द्वारा खेत का स्थान सत्यापित करें"
+                >
+                  {detectingGps ? (
+                    <>
+                      <Loader2 className="animate-spin text-emerald-700" size={13} />
+                      <span>{lang === 'hi' ? 'खोज रहे हैं...' : lang === 'mr' ? 'शोधत आहे...' : 'Detecting...'}</span>
+                    </>
+                  ) : (
+                    <>
+                      <LocateFixed size={13} className="text-emerald-700" />
+                      <span>
+                        {loc?.is_gps
+                          ? (lang === 'hi' ? 'GPS सत्यापित' : lang === 'mr' ? 'GPS सत्यापित' : 'GPS Active')
+                          : (lang === 'hi' ? 'GPS स्थान' : lang === 'mr' ? 'GPS स्थान' : 'Live GPS')}
+                      </span>
+                    </>
+                  )}
+                </button>
+
+                <button
+                  onClick={() => outlet?.openLocationModal?.()}
+                  className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 active:scale-95 border border-slate-200 text-slate-700 text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer"
+                  title="स्थान बदलें / Change Panchayat"
+                >
+                  <MapPin size={13} className="text-slate-500" />
+                  <span>
+                    {lang === 'hi' ? 'पंचायत बदलें' : lang === 'mr' ? 'पंचायत बदला' : 'Change GP'}
+                  </span>
+                </button>
+              </div>
             </div>
 
-            <div className="flex items-center gap-2 self-end sm:self-center">
-              <button
-                onClick={handleDetectLiveLocation}
-                disabled={detectingGps}
-                className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs font-bold flex items-center gap-1.5 shadow-2xs transition-all disabled:opacity-50 cursor-pointer"
-              >
-                {detectingGps ? (
-                  <>
-                    <Loader2 className="animate-spin" size={14} />
-                    <span>{lang === 'hi' ? 'खोज रहे हैं...' : lang === 'mr' ? 'शोधत आहे...' : 'Detecting...'}</span>
-                  </>
-                ) : (
-                  <>
-                    <LocateFixed size={14} />
-                    <span>
-                      {loc?.is_gps
-                        ? (lang === 'hi' ? 'पुनः पहचानें' : lang === 'mr' ? 'पुन्हा शोधा' : 'Update GPS')
-                        : (lang === 'hi' ? 'लाइव स्थान खोजें' : lang === 'mr' ? 'थेट स्थान शोधा' : 'Detect Live GPS')}
-                    </span>
-                  </>
-                )}
-              </button>
-              <button
-                onClick={() => outlet?.openLocationModal?.()}
-                className="px-2.5 py-1.5 rounded-xl bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 text-xs font-semibold cursor-pointer"
-              >
-                {lang === 'hi' ? 'बदलें' : lang === 'mr' ? 'बदला' : 'Change'}
-              </button>
-            </div>
+            {/* GPS verification banner if active / detected */}
+            {loc?.is_gps && (
+              <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-emerald-800">
+                <span className="flex items-center gap-1.5">
+                  <ShieldCheck size={14} className="text-emerald-600" />
+                  <span>
+                    {lang === 'hi'
+                      ? `सटीक खेत स्थान सक्रिय है (${loc.accuracy_m ? `±${loc.accuracy_m}m सटीकता` : 'लाइव'})`
+                      : lang === 'mr'
+                      ? `अचूक शेत स्थान सक्रिय आहे (${loc.accuracy_m ? `±${loc.accuracy_m}m अचूकता` : 'थेट'})`
+                      : `Farm microclimate GPS active (${loc.accuracy_m ? `±${loc.accuracy_m}m accuracy` : 'live'})`}
+                  </span>
+                </span>
+                <span className="text-slate-400 font-mono text-[10px]">
+                  {activeLat.toFixed(3)}°N, {activeLon.toFixed(3)}°E
+                </span>
+              </div>
+            )}
+
+            {gpsMessage && (
+              <div className="mt-2 text-xs font-medium text-emerald-900 bg-emerald-50 border border-emerald-200 p-2 rounded-lg flex items-center gap-1.5">
+                <Info size={13} className="text-emerald-600 flex-shrink-0" />
+                <span>{gpsMessage}</span>
+              </div>
+            )}
           </div>
-          {gpsMessage && (
-            <div className="mt-2 text-xs font-medium text-emerald-800 bg-emerald-100/70 p-1.5 rounded-lg">
-              {gpsMessage}
-            </div>
-          )}
         </div>
 
         {/* ─── Loading ─── */}
@@ -523,45 +458,56 @@ export default function FarmerHome() {
 
         {/* ─── SECTION 1: Today's Weather ─── */}
         {!loading && weather && (
-          <div className="bg-gradient-to-br from-emerald-50 to-sky-50 rounded-2xl border border-emerald-200 p-4 shadow-sm">
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-sm font-bold text-slate-800 flex items-center gap-1.5 flex-wrap">
+          <div className="bg-white rounded-2xl border border-slate-200 p-4 sm:p-5 shadow-xs">
+            <div className="flex items-center justify-between mb-3 border-b border-slate-100 pb-2.5">
+              <h2 className="text-xs uppercase tracking-wider font-bold text-slate-500 flex items-center gap-2">
                 <span>{t.todayWeather}</span>
-                <span className="text-emerald-700 font-extrabold bg-emerald-100/70 px-2 py-0.5 rounded-lg text-xs">
-                  🏛️ {gpDetails.panchayatName}
+                <span className="text-slate-300">·</span>
+                <span className="text-emerald-800 font-semibold lowercase bg-emerald-50 px-2 py-0.5 rounded text-[11px] normal-case">
+                  {gpDetails.panchayatName}
                 </span>
               </h2>
               <span className="text-[10px] text-slate-400 font-medium">{t.source}</span>
             </div>
 
             {/* Main weather display */}
-            <div className="flex items-center gap-4">
-              {getConditionIcon(weather.condition, 48)}
-              <div>
-                <div className="text-3xl font-extrabold text-slate-900">
-                  {weather.temperature_max ?? '--'}°C
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3.5">
+                {getConditionIcon(weather.condition, 44)}
+                <div>
+                  <div className="text-3xl font-extrabold text-slate-900 tracking-tight">
+                    {weather.temperature_max ?? '--'}°C
+                  </div>
+                  <div className="text-xs font-medium text-slate-500">
+                    {getConditionLabel(weather.condition, lang)}
+                    {weather.temperature_min != null && ` · ${lang === 'en' ? 'Min' : 'न्यूनतम'} ${weather.temperature_min}°C`}
+                  </div>
                 </div>
-                <div className="text-xs font-medium text-slate-500">
-                  {getConditionLabel(weather.condition, lang)}
-                  {weather.temperature_min != null && ` · ${lang === 'en' ? 'Min' : 'न्यू'} ${weather.temperature_min}°`}
+              </div>
+
+              {/* Rain forecast indicator */}
+              <div className="text-right">
+                <div className="text-xs font-bold text-blue-700 bg-blue-50 px-2.5 py-1 rounded-lg border border-blue-100">
+                  {weather.rainfall_mm > 0 ? `🌧️ ${weather.rainfall_mm} mm` : '☀️ शुष्क (Dry)'}
                 </div>
+                <div className="text-[10px] text-slate-400 mt-1">24-Hr Precipitation</div>
               </div>
             </div>
 
             {/* Weather metrics row */}
-            <div className="grid grid-cols-3 gap-2 mt-3">
-              <div className="bg-white/60 rounded-xl px-3 py-2 text-center">
-                <Droplets size={14} className="mx-auto text-blue-500 mb-0.5" />
+            <div className="grid grid-cols-3 gap-2 mt-4 pt-3 border-t border-slate-100">
+              <div className="bg-slate-50 rounded-xl px-3 py-2 text-center border border-slate-100">
+                <Droplets size={14} className="mx-auto text-blue-600 mb-0.5" />
                 <div className="text-sm font-bold text-slate-900">{weather.rainfall_mm ?? 0} mm</div>
                 <div className="text-[10px] text-slate-500 font-medium">{t.rain}</div>
               </div>
-              <div className="bg-white/60 rounded-xl px-3 py-2 text-center">
-                <div className="text-[10px] mx-auto text-sky-500 mb-0.5">💧</div>
+              <div className="bg-slate-50 rounded-xl px-3 py-2 text-center border border-slate-100">
+                <div className="text-[11px] mx-auto text-sky-600 font-bold mb-0.5">💧</div>
                 <div className="text-sm font-bold text-slate-900">{weather.humidity_pct ?? '--'}%</div>
                 <div className="text-[10px] text-slate-500 font-medium">{t.humidity}</div>
               </div>
-              <div className="bg-white/60 rounded-xl px-3 py-2 text-center">
-                <Wind size={14} className="mx-auto text-gray-500 mb-0.5" />
+              <div className="bg-slate-50 rounded-xl px-3 py-2 text-center border border-slate-100">
+                <Wind size={14} className="mx-auto text-slate-600 mb-0.5" />
                 <div className="text-sm font-bold text-slate-900">{weather.wind_speed_kmh ?? '--'}</div>
                 <div className="text-[10px] text-slate-500 font-medium">{t.wind} km/h</div>
               </div>
@@ -570,9 +516,9 @@ export default function FarmerHome() {
             {/* View Full Forecast Link */}
             <button
               onClick={() => navigate('/app/farmer/forecast')}
-              className="w-full mt-3 py-2 rounded-xl bg-emerald-600/10 hover:bg-emerald-600/20 text-emerald-800 text-xs font-bold flex items-center justify-center gap-1.5 transition-colors"
+              className="w-full mt-3 py-2.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
             >
-              {t.viewForecast}
+              <span>{t.viewForecast}</span>
             </button>
           </div>
         )}

@@ -71,6 +71,8 @@ export default function OfficerDashboard() {
   const officerName = officerData.name || 'Rajesh Sharma'
   const blockName = selectedLoc?.block || officerData.block || 'Kalmeshwar'
   const districtName = selectedLoc?.district || officerData.district || 'Nagpur'
+  const officerInitials = officerName.split(' ').filter(Boolean).map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() || 'AO'
+  const officerShortName = officerName.split(' ')[0] + (officerName.split(' ')[1] ? ` ${officerName.split(' ')[1][0]}.` : '')
 
   // Listen for location change events from navbar / GPS
   useEffect(() => {
@@ -130,7 +132,7 @@ export default function OfficerDashboard() {
   const subviewList: Array<{ id: SubView; label: string; icon: any; badge?: number }> = [
     { id: 'dashboard', label: 'Dashboard', icon: Activity, badge: undefined },
     { id: 'queue', label: 'Advisory Queue', icon: Clock, badge: stats?.pending_advisories },
-    { id: 'panchayats', label: 'Panchayats (24)', icon: MapPin, badge: undefined },
+    { id: 'panchayats', label: panchayats.length > 0 ? `Panchayats (${panchayats.length})` : 'Panchayats', icon: MapPin, badge: undefined },
     { id: 'weather', label: 'Weather Watch', icon: CloudRain, badge: undefined },
     { id: 'reports', label: 'Field Reports', icon: FileText, badge: fieldReports.length || 3 },
     { id: 'approved', label: 'Approved Advisories', icon: CheckCircle, badge: stats?.approved_today },
@@ -154,7 +156,7 @@ export default function OfficerDashboard() {
           </div>
           <div className="flex items-center gap-1.5 text-[10px] text-slate-600 bg-slate-100 px-2.5 py-1 rounded-full font-semibold">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
-            <span>Rajesh S.</span>
+            <span>{officerShortName}</span>
           </div>
         </div>
 
@@ -198,7 +200,7 @@ export default function OfficerDashboard() {
             </div>
             <div>
               <h2 className="font-bold text-slate-900 text-sm leading-tight">Extension Console</h2>
-              <p className="text-[11px] font-semibold text-emerald-700">{blockName} Block, Nagpur</p>
+              <p className="text-[11px] font-semibold text-emerald-700">{blockName} Block, {districtName}</p>
             </div>
           </div>
         </div>
@@ -236,10 +238,10 @@ export default function OfficerDashboard() {
         <div className="p-4 border-t border-slate-100 bg-slate-50/50">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-full bg-emerald-700 text-white font-bold text-xs flex items-center justify-center">
-              RS
+              {officerInitials}
             </div>
             <div className="text-xs">
-              <p className="font-bold text-slate-900 leading-tight">Rajesh Sharma</p>
+              <p className="font-bold text-slate-900 leading-tight">{officerName}</p>
               <p className="text-[11px] text-slate-500">Sr. Agricultural Officer</p>
             </div>
           </div>
@@ -298,33 +300,88 @@ export default function OfficerDashboard() {
         {/* SUBVIEW 1: DASHBOARD */}
         {activeTab === 'dashboard' && (
           <div className="space-y-6">
-            {/* Top Operational Summary Header */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
-              {[
-                { label: 'Jurisdiction', val: `${blockName} Block`, sub: 'Nagpur Dist', color: 'slate', tab: undefined },
-                { label: 'Panchayats', val: '24', sub: 'In Block', color: 'slate', tab: 'panchayats' },
-                { label: 'Farmers', val: '1,842', sub: 'Registered', color: 'slate', tab: undefined },
-                { label: 'Active Crops', val: '5', sub: 'Soybean, Cotton..', color: 'slate', tab: undefined },
-                { label: 'Pending Review', val: stats?.pending_advisories ?? 2, sub: 'Immediate Action', color: 'amber', tab: 'queue' },
-                { label: 'Approved Today', val: stats?.approved_today ?? 22, sub: 'Disseminated', color: 'emerald', tab: 'approved' },
-                { label: 'Field Reports', val: fieldReports.length || 3, sub: 'On Record', color: 'sky', tab: 'reports' },
-              ].map(({ label, val, sub, color, tab }) => (
-                <div
-                  key={label}
-                  onClick={() => tab && setActiveTab(tab as any)}
-                  className={cn(
-                    'bg-white border rounded-xl p-3.5 shadow-xs transition-all',
-                    tab && 'cursor-pointer hover:shadow-md hover:scale-[1.02]',
-                    color === 'amber' ? 'border-amber-300 bg-amber-50/50' : 'border-slate-200'
-                  )}
-                >
-                  <span className="text-[10px] uppercase font-bold text-slate-400 block">{label}</span>
-                  <span className={cn('text-xl font-bold font-display', color === 'amber' ? 'text-amber-800' : 'text-slate-900')}>
-                    {val}
-                  </span>
-                  <span className="text-[10px] text-slate-500 block">{sub}</span>
+            {/* Top Operational Summary Header - Clustered into Semantic Groups */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+              {/* Group 1: Jurisdiction & Coverage Scope */}
+              <div className="lg:col-span-7 bg-white border border-slate-200 rounded-2xl p-4 shadow-xs">
+                <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2.5 flex items-center justify-between">
+                  <span>Block Jurisdiction & Coverage</span>
+                  <span className="text-slate-500 font-medium normal-case">LGD Verified Network</span>
                 </div>
-              ))}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                  <div className="bg-slate-50 border border-slate-100 rounded-xl p-3">
+                    <span className="text-[10px] uppercase font-bold text-slate-400 block">Jurisdiction</span>
+                    <span className="text-base font-bold text-slate-900 block truncate" title={`${blockName} Block`}>
+                      {blockName}
+                    </span>
+                    <span className="text-[10px] text-slate-500 block truncate">{districtName} Dist</span>
+                  </div>
+                  <div
+                    onClick={() => setActiveTab('panchayats')}
+                    className="bg-slate-50 border border-slate-100 rounded-xl p-3 cursor-pointer hover:border-emerald-300 hover:bg-emerald-50/30 transition-all"
+                  >
+                    <span className="text-[10px] uppercase font-bold text-slate-400 block">Panchayats</span>
+                    <span className="text-base font-bold text-slate-900 block">
+                      {panchayats.length || blockDashboard?.total_panchayats || 24}
+                    </span>
+                    <span className="text-[10px] text-emerald-700 font-medium block">View All →</span>
+                  </div>
+                  <div className="bg-slate-50 border border-slate-100 rounded-xl p-3">
+                    <span className="text-[10px] uppercase font-bold text-slate-400 block">Farmers</span>
+                    <span className="text-base font-bold text-slate-900 block">
+                      {blockDashboard?.total_farmers ? blockDashboard.total_farmers.toLocaleString() : '1,842'}
+                    </span>
+                    <span className="text-[10px] text-slate-500 block">Registered</span>
+                  </div>
+                  <div className="bg-slate-50 border border-slate-100 rounded-xl p-3">
+                    <span className="text-[10px] uppercase font-bold text-slate-400 block">Monitored Crops</span>
+                    <span className="text-base font-bold text-slate-900 block">
+                      {blockDashboard?.active_crops_count ? `${blockDashboard.active_crops_count} Major` : '5 Major'}
+                    </span>
+                    <span className="text-[10px] text-slate-500 block truncate">Soybean, Cotton..</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Group 2: Operational Triage & Dissemination */}
+              <div className="lg:col-span-5 bg-white border border-slate-200 rounded-2xl p-4 shadow-xs">
+                <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2.5 flex items-center justify-between">
+                  <span>Advisory Pipeline Velocity</span>
+                  <span className="text-slate-500 font-medium normal-case">Today's Cycle</span>
+                </div>
+                <div className="grid grid-cols-3 gap-2.5">
+                  <div
+                    onClick={() => setActiveTab('queue')}
+                    className="bg-amber-50/70 border border-amber-200 rounded-xl p-3 cursor-pointer hover:border-amber-400 hover:shadow-xs transition-all"
+                  >
+                    <span className="text-[10px] uppercase font-bold text-amber-700 block">Pending Review</span>
+                    <span className="text-lg font-bold text-amber-900 block">
+                      {stats?.pending_advisories ?? 2}
+                    </span>
+                    <span className="text-[10px] font-semibold text-amber-800 block">Action Req.</span>
+                  </div>
+                  <div
+                    onClick={() => setActiveTab('approved')}
+                    className="bg-emerald-50/60 border border-emerald-200 rounded-xl p-3 cursor-pointer hover:border-emerald-300 hover:shadow-xs transition-all"
+                  >
+                    <span className="text-[10px] uppercase font-bold text-emerald-700 block">Approved</span>
+                    <span className="text-lg font-bold text-emerald-900 block">
+                      {stats?.approved_today ?? 22}
+                    </span>
+                    <span className="text-[10px] text-emerald-800 font-semibold block">Disseminated</span>
+                  </div>
+                  <div
+                    onClick={() => setActiveTab('reports')}
+                    className="bg-sky-50/60 border border-sky-200 rounded-xl p-3 cursor-pointer hover:border-sky-300 hover:shadow-xs transition-all"
+                  >
+                    <span className="text-[10px] uppercase font-bold text-sky-700 block">Field Reports</span>
+                    <span className="text-lg font-bold text-sky-900 block">
+                      {fieldReports.length || 3}
+                    </span>
+                    <span className="text-[10px] text-sky-800 font-semibold block">Ground Truth</span>
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Priority Actions & Weather Watch Row */}

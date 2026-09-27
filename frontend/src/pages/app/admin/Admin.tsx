@@ -1627,36 +1627,73 @@ export const AdminDashboard: React.FC = () => {
         {/* TAB 1: OVERVIEW */}
         {activeTab === 'overview' && (
           <div className="space-y-6">
-            {/* Top Scope Strip */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
-              {[
-                { label: 'District', val: district, sub: selectedState, color: 'slate' },
-                { label: 'Panchayats', val: String(summary?.total_panchayats || 0), sub: 'Total GPs', color: 'slate' },
-                { label: 'Blocks', val: String(summary?.total_blocks || 0), sub: 'Sub-Districts', color: 'slate' },
-                { label: 'AWS Stations', val: String(summary?.total_stations || 12), sub: `${(summary?.total_stations || 12) - (summary?.offline_stations || 0)} Online`, color: 'slate' },
-                { label: 'Approved Today', val: summary?.approved_today ?? 0, sub: 'Disseminated', color: 'emerald' },
-                { label: 'Pending Review', val: summary?.pending_advisories ?? 0, sub: 'Awaiting Action', color: 'amber' },
-                { label: 'Stale Feeds', val: String(summary?.stale_panchayats || 0), sub: 'Delayed >4h', color: 'slate' },
-                { label: 'Stations Offline', val: String(summary?.offline_stations || 0), sub: 'Tech Dispatched', color: 'rose' },
-              ].map(({ label, val, sub, color }) => (
-                <div
-                  key={label}
-                  className={cn(
-                    'bg-white border rounded-xl p-3 shadow-xs',
-                    color === 'amber' ? 'border-amber-300 bg-amber-50/50' : 'border-slate-200'
-                  )}
-                >
-                  <span className="text-[10px] uppercase font-bold text-slate-400 block">{label}</span>
-                  <span className={cn('text-lg font-bold font-display', color === 'amber' ? 'text-amber-800' : 'text-slate-900')}>
-                    {val}
-                  </span>
-                  <span className="text-[10px] text-slate-500 block">{sub}</span>
+            {/* Clustered Operational & Network Scope Strips */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {/* Cluster 1: Infrastructure & Administrative Scope */}
+              <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs">
+                <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2.5 flex items-center justify-between">
+                  <span>Network & Administrative Scope</span>
+                  <span className="text-slate-500 font-medium normal-case">State: {selectedState}</span>
                 </div>
-              ))}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                  <div className="bg-slate-50 border border-slate-100 rounded-xl p-3">
+                    <span className="text-[10px] uppercase font-bold text-slate-400 block">District</span>
+                    <span className="text-base font-bold text-slate-900 block truncate" title={district}>{district}</span>
+                    <span className="text-[10px] text-slate-500 block truncate">{selectedState}</span>
+                  </div>
+                  <div className="bg-slate-50 border border-slate-100 rounded-xl p-3">
+                    <span className="text-[10px] uppercase font-bold text-slate-400 block">Panchayats</span>
+                    <span className="text-base font-bold text-slate-900 block">{summary?.total_panchayats || 0}</span>
+                    <span className="text-[10px] text-slate-500 block">Total GPs</span>
+                  </div>
+                  <div className="bg-slate-50 border border-slate-100 rounded-xl p-3">
+                    <span className="text-[10px] uppercase font-bold text-slate-400 block">Blocks</span>
+                    <span className="text-base font-bold text-slate-900 block">{summary?.total_blocks || 0}</span>
+                    <span className="text-[10px] text-slate-500 block">Sub-Districts</span>
+                  </div>
+                  <div className="bg-slate-50 border border-slate-100 rounded-xl p-3">
+                    <span className="text-[10px] uppercase font-bold text-slate-400 block">AWS Stations</span>
+                    <span className="text-base font-bold text-slate-900 block">{summary?.total_stations || 12}</span>
+                    <span className="text-[10px] text-emerald-700 font-medium block">
+                      {(summary?.total_stations || 12) - (summary?.offline_stations || 0)} Online
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Cluster 2: Daily Agromet Operations & Feed Health */}
+              <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs">
+                <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2.5 flex items-center justify-between">
+                  <span>Daily Agromet Velocity & Feed Health</span>
+                  <span className="text-slate-500 font-medium normal-case">Real-Time Sync</span>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                  <div className="bg-emerald-50/60 border border-emerald-200 rounded-xl p-3">
+                    <span className="text-[10px] uppercase font-bold text-emerald-700 block">Approved</span>
+                    <span className="text-base font-bold text-emerald-900 block">{summary?.approved_today ?? 0}</span>
+                    <span className="text-[10px] text-emerald-800 font-medium block">Disseminated</span>
+                  </div>
+                  <div className="bg-amber-50/70 border border-amber-200 rounded-xl p-3">
+                    <span className="text-[10px] uppercase font-bold text-amber-700 block">Pending Review</span>
+                    <span className="text-base font-bold text-amber-900 block">{summary?.pending_advisories ?? 0}</span>
+                    <span className="text-[10px] text-amber-800 font-medium block">Awaiting Action</span>
+                  </div>
+                  <div className="bg-slate-50 border border-slate-100 rounded-xl p-3">
+                    <span className="text-[10px] uppercase font-bold text-slate-400 block">Stale Feeds</span>
+                    <span className="text-base font-bold text-slate-900 block">{summary?.stale_panchayats || 0}</span>
+                    <span className="text-[10px] text-slate-500 block">Delayed &gt;4h</span>
+                  </div>
+                  <div className="bg-rose-50/70 border border-rose-200 rounded-xl p-3">
+                    <span className="text-[10px] uppercase font-bold text-rose-700 block">Offline STN</span>
+                    <span className="text-base font-bold text-rose-900 block">{summary?.offline_stations || 0}</span>
+                    <span className="text-[10px] text-rose-800 font-medium block">Tech Dispatched</span>
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Action Required Priority Box */}
-            <div className="bg-gradient-to-r from-amber-50/80 via-rose-50/40 to-slate-50 border border-amber-200 rounded-3xl p-6 shadow-xs space-y-4">
+            <div className="bg-amber-50/60 border border-amber-200 rounded-2xl p-5 shadow-xs space-y-4">
               <div className="flex items-center justify-between border-b border-amber-200/80 pb-3 flex-wrap gap-2">
                 <div className="flex items-center gap-2">
                   <span className="w-3 h-3 rounded-full bg-amber-500 animate-ping" />

@@ -13,7 +13,7 @@ export const PWAInstallBanner: React.FC<Props> = ({ lang = 'hi', variant = 'bann
   const [isIOS, setIsIOS] = useState<boolean>(false)
   const [showIOSModal, setShowIOSModal] = useState<boolean>(false)
   const [dismissed, setDismissed] = useState<boolean>(() => {
-    return sessionStorage.getItem('mausamsetu_pwa_dismissed') === 'true'
+    return localStorage.getItem('mausamsetu_pwa_dismissed') === 'true'
   })
 
   useEffect(() => {
