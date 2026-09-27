@@ -7,9 +7,11 @@ from typing import Optional
 
 from app.db.session import get_db
 from app.models.models import OfficerProfile, Panchayat, Advisory, AdvisoryStatus, FieldReport
-from app.schemas.schemas import OfficerDirectoryItem, OfficerAssignRequest, OfficerBlockDashboardOut
+from app.schemas.schemas import OfficerDirectoryItem, OfficerAssignRequest, OfficerBlockDashboardOut, CreateOfficerRequest
 
 router = APIRouter(prefix="/officers", tags=["officers"])
+
+CUSTOM_OFFICERS: list[dict] = []
 
 
 OFFICERS_DIRECTORY = [
@@ -92,8 +94,12 @@ def list_officers(
                     break
             if officers:
                 break
-        if officers:
-            return officers
+        custom_matching = [
+            OfficerDirectoryItem(**o) for o in CUSTOM_OFFICERS
+            if not district or o["district"].lower() == district.lower()
+        ]
+        if officers or custom_matching:
+            return officers + custom_matching
 
     result = []
     for item in OFFICERS_DIRECTORY:
@@ -142,7 +148,33 @@ def list_officers(
                 last_active=item["last_active"],
             )
         )
-    return result
+
+    custom_nagpur = [
+        OfficerDirectoryItem(**o) for o in CUSTOM_OFFICERS
+        if not district or o["district"].lower() == district.lower()
+    ]
+    return result + custom_nagpur
+
+
+@router.post("/", response_model=OfficerDirectoryItem)
+def create_officer(req: CreateOfficerRequest):
+    """Register a new agricultural extension officer and assign them to a jurisdiction."""
+    new_id = 1000 + len(CUSTOM_OFFICERS) + 1
+    new_officer = {
+        "id": new_id,
+        "name": req.name,
+        "phone": req.phone,
+        "district": req.district,
+        "block": req.block,
+        "assigned_panchayats_count": req.assigned_panchayats_count or 24,
+        "pending_reviews": 0,
+        "approved_today": 0,
+        "avg_review_time_mins": 10,
+        "status": req.status or "active",
+        "last_active": "Just now",
+    }
+    CUSTOM_OFFICERS.append(new_officer)
+    return OfficerDirectoryItem(**new_officer)
 
 
 @router.post("/assign", response_model=OfficerDirectoryItem)

@@ -54,7 +54,7 @@ export const advisoryApi = {
   generate: (body: { panchayat_id: number; crop: string; crop_stage?: string }) =>
     api.post('/advisories/generate', body).then((r) => r.data),
 
-  list: (params?: { status?: string; panchayat_id?: number; crop?: string }) =>
+  list: (params?: { status?: string; panchayat_id?: number; crop?: string; district?: string; block?: string }) =>
     api.get('/advisories/', { params }).then((r) => r.data),
 
   get: (id: number) => api.get(`/advisories/${id}`).then((r) => r.data),
@@ -120,6 +120,16 @@ export const officerApi = {
     api.get(`/officers/${officerId}/dashboard`, { params: { ...(block ? { block } : {}), ...(district ? { district } : {}) } }).then((r) => r.data),
   assign: (data: { officer_id: number; block: string }) =>
     api.post('/officers/assign', data).then((r) => r.data),
+  create: (data: {
+    name: string
+    phone: string
+    district: string
+    block: string
+    email?: string
+    designation?: string
+    assigned_panchayats_count?: number
+    status?: string
+  }) => api.post('/officers/', data).then((r) => r.data),
   dispatchBroadcast: (data: {
     officer_id?: number
     block?: string

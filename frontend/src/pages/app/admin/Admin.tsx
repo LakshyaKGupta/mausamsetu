@@ -17,7 +17,8 @@ import {
   TrendingDown, TrendingUp, AlertCircle, X, ChevronRight,
   ExternalLink, UserCheck, Activity, Radio, Users, CheckCircle,
   XCircle, Filter, Search, Settings, FileText, Map as MapIcon,
-  History, ArrowRight, ShieldAlert, Wifi, WifiOff, Globe, Play
+  History, ArrowRight, ShieldAlert, Wifi, WifiOff, Globe, Play,
+  Plus, ChevronLeft, BookOpen, RadioTower, Signal, Compass
 } from 'lucide-react'
 import {
   ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid, Legend
@@ -526,7 +527,7 @@ const ALL_STATES_SPATIAL: SpatialState[] = [
     crops: 'Rice, Wheat, Maize, Pulses',
     districts: [
       {
-        name: 'Patna', lat: 25.59, lng: 85.14, status: 'ready', blocksCount: 1, gps: 26,
+        name: 'Patna', lat: 25.59, lng: 85.14, status: 'ready', blocksCount: 2, gps: 48,
         note: 'Son-Ganga alluvial convergence zone with multi-crop intensive farming',
         crops: 'Rice, Wheat, Maize', farmers: '5,700',
         blocks: [
@@ -537,6 +538,416 @@ const ALL_STATES_SPATIAL: SpatialState[] = [
               { name: 'Bihta GP', lat: 25.57, lng: 84.87, elevation_m: 55, status: 'verified' },
               { name: 'Parev GP', lat: 25.55, lng: 84.82, elevation_m: 53, status: 'verified' },
               { name: 'Lai GP', lat: 25.62, lng: 84.89, elevation_m: 56, status: 'verified' },
+            ]
+          },
+          {
+            name: 'Danapur', lat: 25.63, lng: 85.03, gpsCount: 22, farmers: 2100,
+            aws: 'AWS #1202 (Danapur Cantt)', officer: 'Sanjay Singh', advisories: 'LGD Mapped', status: 'ready',
+            panchayats: [
+              { name: 'Danapur GP', lat: 25.63, lng: 85.03, elevation_m: 52, status: 'verified' },
+              { name: 'Khagaul GP', lat: 25.58, lng: 85.05, elevation_m: 54, status: 'verified' },
+            ]
+          }
+        ]
+      },
+      {
+        name: 'Muzaffarpur', lat: 26.12, lng: 85.36, status: 'ready', blocksCount: 2, gps: 49,
+        note: 'North Bihar shahi litchi & maize agro-zone with flood telemetry',
+        crops: 'Litchi, Maize, Wheat', farmers: '4,800',
+        blocks: [
+          {
+            name: 'Sakra', lat: 25.98, lng: 85.52, gpsCount: 25, farmers: 2200,
+            aws: 'AWS #1203 (Sakra East)', officer: 'Pawan Thakur', advisories: 'LGD Mapped', status: 'ready',
+            panchayats: [
+              { name: 'Sakra GP', lat: 25.98, lng: 85.52, elevation_m: 58, status: 'verified' },
+              { name: 'Dholi GP', lat: 25.99, lng: 85.60, elevation_m: 57, status: 'verified' },
+            ]
+          },
+          {
+            name: 'Bochahan', lat: 26.17, lng: 85.48, gpsCount: 24, farmers: 2100,
+            aws: 'AWS #1204 (Bochahan KVK)', officer: 'Amitabh Roy', advisories: 'LGD Mapped', status: 'ready',
+            panchayats: [
+              { name: 'Bochahan GP', lat: 26.17, lng: 85.48, elevation_m: 62, status: 'verified' },
+              { name: 'Majhauli GP', lat: 26.22, lng: 85.51, elevation_m: 60, status: 'verified' },
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    state: 'Tamil Nadu',
+    lat: 11.12, lng: 78.65, zoom: 7, status: 'ready',
+    coverage: 'Coimbatore & Thanjavur (Cauvery Delta Paddy & Western Cotton Belt)',
+    crops: 'Paddy, Sugarcane, Cotton, Groundnut, Banana',
+    districts: [
+      {
+        name: 'Coimbatore', lat: 11.02, lng: 76.96, status: 'ready', blocksCount: 2, gps: 50,
+        note: 'Western plateau cotton, pulses and coconut cluster with TNAU AWS network',
+        crops: 'Cotton, Groundnut, Maize', farmers: '5,300',
+        blocks: [
+          {
+            name: 'Pollachi', lat: 10.66, lng: 77.00, gpsCount: 28, farmers: 2600,
+            aws: 'AWS #1301 (Pollachi Coconut Node)', officer: 'M. Senthil', advisories: 'LGD Mapped', status: 'ready',
+            panchayats: [
+              { name: 'Pollachi GP', lat: 10.66, lng: 77.00, elevation_m: 293, status: 'verified' },
+              { name: 'Anamalai GP', lat: 10.58, lng: 76.93, elevation_m: 310, status: 'verified' },
+              { name: 'Kinathukadavu GP', lat: 10.82, lng: 77.02, elevation_m: 305, status: 'verified' },
+            ]
+          },
+          {
+            name: 'Thondamuthur', lat: 11.00, lng: 76.83, gpsCount: 22, farmers: 2150,
+            aws: 'AWS #1302 (Western Ghats Foot)', officer: 'K. Meenakshi', advisories: 'LGD Mapped', status: 'ready',
+            panchayats: [
+              { name: 'Thondamuthur GP', lat: 11.00, lng: 76.83, elevation_m: 470, status: 'verified' },
+              { name: 'Alandurai GP', lat: 10.96, lng: 76.78, elevation_m: 485, status: 'verified' },
+            ]
+          }
+        ]
+      },
+      {
+        name: 'Thanjavur', lat: 10.79, lng: 79.14, status: 'ready', blocksCount: 2, gps: 58,
+        note: 'Cauvery delta rice bowl with intensive canal telemetry and kuruvai paddy support',
+        crops: 'Paddy, Pulses, Banana', farmers: '6,400',
+        blocks: [
+          {
+            name: 'Kumbakonam', lat: 10.96, lng: 79.38, gpsCount: 32, farmers: 2900,
+            aws: 'AWS #1303 (Cauvery River Bank)', officer: 'R. Natarajan', advisories: 'LGD Mapped', status: 'ready',
+            panchayats: [
+              { name: 'Kumbakonam GP', lat: 10.96, lng: 79.38, elevation_m: 24, status: 'verified' },
+              { name: 'Swamimalai GP', lat: 10.95, lng: 79.33, elevation_m: 25, status: 'verified' },
+            ]
+          },
+          {
+            name: 'Orathanadu', lat: 10.63, lng: 79.26, gpsCount: 26, farmers: 2400,
+            aws: 'AWS #1304 (Delta Central)', officer: 'P. Selvam', advisories: 'LGD Mapped', status: 'ready',
+            panchayats: [
+              { name: 'Orathanadu GP', lat: 10.63, lng: 79.26, elevation_m: 45, status: 'verified' },
+              { name: 'Pattukkottai GP', lat: 10.43, lng: 79.32, elevation_m: 38, status: 'verified' },
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    state: 'Andhra Pradesh',
+    lat: 15.91, lng: 79.74, zoom: 7, status: 'ready',
+    coverage: 'Guntur & Krishna (Coastal Krishna-Godavari Delta Basin)',
+    crops: 'Paddy, Chilli, Cotton, Tobacco, Black Gram',
+    districts: [
+      {
+        name: 'Guntur', lat: 16.31, lng: 80.44, status: 'ready', blocksCount: 2, gps: 52,
+        note: 'Asia largest chilli market and Krishna delta command zone with automated agromet stations',
+        crops: 'Chilli, Cotton, Paddy', farmers: '6,100',
+        blocks: [
+          {
+            name: 'Tenali', lat: 16.24, lng: 80.64, gpsCount: 28, farmers: 2600,
+            aws: 'AWS #1401 (Tenali Canals)', officer: 'Ch. Venkat Rao', advisories: 'LGD Mapped', status: 'ready',
+            panchayats: [
+              { name: 'Tenali GP', lat: 16.24, lng: 80.64, elevation_m: 15, status: 'verified' },
+              { name: 'Kollipara GP', lat: 16.29, lng: 80.72, elevation_m: 14, status: 'verified' },
+            ]
+          },
+          {
+            name: 'Bapatla', lat: 15.90, lng: 80.47, gpsCount: 24, farmers: 2200,
+            aws: 'AWS #1402 (Agricultural College Bapatla)', officer: 'K. Srinivas', advisories: 'LGD Mapped', status: 'ready',
+            panchayats: [
+              { name: 'Bapatla GP', lat: 15.90, lng: 80.47, elevation_m: 8, status: 'verified' },
+              { name: 'Karlapalem GP', lat: 15.94, lng: 80.55, elevation_m: 7, status: 'verified' },
+            ]
+          }
+        ]
+      },
+      {
+        name: 'Krishna', lat: 16.18, lng: 81.13, status: 'ready', blocksCount: 2, gps: 51,
+        note: 'Krishna river delta fertile alluvial paddy and aquaculture belt',
+        crops: 'Paddy, Black Gram, Sugarcane', farmers: '5,800',
+        blocks: [
+          {
+            name: 'Gudivada', lat: 16.44, lng: 80.99, gpsCount: 26, farmers: 2400,
+            aws: 'AWS #1403 (Gudivada Mandi)', officer: 'B. Ramaiah', advisories: 'LGD Mapped', status: 'ready',
+            panchayats: [
+              { name: 'Gudivada GP', lat: 16.44, lng: 80.99, elevation_m: 9, status: 'verified' },
+              { name: 'Nandivada GP', lat: 16.48, lng: 81.04, elevation_m: 8, status: 'verified' },
+            ]
+          },
+          {
+            name: 'Machilipatnam', lat: 16.19, lng: 81.14, gpsCount: 25, farmers: 2150,
+            aws: 'AWS #1404 (Coastal Telemetry Port)', officer: 'V. Lakshmi', advisories: 'LGD Mapped', status: 'ready',
+            panchayats: [
+              { name: 'Machilipatnam GP', lat: 16.19, lng: 81.14, elevation_m: 7, status: 'verified' },
+              { name: 'Pedana GP', lat: 16.26, lng: 81.14, elevation_m: 8, status: 'verified' },
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    state: 'Telangana',
+    lat: 18.11, lng: 79.01, zoom: 7, status: 'ready',
+    coverage: 'Warangal & Karimnagar (Northern Telangana Cotton & Maize Bowl)',
+    crops: 'Cotton, Paddy, Maize, Red Gram, Turmeric',
+    districts: [
+      {
+        name: 'Warangal', lat: 17.97, lng: 79.59, status: 'ready', blocksCount: 2, gps: 48,
+        note: 'Red sandy loam and black cotton soil agro-zone with Kaleshwaram canal lift telemetry',
+        crops: 'Cotton, Chilli, Maize', farmers: '5,400',
+        blocks: [
+          {
+            name: 'Hanamkonda', lat: 18.01, lng: 79.54, gpsCount: 26, farmers: 2350,
+            aws: 'AWS #1501 (Kakatiya Agromet)', officer: 'T. Ravinder', advisories: 'LGD Mapped', status: 'ready',
+            panchayats: [
+              { name: 'Hanamkonda GP', lat: 18.01, lng: 79.54, elevation_m: 310, status: 'verified' },
+              { name: 'Inavolu GP', lat: 17.91, lng: 79.58, elevation_m: 295, status: 'verified' },
+            ]
+          },
+          {
+            name: 'Parkal', lat: 18.20, lng: 79.72, gpsCount: 22, farmers: 2050,
+            aws: 'AWS #1502 (Parkal Cotton Mandi)', officer: 'G. Mallesh', advisories: 'LGD Mapped', status: 'ready',
+            panchayats: [
+              { name: 'Parkal GP', lat: 18.20, lng: 79.72, elevation_m: 285, status: 'verified' },
+              { name: 'Atmakur GP', lat: 18.15, lng: 79.68, elevation_m: 290, status: 'verified' },
+            ]
+          }
+        ]
+      },
+      {
+        name: 'Karimnagar', lat: 18.44, lng: 79.13, status: 'ready', blocksCount: 2, gps: 49,
+        note: 'Lower Manair Dam command area paddy and maize production cluster',
+        crops: 'Paddy, Maize, Cotton', farmers: '5,200',
+        blocks: [
+          {
+            name: 'Choppadandi', lat: 18.58, lng: 79.17, gpsCount: 24, farmers: 2200,
+            aws: 'AWS #1503 (Choppadandi)', officer: 'M. Kishan', advisories: 'LGD Mapped', status: 'ready',
+            panchayats: [
+              { name: 'Choppadandi GP', lat: 18.58, lng: 79.17, elevation_m: 275, status: 'verified' },
+              { name: 'Gangadhara GP', lat: 18.53, lng: 79.03, elevation_m: 280, status: 'verified' },
+            ]
+          },
+          {
+            name: 'Huzurabad', lat: 18.18, lng: 79.38, gpsCount: 25, farmers: 2250,
+            aws: 'AWS #1504 (Huzurabad Grain Hub)', officer: 'K. Prabhakar', advisories: 'LGD Mapped', status: 'ready',
+            panchayats: [
+              { name: 'Huzurabad GP', lat: 18.18, lng: 79.38, elevation_m: 280, status: 'verified' },
+              { name: 'Jammikunta GP', lat: 18.28, lng: 79.46, elevation_m: 260, status: 'verified' },
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    state: 'West Bengal',
+    lat: 22.98, lng: 87.85, zoom: 7, status: 'ready',
+    coverage: 'Burdwan & Hooghly (Lower Gangetic Alluvium Rice & Potato Heartland)',
+    crops: 'Boro Rice, Aman Paddy, Jute, Potato, Mustard',
+    districts: [
+      {
+        name: 'Burdwan', lat: 23.23, lng: 87.86, status: 'ready', blocksCount: 2, gps: 51,
+        note: 'Granary of Bengal with intensive double-cropped paddy and DVC canal command',
+        crops: 'Paddy, Potato, Mustard', farmers: '6,200',
+        blocks: [
+          {
+            name: 'Memari', lat: 23.18, lng: 88.12, gpsCount: 27, farmers: 2500,
+            aws: 'AWS #1601 (Memari Cold Storage Belt)', officer: 'Subir Banerjee', advisories: 'LGD Mapped', status: 'ready',
+            panchayats: [
+              { name: 'Memari GP', lat: 23.18, lng: 88.12, elevation_m: 25, status: 'verified' },
+              { name: 'Rasulpur GP', lat: 23.15, lng: 88.19, elevation_m: 24, status: 'verified' },
+            ]
+          },
+          {
+            name: 'Kalna', lat: 23.22, lng: 88.37, gpsCount: 24, farmers: 2200,
+            aws: 'AWS #1602 (Bhagirathi River Plains)', officer: 'Anupam Roy', advisories: 'LGD Mapped', status: 'ready',
+            panchayats: [
+              { name: 'Kalna GP', lat: 23.22, lng: 88.37, elevation_m: 20, status: 'verified' },
+              { name: 'Dhatrigram GP', lat: 23.26, lng: 88.32, elevation_m: 22, status: 'verified' },
+            ]
+          }
+        ]
+      },
+      {
+        name: 'Hooghly', lat: 22.90, lng: 88.40, status: 'ready', blocksCount: 2, gps: 49,
+        note: 'Prime commercial potato and jute belt with high groundwater micro-telemetry',
+        crops: 'Potato, Jute, Paddy', farmers: '5,500',
+        blocks: [
+          {
+            name: 'Singur', lat: 22.81, lng: 88.23, gpsCount: 26, farmers: 2400,
+            aws: 'AWS #1603 (Singur Agromet)', officer: 'Debashis Sen', advisories: 'LGD Mapped', status: 'ready',
+            panchayats: [
+              { name: 'Singur GP', lat: 22.81, lng: 88.23, elevation_m: 15, status: 'verified' },
+              { name: 'Haripal GP', lat: 22.83, lng: 88.11, elevation_m: 16, status: 'verified' },
+            ]
+          },
+          {
+            name: 'Tarakeswar', lat: 22.88, lng: 88.02, gpsCount: 23, farmers: 2150,
+            aws: 'AWS #1604 (Tarakeswar Plains)', officer: 'Pranab Ghosh', advisories: 'LGD Mapped', status: 'ready',
+            panchayats: [
+              { name: 'Tarakeswar GP', lat: 22.88, lng: 88.02, elevation_m: 18, status: 'verified' },
+              { name: 'Pursurah GP', lat: 22.85, lng: 87.96, elevation_m: 17, status: 'verified' },
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    state: 'Kerala',
+    lat: 10.85, lng: 76.27, zoom: 7, status: 'ready',
+    coverage: 'Wayanad & Palakkad (Highland Spices & Palakkad Gap Paddy Basin)',
+    crops: 'Paddy, Pepper, Cardamom, Coffee, Banana',
+    districts: [
+      {
+        name: 'Wayanad', lat: 11.69, lng: 76.13, status: 'ready', blocksCount: 2, gps: 46,
+        note: 'Highland plantation agro-zone with microclimate lapse rates across 700m to 1200m elevation',
+        crops: 'Coffee, Pepper, Cardamom, Paddy', farmers: '4,600',
+        blocks: [
+          {
+            name: 'Mananthavady', lat: 11.80, lng: 76.00, gpsCount: 24, farmers: 2100,
+            aws: 'AWS #1701 (Kabini Basin)', officer: 'K. P. Mathew', advisories: 'LGD Mapped', status: 'ready',
+            panchayats: [
+              { name: 'Mananthavady GP', lat: 11.80, lng: 76.00, elevation_m: 750, status: 'verified' },
+              { name: 'Thirunelly GP', lat: 11.90, lng: 75.98, elevation_m: 820, status: 'verified' },
+            ]
+          },
+          {
+            name: 'Sulthan Bathery', lat: 11.66, lng: 76.26, gpsCount: 22, farmers: 2000,
+            aws: 'AWS #1702 (Bathery Plateau)', officer: 'P. Vinod', advisories: 'LGD Mapped', status: 'ready',
+            panchayats: [
+              { name: 'Sulthan Bathery GP', lat: 11.66, lng: 76.26, elevation_m: 890, status: 'verified' },
+              { name: 'Ambalavayal GP', lat: 11.62, lng: 76.21, elevation_m: 910, status: 'verified' },
+            ]
+          }
+        ]
+      },
+      {
+        name: 'Palakkad', lat: 10.79, lng: 76.65, status: 'ready', blocksCount: 2, gps: 53,
+        note: 'Rice bowl of Kerala situated in Western Ghats mountain gap with high diurnal wind flows',
+        crops: 'Paddy, Sugarcane, Groundnut', farmers: '5,700',
+        blocks: [
+          {
+            name: 'Alathur', lat: 10.64, lng: 76.55, gpsCount: 28, farmers: 2500,
+            aws: 'AWS #1703 (Gayathripuzha Basin)', officer: 'S. Unnikrishnan', advisories: 'LGD Mapped', status: 'ready',
+            panchayats: [
+              { name: 'Alathur GP', lat: 10.64, lng: 76.55, elevation_m: 80, status: 'verified' },
+              { name: 'Kuzhalmannam GP', lat: 10.71, lng: 76.58, elevation_m: 85, status: 'verified' },
+            ]
+          },
+          {
+            name: 'Chittur', lat: 10.70, lng: 76.73, gpsCount: 25, farmers: 2250,
+            aws: 'AWS #1704 (Chitturpuzha Command)', officer: 'M. Radhika', advisories: 'LGD Mapped', status: 'ready',
+            panchayats: [
+              { name: 'Chittur GP', lat: 10.70, lng: 76.73, elevation_m: 92, status: 'verified' },
+              { name: 'Kozhinjampara GP', lat: 10.74, lng: 76.82, elevation_m: 105, status: 'verified' },
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    state: 'Odisha',
+    lat: 20.95, lng: 85.10, zoom: 7, status: 'ready',
+    coverage: 'Cuttack & Sambalpur (Mahanadi River Basin Alluvium & Western Hirakud Command)',
+    crops: 'Paddy, Pulses, Groundnut, Mustard, Sugarcane',
+    districts: [
+      {
+        name: 'Cuttack', lat: 20.46, lng: 85.88, status: 'ready', blocksCount: 2, gps: 49,
+        note: 'Mahanadi-Birupa delta bifurcation zone with intensive kharif and rabi rice cropping',
+        crops: 'Paddy, Pulses, Vegetables', farmers: '5,300',
+        blocks: [
+          {
+            name: 'Salepur', lat: 20.48, lng: 86.02, gpsCount: 26, farmers: 2400,
+            aws: 'AWS #1801 (Salepur Mahanadi)', officer: 'Bijay Mohanty', advisories: 'LGD Mapped', status: 'ready',
+            panchayats: [
+              { name: 'Salepur GP', lat: 20.48, lng: 86.02, elevation_m: 30, status: 'verified' },
+              { name: 'Nischintakoili GP', lat: 20.44, lng: 86.13, elevation_m: 28, status: 'verified' },
+            ]
+          },
+          {
+            name: 'Athagarh', lat: 20.53, lng: 85.63, gpsCount: 23, farmers: 2100,
+            aws: 'AWS #1802 (Athagarh Foothills)', officer: 'Pratap Jena', advisories: 'LGD Mapped', status: 'ready',
+            panchayats: [
+              { name: 'Athagarh GP', lat: 20.53, lng: 85.63, elevation_m: 54, status: 'verified' },
+              { name: 'Tigiria GP', lat: 20.56, lng: 85.52, elevation_m: 58, status: 'verified' },
+            ]
+          }
+        ]
+      },
+      {
+        name: 'Sambalpur', lat: 21.47, lng: 83.98, status: 'ready', blocksCount: 2, gps: 46,
+        note: 'Hirakud dam perennial canal network command area supporting high-yield boro paddy',
+        crops: 'Paddy, Groundnut, Mustard', farmers: '4,900',
+        blocks: [
+          {
+            name: 'Rengali', lat: 21.63, lng: 84.03, gpsCount: 24, farmers: 2200,
+            aws: 'AWS #1803 (Hirakud Northern Basin)', officer: 'S. Panigrahi', advisories: 'LGD Mapped', status: 'ready',
+            panchayats: [
+              { name: 'Rengali GP', lat: 21.63, lng: 84.03, elevation_m: 180, status: 'verified' },
+              { name: 'Katarbaga GP', lat: 21.67, lng: 84.08, elevation_m: 185, status: 'verified' },
+            ]
+          },
+          {
+            name: 'Kuchinda', lat: 21.73, lng: 84.35, gpsCount: 22, farmers: 2000,
+            aws: 'AWS #1804 (Kuchinda Hills)', officer: 'D. Pradhan', advisories: 'LGD Mapped', status: 'ready',
+            panchayats: [
+              { name: 'Kuchinda GP', lat: 21.73, lng: 84.35, elevation_m: 220, status: 'verified' },
+              { name: 'Bamra GP', lat: 21.82, lng: 84.42, elevation_m: 235, status: 'verified' },
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    state: 'Himachal Pradesh',
+    lat: 31.10, lng: 77.17, zoom: 7, status: 'ready',
+    coverage: 'Shimla & Kullu (Himalayan Temperate Fruit & High Altitude Microclimates)',
+    crops: 'Apple, Maize, Wheat, Potato, Off-season Vegetables',
+    districts: [
+      {
+        name: 'Shimla', lat: 31.10, lng: 77.17, status: 'ready', blocksCount: 2, gps: 47,
+        note: 'Steep orographic mountain microclimates (1500m to 2800m) with chilling-hour monitoring for apples',
+        crops: 'Apple, Off-season Vegetables, Potato', farmers: '4,200',
+        blocks: [
+          {
+            name: 'Theog', lat: 31.12, lng: 77.36, gpsCount: 25, farmers: 2200,
+            aws: 'AWS #1901 (Theog Ridge)', officer: 'Rajinder Verma', advisories: 'LGD Mapped', status: 'ready',
+            panchayats: [
+              { name: 'Theog GP', lat: 31.12, lng: 77.36, elevation_m: 2280, status: 'verified' },
+              { name: 'Fagu GP', lat: 31.09, lng: 77.31, elevation_m: 2450, status: 'verified' },
+            ]
+          },
+          {
+            name: 'Rohru', lat: 31.20, lng: 77.75, gpsCount: 22, farmers: 2000,
+            aws: 'AWS #1902 (Pabbar Valley)', officer: 'Sunil Chauhan', advisories: 'LGD Mapped', status: 'ready',
+            panchayats: [
+              { name: 'Rohru GP', lat: 31.20, lng: 77.75, elevation_m: 1525, status: 'verified' },
+              { name: 'Jubbal GP', lat: 31.11, lng: 77.66, elevation_m: 1890, status: 'verified' },
+            ]
+          }
+        ]
+      },
+      {
+        name: 'Kullu', lat: 31.96, lng: 77.11, status: 'ready', blocksCount: 2, gps: 44,
+        note: 'Beas river valley fruit belt with alpine microclimate gradient and frost alert sensors',
+        crops: 'Apple, Pears, Plum, Tomato', farmers: '3,900',
+        blocks: [
+          {
+            name: 'Naggar', lat: 32.15, lng: 77.17, gpsCount: 24, farmers: 2100,
+            aws: 'AWS #1903 (Naggar Castle Slope)', officer: 'Deepak Sharma', advisories: 'LGD Mapped', status: 'ready',
+            panchayats: [
+              { name: 'Naggar GP', lat: 32.15, lng: 77.17, elevation_m: 1760, status: 'verified' },
+              { name: 'Manali GP', lat: 32.24, lng: 77.19, elevation_m: 2050, status: 'verified' },
+            ]
+          },
+          {
+            name: 'Banjar', lat: 31.64, lng: 77.35, gpsCount: 20, farmers: 1800,
+            aws: 'AWS #1904 (Tirthan Valley)', officer: 'Mohit Thakur', advisories: 'LGD Mapped', status: 'ready',
+            panchayats: [
+              { name: 'Banjar GP', lat: 31.64, lng: 77.35, elevation_m: 1356, status: 'verified' },
+              { name: 'Jibhi GP', lat: 31.61, lng: 77.40, elevation_m: 1600, status: 'verified' },
             ]
           }
         ]
@@ -595,6 +1006,7 @@ const MapDrilldownTab: React.FC<MapDrilldownTabProps> = ({
   const currentState = ALL_STATES_SPATIAL.find((s) => s.state === drillState) || ALL_STATES_SPATIAL[0]
   const currentDistrict = currentState.districts.find((d) => d.name === drillDistrict) || currentState.districts[0]
   const currentBlock = currentDistrict.blocks.find((b) => b.name === drillBlock) || currentDistrict.blocks[0]
+  const [mapLayer, setMapLayer] = useState<'osm' | 'topo' | 'satellite'>('osm')
 
   // Determine current map center & zoom based on tier
   const mapTarget = (() => {
@@ -695,10 +1107,10 @@ const MapDrilldownTab: React.FC<MapDrilldownTabProps> = ({
           {spatialTier === 'india' && (
             <div className="space-y-3">
               <div className="flex items-center justify-between text-xs text-slate-500">
-                <span className="font-semibold">9 Agrarian States — Click to Inspect</span>
+                <span className="font-semibold">{ALL_STATES_SPATIAL.length} Agrarian States — Click to Inspect</span>
                 <span className="flex items-center gap-1 font-semibold text-emerald-700">
                   <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block"/>1 Live Pilot &nbsp;
-                  <span className="w-2 h-2 rounded-full bg-amber-500 inline-block"/>8 Ready
+                  <span className="w-2 h-2 rounded-full bg-amber-500 inline-block"/>{ALL_STATES_SPATIAL.length - 1} Ready
                 </span>
               </div>
               {ALL_STATES_SPATIAL.map((st) => (
@@ -897,17 +1309,68 @@ const MapDrilldownTab: React.FC<MapDrilldownTabProps> = ({
         </div>
 
         {/* RIGHT: Live Leaflet Map */}
-        <div className="rounded-2xl overflow-hidden border border-slate-200 shadow-sm" style={{ height: '540px' }}>
+        {/* RIGHT: Live Leaflet Map */}
+        <div className="relative rounded-3xl overflow-hidden border border-slate-200 shadow-sm" style={{ height: '540px' }}>
+          {/* High-Performance Map Layer Switcher */}
+          <div className="absolute top-3 right-3 z-[1000] bg-white/95 backdrop-blur-xs p-1 rounded-xl shadow-md border border-slate-200 flex items-center gap-1 text-[11px] font-bold">
+            <button
+              type="button"
+              onClick={() => setMapLayer('osm')}
+              className={cn(
+                'px-2.5 py-1 rounded-lg transition-all cursor-pointer',
+                mapLayer === 'osm' ? 'bg-brand-600 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900'
+              )}
+            >
+              Standard
+            </button>
+            <button
+              type="button"
+              onClick={() => setMapLayer('topo')}
+              className={cn(
+                'px-2.5 py-1 rounded-lg transition-all cursor-pointer',
+                mapLayer === 'topo' ? 'bg-brand-600 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900'
+              )}
+            >
+              ⛰️ Topo Relief
+            </button>
+            <button
+              type="button"
+              onClick={() => setMapLayer('satellite')}
+              className={cn(
+                'px-2.5 py-1 rounded-lg transition-all cursor-pointer',
+                mapLayer === 'satellite' ? 'bg-brand-600 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900'
+              )}
+            >
+              🛰️ Satellite
+            </button>
+          </div>
+
           <MapContainer
             center={[mapTarget.lat, mapTarget.lng]}
             zoom={mapTarget.zoom}
             style={{ height: '100%', width: '100%' }}
             scrollWheelZoom={true}
           >
-            <TileLayer
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-            />
+            {mapLayer === 'osm' && (
+              <TileLayer
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+              />
+            )}
+            {mapLayer === 'topo' && (
+              <TileLayer
+                url="https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png"
+                attribution='Map data: &copy; OpenStreetMap, SRTM | Map style: &copy; OpenTopoMap'
+                maxZoom={17}
+              />
+            )}
+            {mapLayer === 'satellite' && (
+              <TileLayer
+                url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+                attribution='Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+                maxZoom={18}
+              />
+            )}
             {/* Smoothly fly map to whatever region is selected */}
             <MapFlyTo lat={mapTarget.lat} lng={mapTarget.lng} zoom={mapTarget.zoom} />
 
@@ -1095,10 +1558,34 @@ export const AdminDashboard: React.FC = () => {
   const [drillDistrict, setDrillDistrict] = useState<string>('Nagpur')
   const [drillBlock, setDrillBlock] = useState<string>('Kalmeshwar')
 
+  // 10-Item Strict Pagination States (No Infinite Scroll)
+  const [panchayatPage, setPanchayatPage] = useState<number>(1)
+  const [advisoryPage, setAdvisoryPage] = useState<number>(1)
+  const [auditPage, setAuditPage] = useState<number>(1)
+  const ITEMS_PER_PAGE = 10
+
+  // Direct Agricultural Extension Officer Provisioning Modal
+  const [showAddOfficerModal, setShowAddOfficerModal] = useState<boolean>(false)
+  const [newOfficerForm, setNewOfficerForm] = useState({
+    name: '',
+    phone: '',
+    email: '',
+    district: '',
+    block: '',
+    designation: 'Agricultural Extension Officer (AEO)',
+    assigned_panchayats_count: 8,
+    status: 'active'
+  })
+  const [addingOfficer, setAddingOfficer] = useState<boolean>(false)
+  const [officerSuccessToast, setOfficerSuccessToast] = useState<string | null>(null)
+
   const district = selectedDistrict
 
   const loadData = async (dist = selectedDistrict, blk = filterBlock, st = selectedState) => {
     setRefreshing(true)
+    setPanchayatPage(1)
+    setAdvisoryPage(1)
+    setAuditPage(1)
     try {
       const stateObj = states.find(
         (s) => s.state.toLowerCase() === st.toLowerCase() || s.code.toLowerCase() === st.toLowerCase()
@@ -1109,9 +1596,9 @@ export const AdminDashboard: React.FC = () => {
         advisoryApi.districtSummary(dist).catch(() => null),
         advisoryApi.modelHealth(),
         officerApi.list(dist).catch(() => []),
-        advisoryApi.list().catch(() => []),
+        advisoryApi.list({ district: dist, block: blk !== 'all' ? blk : undefined }).catch(() => []),
         geographyApi.getStates().catch(() => []),
-        geographyApi.getPanchayats(blk !== 'all' ? blk : undefined).catch(() => []),
+        geographyApi.getPanchayats(blk !== 'all' ? blk : undefined, dist).catch(() => []),
         advisoryApi.districtAudit().catch(() => []),
         adminApi.dataHealth().catch(() => []),
         adminApi.getModelBenchmarkCurve().catch(() => []),
@@ -1145,30 +1632,55 @@ export const AdminDashboard: React.FC = () => {
   const handleStateChange = async (newState: string) => {
     setSelectedState(newState)
     setDrillState(newState)
+    setPanchayatPage(1)
+    setAdvisoryPage(1)
+    setAuditPage(1)
+
     const stateObj = states.find(
       (s) => s.state.toLowerCase() === newState.toLowerCase() || s.code.toLowerCase() === newState.toLowerCase()
     )
     const stateCode = stateObj?.code || 'MH'
+    const spatialSt = ALL_STATES_SPATIAL.find((s) => s.state.toLowerCase() === newState.toLowerCase())
+
+    let distNames: string[] = []
     try {
       const dists = await geographyApi.getDistricts(stateCode).catch(() => [])
       if (dists && dists.length > 0) {
-        const distNames = dists.map((d: any) => d.district)
-        setAvailableDistricts(distNames)
-        const firstDist = distNames[0]
-        setSelectedDistrict(firstDist)
-        setDrillDistrict(firstDist)
-        setFilterBlock('all')
-        setDrillBlock('all')
-        const blks = await geographyApi.getBlocks(firstDist).catch(() => [])
-        if (blks && blks.length > 0) {
-          setAvailableBlocks(blks.map((b: any) => b.block))
-        } else {
-          setAvailableBlocks([])
-        }
-        loadData(firstDist, 'all', newState)
+        distNames = dists.map((d: any) => d.district)
       }
     } catch (e) {
       console.error(e)
+    }
+
+    if (distNames.length === 0 && spatialSt) {
+      distNames = spatialSt.districts.map((d) => d.name)
+    }
+
+    if (distNames.length > 0) {
+      setAvailableDistricts(distNames)
+      const firstDist = distNames[0]
+      setSelectedDistrict(firstDist)
+      setDrillDistrict(firstDist)
+      setFilterBlock('all')
+      setDrillBlock('all')
+
+      let blockNames: string[] = []
+      try {
+        const blks = await geographyApi.getBlocks(firstDist).catch(() => [])
+        if (blks && blks.length > 0) {
+          blockNames = blks.map((b: any) => b.block)
+        }
+      } catch (e) {
+        console.error(e)
+      }
+
+      if (blockNames.length === 0 && spatialSt) {
+        const dObj = spatialSt.districts.find((d) => d.name === firstDist)
+        if (dObj) blockNames = dObj.blocks.map((b) => b.name)
+      }
+
+      setAvailableBlocks(blockNames)
+      loadData(firstDist, 'all', newState)
     }
   }
 
@@ -1177,17 +1689,28 @@ export const AdminDashboard: React.FC = () => {
     setDrillDistrict(newDistrict)
     setFilterBlock('all')
     setDrillBlock('all')
+    setPanchayatPage(1)
+    setAdvisoryPage(1)
+    setAuditPage(1)
+
+    const spatialSt = ALL_STATES_SPATIAL.find((s) => s.state.toLowerCase() === selectedState.toLowerCase())
+    let blockNames: string[] = []
     try {
       const blks = await geographyApi.getBlocks(newDistrict).catch(() => [])
       if (blks && blks.length > 0) {
-        setAvailableBlocks(blks.map((b: any) => b.block))
-      } else {
-        setAvailableBlocks([])
+        blockNames = blks.map((b: any) => b.block)
       }
-      loadData(newDistrict, 'all', selectedState)
     } catch (e) {
       console.error(e)
     }
+
+    if (blockNames.length === 0 && spatialSt) {
+      const dObj = spatialSt.districts.find((d) => d.name === newDistrict)
+      if (dObj) blockNames = dObj.blocks.map((b) => b.name)
+    }
+
+    setAvailableBlocks(blockNames)
+    loadData(newDistrict, 'all', selectedState)
   }
 
   const handleSelectSearchResult = async (item: any) => {
@@ -1308,6 +1831,55 @@ export const AdminDashboard: React.FC = () => {
     }
   }
 
+  const handleAddOfficerSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!newOfficerForm.name.trim() || !newOfficerForm.phone.trim()) return
+    setAddingOfficer(true)
+    try {
+      const assignedDist = newOfficerForm.district || selectedDistrict
+      const assignedBlk = newOfficerForm.block || availableBlocks[0] || 'Central Block'
+      const created = await officerApi.create({
+        name: newOfficerForm.name.trim(),
+        phone: newOfficerForm.phone.trim(),
+        email: newOfficerForm.email.trim() || undefined,
+        district: assignedDist,
+        block: assignedBlk,
+        designation: newOfficerForm.designation,
+        assigned_panchayats_count: Number(newOfficerForm.assigned_panchayats_count) || 8,
+        status: newOfficerForm.status,
+      })
+      setOfficers((prev) => [created, ...prev])
+      setAuditLogs((prev) => [
+        {
+          id: Date.now(),
+          action: 'EXTENSION_OFFICER_PROVISIONED',
+          actor: 'District Agromet Admin',
+          target: `${created.name} (${created.block} Block)`,
+          time: 'Just now',
+          details: `Direct administrative onboarding of ${created.name} (${created.designation}) for ${assignedDist} - ${assignedBlk} Block covering ${created.assigned_panchayats_count} GPs.`
+        },
+        ...prev
+      ])
+      setShowAddOfficerModal(false)
+      setOfficerSuccessToast(`Officer ${created.name} successfully deployed to ${assignedBlk} Block!`)
+      setTimeout(() => setOfficerSuccessToast(null), 5000)
+      setNewOfficerForm({
+        name: '',
+        phone: '',
+        email: '',
+        district: selectedDistrict,
+        block: availableBlocks[0] || '',
+        designation: 'Agricultural Extension Officer (AEO)',
+        assigned_panchayats_count: 8,
+        status: 'active'
+      })
+    } catch (err) {
+      console.error('Failed to create officer:', err)
+    } finally {
+      setAddingOfficer(false)
+    }
+  }
+
   const filteredPanchayats = panchayats.filter((p) => {
     const matchesBlock = filterBlock === 'all' || p.block.toLowerCase() === filterBlock.toLowerCase()
     const matchesSearch = p.name.toLowerCase().includes(searchPanchayat.toLowerCase()) ||
@@ -1315,9 +1887,21 @@ export const AdminDashboard: React.FC = () => {
     return matchesBlock && matchesSearch
   })
 
+  // 1. Panchayats pagination
+  const totalPanchayatPages = Math.max(1, Math.ceil(filteredPanchayats.length / ITEMS_PER_PAGE))
+  const paginatedPanchayats = filteredPanchayats.slice((panchayatPage - 1) * ITEMS_PER_PAGE, panchayatPage * ITEMS_PER_PAGE)
+
+  // 2. Advisories pagination
+  const totalAdvisoryPages = Math.max(1, Math.ceil(advisories.length / ITEMS_PER_PAGE))
+  const paginatedAdvisories = advisories.slice((advisoryPage - 1) * ITEMS_PER_PAGE, advisoryPage * ITEMS_PER_PAGE)
+
+  // 3. Audit logs pagination
+  const totalAuditPages = Math.max(1, Math.ceil(auditLogs.length / ITEMS_PER_PAGE))
+  const paginatedAuditLogs = auditLogs.slice((auditPage - 1) * ITEMS_PER_PAGE, auditPage * ITEMS_PER_PAGE)
+
   const adminTabsList: Array<{ id: AdminTab; label: string; icon: any; badge?: string | number }> = [
     { id: 'overview', label: 'Overview', icon: BarChart2, badge: undefined },
-    { id: 'panchayats', label: 'Panchayat Operations', icon: MapPin, badge: '78 GP' },
+    { id: 'panchayats', label: 'Panchayat Operations', icon: MapPin, badge: `${panchayats.length || 78} GP` },
     { id: 'officers', label: 'Officers Directory', icon: Users, badge: officers.length || 4 },
     { id: 'advisories', label: 'Advisory Governance', icon: FileText, badge: summary?.pending_advisories },
     { id: 'data-health', label: 'Data & Telemetry', icon: Server, badge: '10/12 AWS' },
@@ -1325,7 +1909,7 @@ export const AdminDashboard: React.FC = () => {
     { id: 'ml-lab', label: '🔬 ML Model Lab', icon: Activity, badge: 'Interactive' },
     { id: 'map', label: 'District Spatial Map', icon: MapIcon, badge: undefined },
     { id: 'audit', label: 'System Audit Log', icon: History, badge: undefined },
-    { id: 'settings', label: 'State & Configuration', icon: Globe, badge: '3 States' },
+    { id: 'settings', label: 'State & Configuration', icon: Globe, badge: '10 States' },
   ]
 
   return (
@@ -1835,11 +2419,14 @@ export const AdminDashboard: React.FC = () => {
                 />
               </div>
 
-              <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl">
-                {['all', 'Kalmeshwar', 'Hingna', 'Saoner', 'Katol'].map((b) => (
+              <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl flex-wrap">
+                {['all', ...availableBlocks].slice(0, 10).map((b) => (
                   <button
                     key={b}
-                    onClick={() => setFilterBlock(b)}
+                    onClick={() => {
+                      setFilterBlock(b)
+                      setPanchayatPage(1)
+                    }}
                     className={cn(
                       'px-3 py-1 rounded-lg text-xs font-bold transition-all',
                       filterBlock === b ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600 hover:text-slate-900'
@@ -1866,9 +2453,9 @@ export const AdminDashboard: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {filteredPanchayats.map((p) => (
+                  {paginatedPanchayats.map((p) => (
                     <tr key={p.id} className="hover:bg-slate-50 transition-colors">
-                      <td className="p-3 font-bold text-slate-900">{p.name} GP</td>
+                      <td className="p-3 font-bold text-slate-900">{p.name.endsWith('GP') ? p.name : `${p.name} GP`}</td>
                       <td className="p-3 text-slate-700">{p.block}</td>
                       <td className="p-3 text-slate-600">{p.weather_status_text || '0.0 mm (Clear)'}</td>
                       <td className="p-3">
@@ -1889,8 +2476,52 @@ export const AdminDashboard: React.FC = () => {
                       </td>
                     </tr>
                   ))}
+                  {paginatedPanchayats.length === 0 && (
+                    <tr>
+                      <td colSpan={8} className="p-6 text-center text-slate-500">
+                        No Gram Panchayats matching current filters for {selectedDistrict} District.
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
+            </div>
+
+            {/* 10-Item Pagination Controls */}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-slate-100 text-xs">
+              <span className="text-slate-500 text-[11px]">
+                Showing <strong className="text-slate-800">{filteredPanchayats.length === 0 ? 0 : (panchayatPage - 1) * ITEMS_PER_PAGE + 1}</strong> to <strong className="text-slate-800">{Math.min(panchayatPage * ITEMS_PER_PAGE, filteredPanchayats.length)}</strong> of <strong className="text-slate-800">{filteredPanchayats.length}</strong> Gram Panchayats ({selectedDistrict}, {selectedState})
+              </span>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => setPanchayatPage((prev) => Math.max(1, prev - 1))}
+                  disabled={panchayatPage <= 1}
+                  className="px-2.5 py-1 rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 font-semibold text-[11px]"
+                >
+                  <ChevronLeft size={13} /> Prev
+                </button>
+                {Array.from({ length: totalPanchayatPages }, (_, idx) => idx + 1).map((pageNum) => (
+                  <button
+                    key={pageNum}
+                    onClick={() => setPanchayatPage(pageNum)}
+                    className={cn(
+                      'w-7 h-7 rounded-lg font-bold text-[11px] transition-all',
+                      panchayatPage === pageNum
+                        ? 'bg-brand-600 text-white shadow-2xs'
+                        : 'text-slate-600 hover:bg-slate-100'
+                    )}
+                  >
+                    {pageNum}
+                  </button>
+                ))}
+                <button
+                  onClick={() => setPanchayatPage((prev) => Math.min(totalPanchayatPages, prev + 1))}
+                  disabled={panchayatPage >= totalPanchayatPages}
+                  className="px-2.5 py-1 rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 font-semibold text-[11px]"
+                >
+                  Next <ChevronRight size={13} />
+                </button>
+              </div>
             </div>
           </div>
         )}
@@ -1898,14 +2529,35 @@ export const AdminDashboard: React.FC = () => {
         {/* TAB 3: OFFICER MANAGEMENT */}
         {activeTab === 'officers' && (
           <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
               <div>
                 <h3 className="font-bold text-slate-900 text-base">Agricultural Extension Officers Directory</h3>
-                <p className="text-xs text-slate-500">Jurisdiction assignment, workload telemetry & review performance</p>
+                <p className="text-xs text-slate-500">Jurisdiction assignment, workload telemetry & review performance ({selectedDistrict}, {selectedState})</p>
               </div>
-              <span className="text-xs font-bold text-emerald-800 bg-emerald-100 px-3 py-1 rounded-full">
-                4/4 Active Extension Leads
-              </span>
+              <div className="flex items-center gap-2.5">
+                <span className="text-xs font-bold text-emerald-800 bg-emerald-100 px-3 py-1 rounded-full">
+                  {officers.filter((o) => o.status === 'active').length}/{officers.length} Active Leads
+                </span>
+                <button
+                  onClick={() => {
+                    setNewOfficerForm({
+                      name: '',
+                      phone: '',
+                      email: '',
+                      district: selectedDistrict,
+                      block: availableBlocks[0] || '',
+                      designation: 'Agricultural Extension Officer (AEO)',
+                      assigned_panchayats_count: 8,
+                      status: 'active'
+                    })
+                    setShowAddOfficerModal(true)
+                  }}
+                  className="btn-primary text-xs font-bold py-1.5 px-3 flex items-center gap-1.5 shadow-xs"
+                >
+                  <Plus size={14} />
+                  <span>+ Add Extension Officer</span>
+                </button>
+              </div>
             </div>
 
             <div className="overflow-x-auto">
@@ -1957,6 +2609,13 @@ export const AdminDashboard: React.FC = () => {
                       </td>
                     </tr>
                   ))}
+                  {officers.length === 0 && (
+                    <tr>
+                      <td colSpan={8} className="p-6 text-center text-slate-500">
+                        No officers currently assigned to {selectedDistrict}. Click "+ Add Extension Officer" to onboard field leads.
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
@@ -1969,7 +2628,7 @@ export const AdminDashboard: React.FC = () => {
             <div className="flex items-center justify-between border-b border-slate-100 pb-4">
               <div>
                 <h3 className="font-bold text-slate-900 text-base">District Advisory Governance Ledger</h3>
-                <p className="text-xs text-slate-500">Lifecycle traceability: Draft → Under Review → Approved → Published</p>
+                <p className="text-xs text-slate-500">Lifecycle traceability: Draft → Under Review → Approved → Published ({selectedDistrict}, {selectedState})</p>
               </div>
               <span className="text-xs font-mono font-bold bg-slate-100 text-slate-700 px-3 py-1 rounded-full">
                 {advisories.length} Total Records
@@ -1977,8 +2636,8 @@ export const AdminDashboard: React.FC = () => {
             </div>
 
             <div className="space-y-3">
-              {advisories.map((a) => (
-                <div key={a.id} className="p-4 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between text-xs">
+              {paginatedAdvisories.map((a) => (
+                <div key={a.id} className="p-4 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between text-xs hover:border-brand-300 transition-colors">
                   <div>
                     <div className="flex items-center gap-2 mb-1">
                       <span className="font-mono text-[10px] font-bold bg-slate-200 px-2 py-0.5 rounded">
@@ -1988,7 +2647,7 @@ export const AdminDashboard: React.FC = () => {
                       <span className="text-slate-500 capitalize">• {a.crop}</span>
                     </div>
                     <p className="text-slate-600 text-[11px]">
-                      Downscaled: {a.predicted_rainfall_mm ?? 3.8}mm (vs IMD {a.baseline_rainfall_mm ?? 4.5}mm) • Diff: {a.model_diff_mm ?? -0.7}mm
+                      Downscaled: <strong className="text-emerald-700 font-mono">{a.predicted_rainfall_mm ?? 3.8}mm</strong> (vs IMD {a.baseline_rainfall_mm ?? 4.5}mm) • Diff: <strong className="font-mono">{a.model_diff_mm ?? -0.7}mm</strong>
                     </p>
                   </div>
 
@@ -2009,31 +2668,235 @@ export const AdminDashboard: React.FC = () => {
                   </div>
                 </div>
               ))}
+              {paginatedAdvisories.length === 0 && (
+                <div className="p-8 text-center bg-slate-50 border border-slate-200 rounded-xl text-slate-500 text-xs">
+                  No advisories recorded for {selectedDistrict} ({filterBlock === 'all' ? 'All Blocks' : `${filterBlock} Block`}).
+                </div>
+              )}
+            </div>
+
+            {/* 10-Item Pagination Controls */}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-slate-100 text-xs">
+              <span className="text-slate-500 text-[11px]">
+                Showing <strong className="text-slate-800">{advisories.length === 0 ? 0 : (advisoryPage - 1) * ITEMS_PER_PAGE + 1}</strong> to <strong className="text-slate-800">{Math.min(advisoryPage * ITEMS_PER_PAGE, advisories.length)}</strong> of <strong className="text-slate-800">{advisories.length}</strong> Advisories ({selectedDistrict}, {selectedState})
+              </span>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => setAdvisoryPage((prev) => Math.max(1, prev - 1))}
+                  disabled={advisoryPage <= 1}
+                  className="px-2.5 py-1 rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 font-semibold text-[11px]"
+                >
+                  <ChevronLeft size={13} /> Prev
+                </button>
+                {Array.from({ length: totalAdvisoryPages }, (_, idx) => idx + 1).map((pageNum) => (
+                  <button
+                    key={pageNum}
+                    onClick={() => setAdvisoryPage(pageNum)}
+                    className={cn(
+                      'w-7 h-7 rounded-lg font-bold text-[11px] transition-all',
+                      advisoryPage === pageNum
+                        ? 'bg-brand-600 text-white shadow-2xs'
+                        : 'text-slate-600 hover:bg-slate-100'
+                    )}
+                  >
+                    {pageNum}
+                  </button>
+                ))}
+                <button
+                  onClick={() => setAdvisoryPage((prev) => Math.min(totalAdvisoryPages, prev + 1))}
+                  disabled={advisoryPage >= totalAdvisoryPages}
+                  className="px-2.5 py-1 rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 font-semibold text-[11px]"
+                >
+                  Next <ChevronRight size={13} />
+                </button>
+              </div>
             </div>
           </div>
         )}
 
-        {/* TAB 5: DATA HEALTH */}
+        {/* TAB 5: DATA HEALTH & ADVANCED TELEMETRY */}
         {activeTab === 'data-health' && (
           <div className="space-y-6">
-            <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs space-y-4">
-              <h3 className="font-bold text-slate-900 text-base border-b pb-3">Weather Data Pipelines & Telemetry Status</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Core Ingestion Pipelines */}
+            <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-xs space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
+                <div>
+                  <h3 className="font-bold text-slate-900 text-base flex items-center gap-2">
+                    <Server size={18} className="text-brand-600" />
+                    National Agromet Pipelines & Sensor Telemetry Status
+                  </h3>
+                  <p className="text-xs text-slate-500">Live operational sync across IMD numerical models, Doppler radars, and field AWS nodes ({selectedDistrict}, {selectedState})</p>
+                </div>
+                <span className="text-xs font-bold text-emerald-800 bg-emerald-100 px-3 py-1 rounded-full flex items-center gap-1.5 self-start sm:self-auto">
+                  <span className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse" />
+                  All 4 Ingestion Pipelines Operational
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 {dataHealthList.map((item, i) => (
-                  <div key={i} className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-2 text-xs">
+                  <div key={i} className="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-2 text-xs hover:border-slate-300 transition-colors">
                     <div className="flex items-center justify-between">
                       <strong className="text-slate-900">{item.name}</strong>
-                      <span className="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded">
+                      <span className="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full">
                         {item.status}
                       </span>
                     </div>
                     <div className="space-y-1 text-slate-600 text-[11px]">
                       <p>Last Sync: <strong>{item.sync}</strong></p>
-                      <p>Ingestion Latency: <strong className="font-mono">{item.latency}</strong></p>
-                      <p>Error Flags: <strong className="font-mono">{item.errors}</strong></p>
+                      <p>Ingestion Latency: <strong className="font-mono text-slate-800">{item.latency}</strong></p>
+                      <p>Error Flags: <strong className="font-mono text-emerald-700">{item.errors}</strong></p>
                     </div>
                   </div>
                 ))}
+              </div>
+            </div>
+
+            {/* IMD Doppler Weather Radar & Real-Time Radio Telemetry */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+              {/* S-Band Polarimetric Radar Card */}
+              <div className="lg:col-span-2 bg-gradient-to-br from-slate-900 via-slate-800 to-brand-950 text-white rounded-3xl p-6 shadow-sm space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-700/60 pb-3">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <RadioTower size={18} className="text-emerald-400" />
+                      <h4 className="font-bold text-sm text-white">
+                        IMD Doppler Weather Radar (DWR) Polarimetric Telemetry
+                      </h4>
+                    </div>
+                    <p className="text-[11px] text-slate-300 mt-0.5">
+                      S-Band (2.8 GHz) polarimetric radar live pulse reflection feed • 250km radial boundary
+                    </p>
+                  </div>
+                  <a
+                    href="https://mausam.imd.gov.in/"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-[11px] font-bold px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-emerald-300 flex items-center gap-1.5 transition-colors border border-white/10 w-fit"
+                  >
+                    <span>IMD Radar Portal</span>
+                    <ExternalLink size={12} />
+                  </a>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                  <div className="bg-white/5 border border-white/10 p-3 rounded-xl">
+                    <span className="text-[10px] uppercase font-bold text-slate-400 block">Radar Node</span>
+                    <strong className="text-white text-sm block mt-0.5">DWR {selectedDistrict} / Regional</strong>
+                    <span className="text-[10px] text-emerald-400 font-mono">Radial: 250 km</span>
+                  </div>
+                  <div className="bg-white/5 border border-white/10 p-3 rounded-xl">
+                    <span className="text-[10px] uppercase font-bold text-slate-400 block">Pulse Frequency</span>
+                    <strong className="text-white text-sm block mt-0.5 font-mono">600 Hz / PRF</strong>
+                    <span className="text-[10px] text-slate-300">Dual-Polarization (ZDR)</span>
+                  </div>
+                  <div className="bg-white/5 border border-white/10 p-3 rounded-xl">
+                    <span className="text-[10px] uppercase font-bold text-slate-400 block">Scan Elevation</span>
+                    <strong className="text-white text-sm block mt-0.5 font-mono">0.5° – 19.5°</strong>
+                    <span className="text-[10px] text-slate-300">10-min volume cycle</span>
+                  </div>
+                  <div className="bg-white/5 border border-white/10 p-3 rounded-xl">
+                    <span className="text-[10px] uppercase font-bold text-slate-400 block">Reflectivity Status</span>
+                    <strong className="text-emerald-400 text-sm block mt-0.5">Clear / Convective OK</strong>
+                    <span className="text-[10px] text-slate-300 font-mono">Echo: 18–32 dBZ</span>
+                  </div>
+                </div>
+
+                <div className="bg-white/5 border border-white/10 p-3 rounded-xl flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+                  <div className="flex items-center gap-2">
+                    <Signal size={16} className="text-emerald-400 shrink-0" />
+                    <span className="text-slate-200 text-[11px]">
+                      Radar echo precipitation estimates are fused with SRTM 90m DEM lapse rates to generate 3km panchayat cell advisories.
+                    </span>
+                  </div>
+                  <span className="badge bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-mono shrink-0">
+                    Sync Latency: 4.2 min
+                  </span>
+                </div>
+              </div>
+
+              {/* Ingestion & Packet Telemetry Throughput */}
+              <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-xs space-y-4">
+                <h4 className="font-bold text-sm text-slate-900 flex items-center gap-2 border-b pb-2">
+                  <Activity size={16} className="text-brand-600" />
+                  Live Packet Transmission
+                </h4>
+
+                <div className="space-y-3 text-xs">
+                  <div className="flex items-center justify-between p-2.5 bg-slate-50 rounded-xl border border-slate-100">
+                    <span className="text-slate-600">Ingestion Throughput:</span>
+                    <strong className="font-mono text-slate-900 font-bold">1,840 pkts/min</strong>
+                  </div>
+                  <div className="flex items-center justify-between p-2.5 bg-slate-50 rounded-xl border border-slate-100">
+                    <span className="text-slate-600">Edge Transmission:</span>
+                    <strong className="font-mono text-emerald-700 font-bold">38 ms (4G/LoRa)</strong>
+                  </div>
+                  <div className="flex items-center justify-between p-2.5 bg-slate-50 rounded-xl border border-slate-100">
+                    <span className="text-slate-600">CRC Checksum Pass:</span>
+                    <strong className="font-mono text-emerald-700 font-bold">99.98% Integrity</strong>
+                  </div>
+                  <div className="flex items-center justify-between p-2.5 bg-slate-50 rounded-xl border border-slate-100">
+                    <span className="text-slate-600">Edge Brokers (MQTT):</span>
+                    <strong className="text-slate-900 font-semibold">Active (Cluster A & B)</strong>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* AWS Hardware Sensors Diagnostics Table */}
+            <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-xs space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div>
+                  <h4 className="font-bold text-sm text-slate-900 flex items-center gap-2">
+                    <Server size={16} className="text-brand-600" />
+                    Automatic Weather Station (AWS) Physical Sensor Diagnostics
+                  </h4>
+                  <p className="text-xs text-slate-500 mt-0.5">Hardware telemetry, battery levels, RSSI signal & calibration offset</p>
+                </div>
+                <span className="text-xs font-bold text-slate-700 bg-slate-100 px-3 py-1 rounded-full">
+                  12 Physical AWS Nodes
+                </span>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs text-left">
+                  <thead>
+                    <tr className="bg-slate-50 text-slate-600 uppercase text-[10px] font-bold border-b border-slate-200">
+                      <th className="p-3">Station Node</th>
+                      <th className="p-3">Jurisdiction</th>
+                      <th className="p-3">Power Source</th>
+                      <th className="p-3">Battery Voltage</th>
+                      <th className="p-3">RSSI Signal</th>
+                      <th className="p-3">Rain Gauge Offset</th>
+                      <th className="p-3">Soil Moisture</th>
+                      <th className="p-3 text-right">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {[
+                      { id: 'AWS-901', loc: 'Central Mandi Agromet', pwr: 'Solar + LiFePO4', volt: '13.2 V', rssi: '-64 dBm', rain: '±0.0 mm', soil: 'Operational', status: 'Optimal' },
+                      { id: 'AWS-902', loc: 'Raja Talab Hub', pwr: 'Solar + LiFePO4', volt: '12.8 V', rssi: '-71 dBm', rain: '+0.1 mm', soil: 'Operational', status: 'Optimal' },
+                      { id: 'AWS-903', loc: 'BKT Research Station', pwr: 'Solar + LiFePO4', volt: '13.0 V', rssi: '-68 dBm', rain: '±0.0 mm', soil: 'Operational', status: 'Optimal' },
+                      { id: 'AWS-904', loc: 'Western Ridge Node', pwr: 'Solar + Lead-Acid', volt: '12.4 V', rssi: '-78 dBm', rain: '-0.2 mm', soil: 'Calibrated', status: 'Normal' },
+                      { id: 'AWS-905', loc: 'River Plain Agromet', pwr: 'Solar + LiFePO4', volt: '13.1 V', rssi: '-66 dBm', rain: '±0.0 mm', soil: 'Operational', status: 'Optimal' },
+                    ].map((aws) => (
+                      <tr key={aws.id} className="hover:bg-slate-50 transition-colors">
+                        <td className="p-3 font-mono font-bold text-slate-900">{aws.id}</td>
+                        <td className="p-3 font-semibold text-slate-800">{aws.loc}</td>
+                        <td className="p-3 text-slate-600">{aws.pwr}</td>
+                        <td className="p-3 font-mono text-emerald-700 font-bold">{aws.volt}</td>
+                        <td className="p-3 font-mono text-slate-700">{aws.rssi}</td>
+                        <td className="p-3 font-mono text-slate-700">{aws.rain}</td>
+                        <td className="p-3 text-slate-700 font-semibold">{aws.soil}</td>
+                        <td className="p-3 text-right">
+                          <span className="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                            {aws.status}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>
@@ -2257,6 +3120,151 @@ export const AdminDashboard: React.FC = () => {
                   </div>
                 )}
               </div>
+
+              {/* OFFICIAL NATIONAL AGROMET RESOURCES & SCIENTIFIC DATA PROVENANCE */}
+              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 pb-3">
+                  <div>
+                    <h4 className="font-bold text-slate-900 text-xs uppercase tracking-wider flex items-center gap-2">
+                      <BookOpen size={16} className="text-brand-700" />
+                      Official Data Sources & National Infrastructure Provenance
+                    </h4>
+                    <p className="text-[11px] text-slate-500 mt-0.5">
+                      Authoritative telemetry, boundary registries, and numerical weather model sources integrated by MausamSetu
+                    </p>
+                  </div>
+                  <span className="text-[10px] font-bold text-slate-700 bg-white border border-slate-200 px-3 py-1 rounded-full shadow-2xs">
+                    5 Verified Scientific Providers
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5 text-xs">
+                  {/* IMD */}
+                  <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs space-y-2 hover:border-brand-300 transition-colors">
+                    <div className="flex items-center justify-between">
+                      <strong className="text-slate-900 font-bold flex items-center gap-1.5">
+                        <Globe size={14} className="text-blue-600" />
+                        IMD (MoES, Govt. of India)
+                      </strong>
+                      <span className="bg-blue-100 text-blue-800 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                        Primary Source
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-600 leading-relaxed">
+                      Synoptic NWP models (40km regional baseline), Pune National Data Centre 0.25° gridded daily rainfall archive, and Doppler Weather Radar (DWR) composite reflectivity mosaics.
+                    </p>
+                    <a
+                      href="https://mausam.imd.gov.in/"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-[10px] text-brand-700 font-bold hover:underline flex items-center gap-1 pt-1"
+                    >
+                      <span>mausam.imd.gov.in</span>
+                      <ExternalLink size={10} />
+                    </a>
+                  </div>
+
+                  {/* BharatMaps & LGD */}
+                  <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs space-y-2 hover:border-brand-300 transition-colors">
+                    <div className="flex items-center justify-between">
+                      <strong className="text-slate-900 font-bold flex items-center gap-1.5">
+                        <MapIcon size={14} className="text-emerald-600" />
+                        NIC BharatMaps & LGD
+                      </strong>
+                      <span className="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                        Boundaries
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-600 leading-relaxed">
+                      Ministry of Panchayati Raj Local Government Directory (LGD) authoritative hierarchy covering 28 States, 700+ Districts, 6,600+ Blocks, and 250,000+ Gram Panchayats with GIS vectors.
+                    </p>
+                    <a
+                      href="https://lgdirectory.gov.in/"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-[10px] text-brand-700 font-bold hover:underline flex items-center gap-1 pt-1"
+                    >
+                      <span>lgdirectory.gov.in</span>
+                      <ExternalLink size={10} />
+                    </a>
+                  </div>
+
+                  {/* NCMRWF */}
+                  <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs space-y-2 hover:border-brand-300 transition-colors">
+                    <div className="flex items-center justify-between">
+                      <strong className="text-slate-900 font-bold flex items-center gap-1.5">
+                        <Activity size={14} className="text-purple-600" />
+                        NCMRWF (MoES)
+                      </strong>
+                      <span className="bg-purple-100 text-purple-800 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                        Ensemble
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-600 leading-relaxed">
+                      National Centre for Medium Range Weather Forecasting 12km Unified Model (NCUM) regional atmospheric ensemble predictions and bias-corrected agricultural meteorological advisories.
+                    </p>
+                    <a
+                      href="https://www.ncmrwf.gov.in/"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-[10px] text-brand-700 font-bold hover:underline flex items-center gap-1 pt-1"
+                    >
+                      <span>ncmrwf.gov.in</span>
+                      <ExternalLink size={10} />
+                    </a>
+                  </div>
+
+                  {/* ISRO Bhuvan */}
+                  <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs space-y-2 hover:border-brand-300 transition-colors">
+                    <div className="flex items-center justify-between">
+                      <strong className="text-slate-900 font-bold flex items-center gap-1.5">
+                        <Layers size={14} className="text-amber-600" />
+                        ISRO NRSC (Bhuvan & VEDAS)
+                      </strong>
+                      <span className="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                        Soil & Vegetation
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-600 leading-relaxed">
+                      Multispectral Normalized Difference Vegetation Index (NDVI/EVI) and C-band microwave root-zone soil moisture estimation for agro-ecological phenology validation.
+                    </p>
+                    <a
+                      href="https://bhuvan.nrsc.gov.in/"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-[10px] text-brand-700 font-bold hover:underline flex items-center gap-1 pt-1"
+                    >
+                      <span>bhuvan.nrsc.gov.in</span>
+                      <ExternalLink size={10} />
+                    </a>
+                  </div>
+
+                  {/* Open-Meteo & NASA SRTM */}
+                  <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs space-y-2 hover:border-brand-300 transition-colors md:col-span-2 lg:col-span-2">
+                    <div className="flex items-center justify-between">
+                      <strong className="text-slate-900 font-bold flex items-center gap-1.5">
+                        <Cpu size={14} className="text-slate-800" />
+                        NASA SRTM 90m DEM & Open-Meteo High-Resolution Ensemble
+                      </strong>
+                      <span className="bg-slate-200 text-slate-800 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                        Physics & DEM
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-600 leading-relaxed">
+                      Seamless physics assimilation combining NASA Shuttle Radar Topography Mission (SRTM 90m) with European ECMWF IFS (9km), NOAA GFS (13km), and DWD ICON-EU (7km) downscaled directly to 3km panchayat centroids.
+                    </p>
+                    <a
+                      href="https://open-meteo.com/"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-[10px] text-brand-700 font-bold hover:underline flex items-center gap-1 pt-1"
+                    >
+                      <span>open-meteo.com</span>
+                      <ExternalLink size={10} />
+                    </a>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         )}
@@ -2333,8 +3341,40 @@ export const AdminDashboard: React.FC = () => {
                     </p>
                   </div>
                   <span className="text-[10px] font-mono font-bold bg-white text-brand-800 px-2.5 py-1 rounded-full border border-brand-200 shadow-2xs">
-                    Ref Centroid: 240m
+                    Ref Centroid: 240m (Pan-India Physics)
                   </span>
+                </div>
+
+                {/* State Agro-Climatic Quick Presets */}
+                <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
+                  <span className="text-[11px] font-bold text-slate-500 uppercase shrink-0">State Presets:</span>
+                  {[
+                    { label: 'MH (Vidarbha)', elev: 312, temp: 33.0, rain: 4.5, hum: 72 },
+                    { label: 'HP (Shimla/Theog)', elev: 2280, temp: 19.5, rain: 6.0, hum: 65 },
+                    { label: 'WB (Hooghly)', elev: 15, temp: 31.5, rain: 8.0, hum: 84 },
+                    { label: 'PB (Moga)', elev: 230, temp: 32.0, rain: 2.5, hum: 58 },
+                    { label: 'RJ (Jaipur)', elev: 435, temp: 35.0, rain: 1.5, hum: 42 },
+                    { label: 'KL (Wayanad)', elev: 750, temp: 24.0, rain: 12.0, hum: 88 },
+                  ].map((preset) => (
+                    <button
+                      key={preset.label}
+                      type="button"
+                      onClick={() => {
+                        setCalcElevation(preset.elev)
+                        setCalcBaseTemp(preset.temp)
+                        setCalcBaseRain(preset.rain)
+                        setCalcHumidity(preset.hum)
+                      }}
+                      className={cn(
+                        'px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all shrink-0 border cursor-pointer',
+                        calcElevation === preset.elev
+                          ? 'bg-brand-600 text-white border-brand-600 shadow-2xs font-bold'
+                          : 'bg-white text-slate-700 border-slate-200 hover:border-brand-400'
+                      )}
+                    >
+                      {preset.label} ({preset.elev}m)
+                    </button>
+                  ))}
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -2347,18 +3387,18 @@ export const AdminDashboard: React.FC = () => {
                       </div>
                       <input
                         type="range"
-                        min="150"
-                        max="1400"
+                        min="10"
+                        max="3000"
                         step="10"
                         value={calcElevation}
                         onChange={(e) => setCalcElevation(Number(e.target.value))}
-                        className="w-full accent-brand-600"
+                        className="w-full accent-brand-600 cursor-pointer"
                       />
                       <div className="flex justify-between text-[10px] text-slate-400 font-mono">
-                        <span>Plains (150m)</span>
-                        <span>Dhapewada (310m)</span>
-                        <span>Nashik (598m)</span>
-                        <span>Mahabaleshwar (1382m)</span>
+                        <span>Coastal Plains (10m)</span>
+                        <span>Plateau (400m)</span>
+                        <span>Highlands (1000m)</span>
+                        <span>Himalayan Ridges (3000m)</span>
                       </div>
                     </div>
 
@@ -2374,7 +3414,7 @@ export const AdminDashboard: React.FC = () => {
                         step="0.5"
                         value={calcBaseRain}
                         onChange={(e) => setCalcBaseRain(Number(e.target.value))}
-                        className="w-full accent-brand-600"
+                        className="w-full accent-brand-600 cursor-pointer"
                       />
                     </div>
 
@@ -2542,20 +3582,71 @@ export const AdminDashboard: React.FC = () => {
         {/* TAB 8: AUDIT LOG */}
         {activeTab === 'audit' && (
           <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs space-y-4">
-            <h3 className="font-bold text-slate-900 text-base border-b pb-3">District Governance Audit Trail</h3>
+            <div className="flex items-center justify-between border-b pb-3">
+              <div>
+                <h3 className="font-bold text-slate-900 text-base">District Governance Audit Trail</h3>
+                <p className="text-xs text-slate-500">Immutable ledger of administrative actions, officer onboardings & advisory overrides</p>
+              </div>
+              <span className="text-xs font-mono font-bold bg-slate-100 text-slate-700 px-3 py-1 rounded-full">
+                {auditLogs.length} Log Entries
+              </span>
+            </div>
+
             <div className="space-y-3">
-              {auditLogs.map((item, i) => (
-                <div key={i} className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl text-xs">
+              {paginatedAuditLogs.map((item, i) => (
+                <div key={item.id || i} className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl text-xs hover:border-slate-300 transition-colors">
                   <div className="flex items-center justify-between mb-1">
-                    <strong className="text-slate-900">{item.action}</strong>
+                    <strong className="text-slate-900 font-mono text-[11px] bg-slate-200/80 px-2 py-0.5 rounded">{item.action}</strong>
                     <span className="font-mono text-[11px] text-slate-400 font-bold">{item.time}</span>
                   </div>
-                  <p className="text-slate-600 mb-1">By: <strong>{item.actor}</strong></p>
-                  <p className="text-slate-500 font-mono text-[11px] bg-white p-2 rounded border border-slate-200">
+                  <p className="text-slate-600 mb-1">Actor: <strong>{item.actor}</strong> {item.target && <span className="text-slate-400">• Target: {item.target}</span>}</p>
+                  <p className="text-slate-600 font-mono text-[11px] bg-white p-2.5 rounded-lg border border-slate-200">
                     {item.details}
                   </p>
                 </div>
               ))}
+              {paginatedAuditLogs.length === 0 && (
+                <div className="p-6 text-center text-slate-500 text-xs">
+                  No audit trail records found.
+                </div>
+              )}
+            </div>
+
+            {/* 10-Item Pagination Controls */}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-slate-100 text-xs">
+              <span className="text-slate-500 text-[11px]">
+                Showing <strong className="text-slate-800">{auditLogs.length === 0 ? 0 : (auditPage - 1) * ITEMS_PER_PAGE + 1}</strong> to <strong className="text-slate-800">{Math.min(auditPage * ITEMS_PER_PAGE, auditLogs.length)}</strong> of <strong className="text-slate-800">{auditLogs.length}</strong> Audit Trail Records
+              </span>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => setAuditPage((prev) => Math.max(1, prev - 1))}
+                  disabled={auditPage <= 1}
+                  className="px-2.5 py-1 rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 font-semibold text-[11px]"
+                >
+                  <ChevronLeft size={13} /> Prev
+                </button>
+                {Array.from({ length: totalAuditPages }, (_, idx) => idx + 1).map((pageNum) => (
+                  <button
+                    key={pageNum}
+                    onClick={() => setAuditPage(pageNum)}
+                    className={cn(
+                      'w-7 h-7 rounded-lg font-bold text-[11px] transition-all',
+                      auditPage === pageNum
+                        ? 'bg-brand-600 text-white shadow-2xs'
+                        : 'text-slate-600 hover:bg-slate-100'
+                    )}
+                  >
+                    {pageNum}
+                  </button>
+                ))}
+                <button
+                  onClick={() => setAuditPage((prev) => Math.min(totalAuditPages, prev + 1))}
+                  disabled={auditPage >= totalAuditPages}
+                  className="px-2.5 py-1 rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 font-semibold text-[11px]"
+                >
+                  Next <ChevronRight size={13} />
+                </button>
+              </div>
             </div>
           </div>
         )}
@@ -2622,10 +3713,9 @@ export const AdminDashboard: React.FC = () => {
                   onChange={(e) => setReassignBlockTarget(e.target.value)}
                   className="input w-full py-2 text-xs"
                 >
-                  <option value="Kalmeshwar">Kalmeshwar Block</option>
-                  <option value="Hingna">Hingna Block</option>
-                  <option value="Saoner">Saoner Block</option>
-                  <option value="Katol">Katol Block</option>
+                  {availableBlocks.map((b) => (
+                    <option key={b} value={b}>{b} Block</option>
+                  ))}
                 </select>
               </div>
             </div>
@@ -2644,6 +3734,150 @@ export const AdminDashboard: React.FC = () => {
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Add Extension Officer Modal */}
+      {showAddOfficerModal && (
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 space-y-4 animate-in fade-in zoom-in-95">
+            <div className="flex items-center justify-between border-b pb-3">
+              <div>
+                <h3 className="font-bold text-slate-900 text-base flex items-center gap-2">
+                  <Users size={18} className="text-brand-600" />
+                  Add Agricultural Extension Officer
+                </h3>
+                <p className="text-xs text-slate-500">Deploy a dedicated officer to supervise advisory verification</p>
+              </div>
+              <button
+                onClick={() => setShowAddOfficerModal(false)}
+                className="text-slate-400 hover:text-slate-700 p-1 rounded-lg hover:bg-slate-100"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleAddOfficerSubmit} className="space-y-3.5 text-xs">
+              <div>
+                <label className="block font-bold text-slate-800 mb-1">Officer Full Name *</label>
+                <input
+                  required
+                  type="text"
+                  placeholder="e.g. Dr. Ramesh K. Patil"
+                  value={newOfficerForm.name}
+                  onChange={(e) => setNewOfficerForm({ ...newOfficerForm, name: e.target.value })}
+                  className="input w-full py-2 text-xs"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-slate-800 mb-1">Mobile Number *</label>
+                  <input
+                    required
+                    type="tel"
+                    placeholder="+91 98765 43210"
+                    value={newOfficerForm.phone}
+                    onChange={(e) => setNewOfficerForm({ ...newOfficerForm, phone: e.target.value })}
+                    className="input w-full py-2 text-xs font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold text-slate-800 mb-1">Official Email</label>
+                  <input
+                    type="email"
+                    placeholder="officer@agri.gov.in"
+                    value={newOfficerForm.email}
+                    onChange={(e) => setNewOfficerForm({ ...newOfficerForm, email: e.target.value })}
+                    className="input w-full py-2 text-xs"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-slate-800 mb-1">State & District</label>
+                  <div className="bg-slate-100 border border-slate-200 rounded-xl px-3 py-2 font-semibold text-slate-700">
+                    {selectedDistrict}, {selectedState}
+                  </div>
+                </div>
+                <div>
+                  <label className="block font-bold text-slate-800 mb-1">Assigned Block *</label>
+                  <select
+                    value={newOfficerForm.block || availableBlocks[0] || ''}
+                    onChange={(e) => setNewOfficerForm({ ...newOfficerForm, block: e.target.value })}
+                    className="input w-full py-2 text-xs"
+                  >
+                    {availableBlocks.map((b) => (
+                      <option key={b} value={b}>{b} Block</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-slate-800 mb-1">Designation</label>
+                  <select
+                    value={newOfficerForm.designation}
+                    onChange={(e) => setNewOfficerForm({ ...newOfficerForm, designation: e.target.value })}
+                    className="input w-full py-2 text-xs"
+                  >
+                    <option value="Agricultural Extension Officer (AEO)">AEO (Extension Lead)</option>
+                    <option value="Block Technology Manager (BTM)">BTM (ATMA)</option>
+                    <option value="Assistant Technology Manager (ATM)">ATM (Field Support)</option>
+                    <option value="Subject Matter Specialist (SMS)">SMS (Agrometeorology)</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block font-bold text-slate-800 mb-1">Assigned Panchayats</label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="50"
+                    value={newOfficerForm.assigned_panchayats_count}
+                    onChange={(e) => setNewOfficerForm({ ...newOfficerForm, assigned_panchayats_count: Number(e.target.value) })}
+                    className="input w-full py-2 text-xs"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-3 border-t">
+                <button
+                  type="button"
+                  onClick={() => setShowAddOfficerModal(false)}
+                  className="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 text-xs font-semibold"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={addingOfficer}
+                  className="btn-primary py-2 px-5 text-xs font-bold flex items-center gap-1.5 shadow-sm"
+                >
+                  {addingOfficer ? (
+                    <>
+                      <RefreshCw size={13} className="animate-spin" />
+                      Provisioning...
+                    </>
+                  ) : (
+                    <>
+                      <Plus size={14} />
+                      Deploy Officer
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Success Toast */}
+      {officerSuccessToast && (
+        <div className="fixed bottom-6 right-6 z-50 bg-emerald-900 text-white text-xs font-bold px-4 py-3 rounded-2xl shadow-xl border border-emerald-700 flex items-center gap-2 animate-in slide-in-from-bottom-5">
+          <CheckCircle2 size={16} className="text-emerald-400" />
+          <span>{officerSuccessToast}</span>
         </div>
       )}
 

@@ -482,6 +482,17 @@ class OfficerAssignRequest(BaseModel):
     panchayat_ids: Optional[list[int]] = None
 
 
+class CreateOfficerRequest(BaseModel):
+    name: str
+    phone: str
+    district: str
+    block: str
+    email: Optional[str] = None
+    designation: Optional[str] = "Agricultural Extension Officer"
+    assigned_panchayats_count: Optional[int] = 24
+    status: Optional[str] = "active"
+
+
 class OfficerBlockDashboardOut(BaseModel):
     officer_id: int
     officer_name: str

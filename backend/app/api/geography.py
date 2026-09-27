@@ -239,6 +239,190 @@ STATES_DATA: list[dict] = [
                 "lat": 25.5941, "lon": 85.1376, "elevation_m": 53.0,
                 "blocks": [
                     {"block": "Bihta", "panchayats_count": 26, "assigned_officer": "Arvind Kumar", "lat": 25.5667, "lon": 84.8667, "elevation_m": 55.0},
+                    {"block": "Danapur", "panchayats_count": 22, "assigned_officer": "Sanjay Singh", "lat": 25.6333, "lon": 85.0333, "elevation_m": 52.0},
+                ]
+            },
+            {
+                "district": "Muzaffarpur",
+                "lat": 26.1209, "lon": 85.3647, "elevation_m": 60.0,
+                "blocks": [
+                    {"block": "Sakra", "panchayats_count": 25, "assigned_officer": "Pawan Thakur", "lat": 25.9833, "lon": 85.5167, "elevation_m": 58.0},
+                    {"block": "Bochahan", "panchayats_count": 24, "assigned_officer": "Amitabh Roy", "lat": 26.1667, "lon": 85.4833, "elevation_m": 62.0},
+                ]
+            }
+        ]
+    },
+    {
+        "state": "Tamil Nadu",
+        "code": "TN",
+        "languages": ["ta", "en"],
+        "major_crops": ["rice", "sugarcane", "cotton", "groundnut", "banana"],
+        "districts_count": 38,
+        "districts": [
+            {
+                "district": "Coimbatore",
+                "lat": 11.0168, "lon": 76.9558, "elevation_m": 411.0,
+                "blocks": [
+                    {"block": "Pollachi", "panchayats_count": 28, "assigned_officer": "M. Senthil", "lat": 10.6609, "lon": 77.0048, "elevation_m": 293.0},
+                    {"block": "Thondamuthur", "panchayats_count": 22, "assigned_officer": "K. Meenakshi", "lat": 10.9983, "lon": 76.8344, "elevation_m": 470.0},
+                ]
+            },
+            {
+                "district": "Thanjavur",
+                "lat": 10.7870, "lon": 79.1378, "elevation_m": 59.0,
+                "blocks": [
+                    {"block": "Kumbakonam", "panchayats_count": 32, "assigned_officer": "R. Natarajan", "lat": 10.9602, "lon": 79.3845, "elevation_m": 24.0},
+                    {"block": "Orathanadu", "panchayats_count": 26, "assigned_officer": "P. Selvam", "lat": 10.6272, "lon": 79.2558, "elevation_m": 45.0},
+                ]
+            }
+        ]
+    },
+    {
+        "state": "Andhra Pradesh",
+        "code": "AP",
+        "languages": ["te", "en"],
+        "major_crops": ["rice", "cotton", "chilli", "groundnut", "tobacco"],
+        "districts_count": 26,
+        "districts": [
+            {
+                "district": "Guntur",
+                "lat": 16.3067, "lon": 80.4365, "elevation_m": 33.0,
+                "blocks": [
+                    {"block": "Tenali", "panchayats_count": 28, "assigned_officer": "Ch. Venkat Rao", "lat": 16.2430, "lon": 80.6400, "elevation_m": 15.0},
+                    {"block": "Bapatla", "panchayats_count": 24, "assigned_officer": "K. Srinivas", "lat": 15.9042, "lon": 80.4678, "elevation_m": 8.0},
+                ]
+            },
+            {
+                "district": "Krishna",
+                "lat": 16.1809, "lon": 81.1303, "elevation_m": 10.0,
+                "blocks": [
+                    {"block": "Gudivada", "panchayats_count": 26, "assigned_officer": "B. Ramaiah", "lat": 16.4410, "lon": 80.9926, "elevation_m": 9.0},
+                    {"block": "Machilipatnam", "panchayats_count": 25, "assigned_officer": "V. Lakshmi", "lat": 16.1875, "lon": 81.1389, "elevation_m": 7.0},
+                ]
+            }
+        ]
+    },
+    {
+        "state": "Telangana",
+        "code": "TS",
+        "languages": ["te", "en"],
+        "major_crops": ["cotton", "rice", "maize", "soybean", "red gram"],
+        "districts_count": 33,
+        "districts": [
+            {
+                "district": "Warangal",
+                "lat": 17.9689, "lon": 79.5941, "elevation_m": 302.0,
+                "blocks": [
+                    {"block": "Hanamkonda", "panchayats_count": 26, "assigned_officer": "T. Ravinder", "lat": 18.0138, "lon": 79.5444, "elevation_m": 310.0},
+                    {"block": "Parkal", "panchayats_count": 22, "assigned_officer": "G. Mallesh", "lat": 18.2000, "lon": 79.7167, "elevation_m": 285.0},
+                ]
+            },
+            {
+                "district": "Karimnagar",
+                "lat": 18.4386, "lon": 79.1288, "elevation_m": 265.0,
+                "blocks": [
+                    {"block": "Choppadandi", "panchayats_count": 24, "assigned_officer": "M. Kishan", "lat": 18.5833, "lon": 79.1667, "elevation_m": 275.0},
+                    {"block": "Huzurabad", "panchayats_count": 25, "assigned_officer": "K. Prabhakar", "lat": 18.1833, "lon": 79.3833, "elevation_m": 280.0},
+                ]
+            }
+        ]
+    },
+    {
+        "state": "West Bengal",
+        "code": "WB",
+        "languages": ["bn", "en"],
+        "major_crops": ["rice", "jute", "potato", "mustard", "tea"],
+        "districts_count": 23,
+        "districts": [
+            {
+                "district": "Burdwan",
+                "lat": 23.2324, "lon": 87.8615, "elevation_m": 30.0,
+                "blocks": [
+                    {"block": "Memari", "panchayats_count": 27, "assigned_officer": "Subir Banerjee", "lat": 23.1833, "lon": 88.1167, "elevation_m": 25.0},
+                    {"block": "Kalna", "panchayats_count": 24, "assigned_officer": "Anupam Roy", "lat": 23.2167, "lon": 88.3667, "elevation_m": 20.0},
+                ]
+            },
+            {
+                "district": "Hooghly",
+                "lat": 22.9038, "lon": 88.3968, "elevation_m": 17.0,
+                "blocks": [
+                    {"block": "Singur", "panchayats_count": 26, "assigned_officer": "Debashis Sen", "lat": 22.8122, "lon": 88.2328, "elevation_m": 15.0},
+                    {"block": "Tarakeswar", "panchayats_count": 23, "assigned_officer": "Pranab Ghosh", "lat": 22.8833, "lon": 88.0167, "elevation_m": 18.0},
+                ]
+            }
+        ]
+    },
+    {
+        "state": "Kerala",
+        "code": "KL",
+        "languages": ["ml", "en"],
+        "major_crops": ["paddy", "pepper", "rubber", "cardamom", "coconut"],
+        "districts_count": 14,
+        "districts": [
+            {
+                "district": "Wayanad",
+                "lat": 11.6854, "lon": 76.1320, "elevation_m": 700.0,
+                "blocks": [
+                    {"block": "Mananthavady", "panchayats_count": 24, "assigned_officer": "K. P. Mathew", "lat": 11.8033, "lon": 76.0042, "elevation_m": 750.0},
+                    {"block": "Sulthan Bathery", "panchayats_count": 22, "assigned_officer": "P. Vinod", "lat": 11.6628, "lon": 76.2570, "elevation_m": 890.0},
+                ]
+            },
+            {
+                "district": "Palakkad",
+                "lat": 10.7867, "lon": 76.6548, "elevation_m": 84.0,
+                "blocks": [
+                    {"block": "Alathur", "panchayats_count": 28, "assigned_officer": "S. Unnikrishnan", "lat": 10.6433, "lon": 76.5458, "elevation_m": 80.0},
+                    {"block": "Chittur", "panchayats_count": 25, "assigned_officer": "M. Radhika", "lat": 10.7000, "lon": 76.7333, "elevation_m": 92.0},
+                ]
+            }
+        ]
+    },
+    {
+        "state": "Odisha",
+        "code": "OD",
+        "languages": ["or", "en"],
+        "major_crops": ["rice", "pulses", "groundnut", "mustard", "sugarcane"],
+        "districts_count": 30,
+        "districts": [
+            {
+                "district": "Cuttack",
+                "lat": 20.4625, "lon": 85.8830, "elevation_m": 36.0,
+                "blocks": [
+                    {"block": "Salepur", "panchayats_count": 26, "assigned_officer": "Bijay Mohanty", "lat": 20.4833, "lon": 86.0167, "elevation_m": 30.0},
+                    {"block": "Athagarh", "panchayats_count": 23, "assigned_officer": "Pratap Jena", "lat": 20.5292, "lon": 85.6267, "elevation_m": 54.0},
+                ]
+            },
+            {
+                "district": "Sambalpur",
+                "lat": 21.4669, "lon": 83.9812, "elevation_m": 135.0,
+                "blocks": [
+                    {"block": "Rengali", "panchayats_count": 24, "assigned_officer": "S. Panigrahi", "lat": 21.6333, "lon": 84.0333, "elevation_m": 180.0},
+                    {"block": "Kuchinda", "panchayats_count": 22, "assigned_officer": "D. Pradhan", "lat": 21.7333, "lon": 84.3500, "elevation_m": 220.0},
+                ]
+            }
+        ]
+    },
+    {
+        "state": "Himachal Pradesh",
+        "code": "HP",
+        "languages": ["hi", "en"],
+        "major_crops": ["apple", "maize", "wheat", "potato", "vegetables"],
+        "districts_count": 12,
+        "districts": [
+            {
+                "district": "Shimla",
+                "lat": 31.1048, "lon": 77.1734, "elevation_m": 2276.0,
+                "blocks": [
+                    {"block": "Theog", "panchayats_count": 25, "assigned_officer": "Rajinder Verma", "lat": 31.1214, "lon": 77.3556, "elevation_m": 2280.0},
+                    {"block": "Rohru", "panchayats_count": 22, "assigned_officer": "Sunil Chauhan", "lat": 31.2033, "lon": 77.7522, "elevation_m": 1525.0},
+                ]
+            },
+            {
+                "district": "Kullu",
+                "lat": 31.9579, "lon": 77.1095, "elevation_m": 1279.0,
+                "blocks": [
+                    {"block": "Naggar", "panchayats_count": 24, "assigned_officer": "Deepak Sharma", "lat": 32.1467, "lon": 77.1706, "elevation_m": 1760.0},
+                    {"block": "Banjar", "panchayats_count": 20, "assigned_officer": "Mohit Thakur", "lat": 31.6378, "lon": 77.3456, "elevation_m": 1356.0},
                 ]
             }
         ]
@@ -444,12 +628,24 @@ def list_panchayats_hierarchy(
                     break
 
         synthetic_names = [
+            f"{target_blk} Central GP",
             f"{target_blk} East GP",
             f"{target_blk} West GP",
             f"{target_blk} North GP",
             f"{target_blk} South GP",
-            f"{target_blk} Central GP",
             f"{target_blk} Mandi GP",
+            f"{target_blk} Kalan GP",
+            f"{target_blk} Khurd GP",
+            f"{target_blk} Rampur GP",
+            f"{target_blk} Govindpur GP",
+            f"{target_blk} Shivpuri GP",
+            f"{target_blk} Mohanpur GP",
+            f"{target_blk} Haripur GP",
+            f"{target_blk} Kalyanpur GP",
+            f"{target_blk} Anandpur GP",
+            f"{target_blk} Krishnapur GP",
+            f"{target_blk} Gopalpur GP",
+            f"{target_blk} Sundarpur GP",
         ]
         return [
             PanchayatHierarchyOut(
