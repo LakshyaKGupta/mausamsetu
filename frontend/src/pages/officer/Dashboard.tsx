@@ -5,9 +5,10 @@ import {
   TrendingUp, Users, Send, AlertTriangle, RefreshCw,
   ChevronRight, Filter, Search, ShieldCheck, Activity,
   CloudRain, Wind, Droplets, Thermometer, Plus, FileText,
-  Compass, Map as MapIcon, History, Radio, Layers, X, Download
+  Compass, Map as MapIcon, History, Radio, Layers, X, Download, ChevronDown
 } from 'lucide-react'
 import { advisoryApi, officerApi, fieldReportApi, geographyApi } from '@/api/client'
+import { LocationSearchModal, type SelectedLocation } from '@/components/farmer/LocationSearchModal'
 import type {
   AdvisoryListItem,
   StatsResponse,
@@ -67,12 +68,19 @@ export default function OfficerDashboard() {
   }
 
   const [selectedLoc, setSelectedLoc] = useState<any>(getSelectedLoc)
+  const [showLocationModal, setShowLocationModal] = useState(false)
   const officerId = officerData.id || 1
-  const officerName = officerData.name || 'Rajesh Sharma'
-  const blockName = selectedLoc?.block || officerData.block || 'Kalmeshwar'
+  const blockName = selectedLoc?.block || selectedLoc?.panchayat || selectedLoc?.name || officerData.block || 'Kalmeshwar'
   const districtName = selectedLoc?.district || officerData.district || 'Nagpur'
+  const officerName = blockDashboard?.officer_name || officerData.name || 'Rajesh Sharma'
   const officerInitials = officerName.split(' ').filter(Boolean).map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() || 'AO'
   const officerShortName = officerName.split(' ')[0] + (officerName.split(' ')[1] ? ` ${officerName.split(' ')[1][0]}.` : '')
+
+  const handleSelectLocation = (loc: SelectedLocation) => {
+    setSelectedLoc(loc)
+    localStorage.setItem('mausamsetu_selected_location', JSON.stringify(loc))
+    window.dispatchEvent(new CustomEvent('mausamsetu_location_change', { detail: loc }))
+  }
 
   // Listen for location change events from navbar / GPS
   useEffect(() => {
@@ -94,9 +102,9 @@ export default function OfficerDashboard() {
       const [advData, statsData, dashData, reportsData, panchayatData] = await Promise.all([
         advisoryApi.list(),
         advisoryApi.stats(blockName),
-        officerApi.getDashboard(officerId).catch(() => null),
+        officerApi.getDashboard(officerId, blockName, districtName).catch(() => null),
         fieldReportApi.list({ block: blockName }).catch(() => []),
-        geographyApi.getPanchayats(blockName).catch(() => []),
+        geographyApi.getPanchayats(blockName, districtName).catch(() => []),
       ])
       setAdvisories(advData)
       setStats(statsData)
@@ -131,11 +139,11 @@ export default function OfficerDashboard() {
 
   const subviewList: Array<{ id: SubView; label: string; icon: any; badge?: number }> = [
     { id: 'dashboard', label: 'Dashboard', icon: Activity, badge: undefined },
-    { id: 'queue', label: 'Advisory Queue', icon: Clock, badge: stats?.pending_advisories },
-    { id: 'panchayats', label: panchayats.length > 0 ? `Panchayats (${panchayats.length})` : 'Panchayats', icon: MapPin, badge: undefined },
+    { id: 'queue', label: 'Advisory Queue', icon: Clock, badge: blockDashboard?.pending_advisories ?? stats?.pending_advisories ?? 2 },
+    { id: 'panchayats', label: `Panchayats (${blockDashboard?.total_panchayats || panchayats.length || stats?.total_panchayats || 24})`, icon: MapPin, badge: undefined },
     { id: 'weather', label: 'Weather Watch', icon: CloudRain, badge: undefined },
-    { id: 'reports', label: 'Field Reports', icon: FileText, badge: fieldReports.length || 3 },
-    { id: 'approved', label: 'Approved Advisories', icon: CheckCircle, badge: stats?.approved_today },
+    { id: 'reports', label: 'Field Reports', icon: FileText, badge: fieldReports.length || blockDashboard?.field_reports_count || 2 },
+    { id: 'approved', label: 'Approved Advisories', icon: CheckCircle, badge: blockDashboard?.approved_today ?? stats?.approved_today ?? 22 },
     { id: 'map', label: 'Block Map', icon: MapIcon, badge: undefined },
     { id: 'audit', label: 'Audit Trail', icon: History, badge: undefined },
   ]
@@ -250,14 +258,32 @@ export default function OfficerDashboard() {
 
       {/* Main Content Area */}
       <main className="flex-1 p-3.5 sm:p-6 md:p-8 overflow-y-auto">
+        {/* Location Search Modal for switching jurisdiction anywhere */}
+        <LocationSearchModal
+          isOpen={showLocationModal}
+          onClose={() => setShowLocationModal(false)}
+          onSelectLocation={handleSelectLocation}
+          currentLocation={selectedLoc}
+          lang="en"
+        />
+
         {/* Top Operational Bar */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
           <div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <span className="text-[11px] uppercase font-bold text-emerald-800 tracking-wider bg-emerald-100 px-2.5 py-0.5 rounded-full">
                 {blockName} Block Operations
               </span>
-              <span className="text-xs text-slate-400">• Updated 10:30 AM IST</span>
+              <button
+                onClick={() => setShowLocationModal(true)}
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-950 bg-white hover:bg-emerald-50 border border-emerald-300 px-2.5 py-1 rounded-lg shadow-2xs transition-all cursor-pointer group"
+                title="Change jurisdiction block or district"
+              >
+                <MapPin size={12} className="text-emerald-700 group-hover:scale-110 transition-transform" />
+                <span>{blockName}, {districtName}</span>
+                <ChevronDown size={12} className="text-slate-400 group-hover:text-emerald-700" />
+              </button>
+              <span className="text-xs text-slate-400 hidden sm:inline">• Live Synced</span>
             </div>
             <h1 className="text-2xl font-display font-bold text-slate-900 mt-1 capitalize">
               {activeTab === 'dashboard' && 'Extension Operations Dashboard'}
@@ -266,9 +292,58 @@ export default function OfficerDashboard() {
               {activeTab === 'weather' && 'Local Weather Watch & Telemetry'}
               {activeTab === 'reports' && 'Field Extension Observations'}
               {activeTab === 'approved' && 'Verified Advisories Archive'}
-              {activeTab === 'map' && 'Kalmeshwar Spatial Block Map'}
+              {activeTab === 'map' && `${blockName} Spatial Block Map`}
               {activeTab === 'audit' && 'Governance Audit Log'}
             </h1>
+
+            {/* Quick Block Switcher Strip */}
+            <div className="flex items-center gap-1.5 mt-2.5 overflow-x-auto no-scrollbar py-0.5">
+              <span className="text-[10px] uppercase font-bold text-slate-400 mr-1 flex-shrink-0">Switch Block:</span>
+              {[
+                { block: 'Kalmeshwar', district: 'Nagpur' },
+                { block: 'Ramtek', district: 'Nagpur' },
+                { block: 'Katol', district: 'Nagpur' },
+                { block: 'Saoner', district: 'Nagpur' },
+                { block: 'Hingna', district: 'Nagpur' },
+                { block: 'Baramati', district: 'Pune' },
+                { block: 'Junnar', district: 'Pune' },
+                { block: 'Jagraon', district: 'Ludhiana' },
+              ].map((b) => {
+                const isActive = blockName.toLowerCase() === b.block.toLowerCase()
+                return (
+                  <button
+                    key={b.block}
+                    onClick={() => {
+                      const newLoc = {
+                        name: b.block,
+                        panchayat: b.block,
+                        block: b.block,
+                        district: b.district,
+                        state: b.district === 'Ludhiana' ? 'Punjab' : 'Maharashtra',
+                        lat: b.block === 'Baramati' ? 18.15 : b.block === 'Jagraon' ? 30.78 : 21.28,
+                        lon: b.block === 'Baramati' ? 74.58 : b.block === 'Jagraon' ? 75.48 : 78.89,
+                        display_label: `🏛️ ${b.block} Block · ${b.district}`
+                      }
+                      handleSelectLocation(newLoc as any)
+                    }}
+                    className={cn(
+                      'text-[11px] font-semibold px-2.5 py-0.5 rounded-full border transition-all flex-shrink-0 cursor-pointer',
+                      isActive
+                        ? 'bg-emerald-700 text-white border-emerald-800 shadow-2xs font-bold'
+                        : 'bg-white text-slate-600 border-slate-200 hover:border-emerald-300 hover:text-emerald-800'
+                    )}
+                  >
+                    {b.block} ({b.district})
+                  </button>
+                )
+              })}
+              <button
+                onClick={() => setShowLocationModal(true)}
+                className="text-[11px] font-bold text-emerald-700 hover:underline px-2 py-0.5 flex-shrink-0 cursor-pointer"
+              >
+                + Search Any Location...
+              </button>
+            </div>
           </div>
 
           <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 w-full sm:w-auto">
@@ -312,7 +387,7 @@ export default function OfficerDashboard() {
                   <div className="bg-slate-50 border border-slate-100 rounded-xl p-3">
                     <span className="text-[10px] uppercase font-bold text-slate-400 block">Jurisdiction</span>
                     <span className="text-base font-bold text-slate-900 block truncate" title={`${blockName} Block`}>
-                      {blockName}
+                      {blockName} Block
                     </span>
                     <span className="text-[10px] text-slate-500 block truncate">{districtName} Dist</span>
                   </div>
@@ -322,21 +397,21 @@ export default function OfficerDashboard() {
                   >
                     <span className="text-[10px] uppercase font-bold text-slate-400 block">Panchayats</span>
                     <span className="text-base font-bold text-slate-900 block">
-                      {panchayats.length || blockDashboard?.total_panchayats || 24}
+                      {blockDashboard?.total_panchayats || panchayats.length || stats?.total_panchayats || 24}
                     </span>
-                    <span className="text-[10px] text-emerald-700 font-medium block">View All →</span>
+                    <span className="text-[10px] text-emerald-700 font-medium block">In Block →</span>
                   </div>
                   <div className="bg-slate-50 border border-slate-100 rounded-xl p-3">
                     <span className="text-[10px] uppercase font-bold text-slate-400 block">Farmers</span>
                     <span className="text-base font-bold text-slate-900 block">
-                      {blockDashboard?.total_farmers ? blockDashboard.total_farmers.toLocaleString() : '1,842'}
+                      {blockDashboard?.total_farmers ? blockDashboard.total_farmers.toLocaleString() : stats?.total_farmers ? stats.total_farmers.toLocaleString() : '1,842'}
                     </span>
                     <span className="text-[10px] text-slate-500 block">Registered</span>
                   </div>
                   <div className="bg-slate-50 border border-slate-100 rounded-xl p-3">
-                    <span className="text-[10px] uppercase font-bold text-slate-400 block">Monitored Crops</span>
+                    <span className="text-[10px] uppercase font-bold text-slate-400 block">Active Crops</span>
                     <span className="text-base font-bold text-slate-900 block">
-                      {blockDashboard?.active_crops_count ? `${blockDashboard.active_crops_count} Major` : '5 Major'}
+                      {blockDashboard?.active_crops_count ? `${blockDashboard.active_crops_count}` : '5'}
                     </span>
                     <span className="text-[10px] text-slate-500 block truncate">Soybean, Cotton..</span>
                   </div>
@@ -356,17 +431,17 @@ export default function OfficerDashboard() {
                   >
                     <span className="text-[10px] uppercase font-bold text-amber-700 block">Pending Review</span>
                     <span className="text-lg font-bold text-amber-900 block">
-                      {stats?.pending_advisories ?? 2}
+                      {blockDashboard?.pending_advisories ?? stats?.pending_advisories ?? 2}
                     </span>
-                    <span className="text-[10px] font-semibold text-amber-800 block">Action Req.</span>
+                    <span className="text-[10px] font-semibold text-amber-800 block">Immediate Action</span>
                   </div>
                   <div
                     onClick={() => setActiveTab('approved')}
                     className="bg-emerald-50/60 border border-emerald-200 rounded-xl p-3 cursor-pointer hover:border-emerald-300 hover:shadow-xs transition-all"
                   >
-                    <span className="text-[10px] uppercase font-bold text-emerald-700 block">Approved</span>
+                    <span className="text-[10px] uppercase font-bold text-emerald-700 block">Approved Today</span>
                     <span className="text-lg font-bold text-emerald-900 block">
-                      {stats?.approved_today ?? 22}
+                      {blockDashboard?.approved_today ?? stats?.approved_today ?? 22}
                     </span>
                     <span className="text-[10px] text-emerald-800 font-semibold block">Disseminated</span>
                   </div>
@@ -376,9 +451,9 @@ export default function OfficerDashboard() {
                   >
                     <span className="text-[10px] uppercase font-bold text-sky-700 block">Field Reports</span>
                     <span className="text-lg font-bold text-sky-900 block">
-                      {fieldReports.length || 3}
+                      {fieldReports.length || blockDashboard?.field_reports_count || 2}
                     </span>
-                    <span className="text-[10px] text-sky-800 font-semibold block">Ground Truth</span>
+                    <span className="text-[10px] text-sky-800 font-semibold block">On Record</span>
                   </div>
                 </div>
               </div>

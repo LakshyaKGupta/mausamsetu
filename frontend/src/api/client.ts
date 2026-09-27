@@ -116,8 +116,8 @@ export const fieldReportApi = {
 export const officerApi = {
   list: (district?: string) =>
     api.get('/officers/', { params: district ? { district } : {} }).then((r) => r.data),
-  getDashboard: (officerId: number) =>
-    api.get(`/officers/${officerId}/dashboard`).then((r) => r.data),
+  getDashboard: (officerId: number, block?: string, district?: string) =>
+    api.get(`/officers/${officerId}/dashboard`, { params: { ...(block ? { block } : {}), ...(district ? { district } : {}) } }).then((r) => r.data),
   assign: (data: { officer_id: number; block: string }) =>
     api.post('/officers/assign', data).then((r) => r.data),
   dispatchBroadcast: (data: {

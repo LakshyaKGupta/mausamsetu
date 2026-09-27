@@ -112,10 +112,9 @@ export const AppLayout: React.FC = () => {
     }
 
     if (role === 'officer') {
-      const b = officerData.block || 'Kalmeshwar'
-      const bTranslated = lang === 'en' ? 'Kalmeshwar' : lang === 'mr' ? 'कळमेश्वर' : 'कलमेश्वर'
-      const dTranslated = lang === 'en' ? 'Nagpur' : lang === 'mr' ? 'नागपूर' : 'नागपुर'
-      return lang === 'en' ? `Sub-Div: ${bTranslated} · ${dTranslated}` : `🏛️ उप-विभाग: ${bTranslated} · ${dTranslated}`
+      const b = selectedLoc?.block || selectedLoc?.name || officerData.block || 'Kalmeshwar'
+      const d = selectedLoc?.district || officerData.district || 'Nagpur'
+      return lang === 'en' ? `Sub-Div: ${b} · ${d}` : `🏛️ उप-विभाग: ${b} · ${d}`
     }
 
     // Farmer role: Always prominently show Gram Panchayat
