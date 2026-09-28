@@ -413,13 +413,10 @@ class BroadcastRequest(BaseModel):
 @router.post("/broadcast")
 def dispatch_broadcast(req: BroadcastRequest):
     return {
-        "broadcast_id": "BC-20260926-042",
-        "status": "DISPATCHED",
-        "recipients_targeted": 1842,
-        "sms_sent": 1842,
-        "whatsapp_sent": 1420,
-        "delivery_rate_pct": 98.4,
-        "timestamp": "12:15 PM IST",
-        "summary": f"Bulletin dispatched to {len(req.panchayats)} panchayats in {req.block} block."
+        "status": "NOT_AVAILABLE",
+        "recipients_targeted": None,
+        "sms_sent": None,
+        "whatsapp_sent": None,
+        "delivery_rate_pct": None,
+        "summary": "Broadcast delivery is unavailable until a provider-backed broadcast outbox is configured."
     }
-

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
+import { Link } from 'react-router-dom'
 import { MapContainer, TileLayer, Marker, Popup, useMap, Circle } from 'react-leaflet'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
@@ -1601,7 +1602,7 @@ export const AdminDashboard: React.FC = () => {
         geographyApi.getPanchayats(blk !== 'all' ? blk : undefined, dist).catch(() => []),
         advisoryApi.districtAudit().catch(() => []),
         adminApi.dataHealth().catch(() => []),
-        adminApi.getModelBenchmarkCurve().catch(() => []),
+        adminApi.getModelBenchmarkCurve().catch(() => ({ points: [] })),
         geographyApi.getDistricts(stateCode).catch(() => []),
         geographyApi.getBlocks(dist).catch(() => []),
       ])
@@ -1613,7 +1614,7 @@ export const AdminDashboard: React.FC = () => {
       setPanchayats(gpList)
       setAuditLogs(audits)
       setDataHealthList(dHealth)
-      setBenchmarkCurve(curve)
+      setBenchmarkCurve(curve?.points ?? [])
 
       if (distList?.length) {
         setAvailableDistricts(distList.map((d: any) => d.district))
@@ -1898,6 +1899,9 @@ export const AdminDashboard: React.FC = () => {
   // 3. Audit logs pagination
   const totalAuditPages = Math.max(1, Math.ceil(auditLogs.length / ITEMS_PER_PAGE))
   const paginatedAuditLogs = auditLogs.slice((auditPage - 1) * ITEMS_PER_PAGE, auditPage * ITEMS_PER_PAGE)
+  const pendingAdvisoryAlert = summary?.alerts.find((alert) => alert.category === 'advisory_pending')
+  const pendingAdvisoryCount = summary?.pending_advisories ?? 0
+  const operationalSignalCount = summary?.alerts.length ?? 0
 
   const adminTabsList: Array<{ id: AdminTab; label: string; icon: any; badge?: string | number }> = [
     { id: 'overview', label: 'Overview', icon: BarChart2, badge: undefined },
@@ -1913,7 +1917,7 @@ export const AdminDashboard: React.FC = () => {
   ]
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-slate-50 flex flex-col md:flex-row">
+    <div className="min-h-[calc(100vh-4rem)] bg-slate-50 flex flex-col md:flex-row md:h-[calc(100dvh-4rem)] md:overflow-hidden">
       {/* Mobile Top Navigation Strip (< md) */}
       <div className="md:hidden bg-white border-b border-slate-200 sticky top-14 z-30 shadow-2xs">
         <div className="flex items-center justify-between px-3 py-2 border-b border-slate-100">
@@ -2016,7 +2020,7 @@ export const AdminDashboard: React.FC = () => {
       </aside>
 
       {/* Main Content Area */}
-      <main className="flex-1 p-3.5 sm:p-6 md:p-8 overflow-y-auto">
+      <main className="flex-1 min-w-0 p-3.5 sm:p-6 md:p-8 md:overflow-y-auto">
         {/* Top Control Bar */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
           <div>
@@ -2286,7 +2290,7 @@ export const AdminDashboard: React.FC = () => {
                   </h2>
                 </div>
                 <span className="text-xs font-bold bg-amber-200/80 text-amber-900 px-3 py-1 rounded-full">
-                  4 District Exceptions
+                  {operationalSignalCount} Operational Signals
                 </span>
               </div>
 
@@ -2295,11 +2299,11 @@ export const AdminDashboard: React.FC = () => {
                   <div className="flex items-center justify-between text-amber-900 font-bold">
                     <span>Advisories Awaiting Review</span>
                     <span className="bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full font-mono">
-                      {summary?.pending_advisories ?? 7} GP
+                      {pendingAdvisoryCount} GP
                     </span>
                   </div>
                   <p className="text-slate-600 leading-snug text-[11px]">
-                    Kalmeshwar & Saoner blocks downscaled batches awaiting officer sign-off.
+                    {pendingAdvisoryAlert?.description ?? 'No pending-advisory status is available for this district.'}
                   </p>
                   <button
                     onClick={() => setActiveTab('advisories')}
@@ -2725,11 +2729,11 @@ export const AdminDashboard: React.FC = () => {
                     <Server size={18} className="text-brand-600" />
                     National Agromet Pipelines & Sensor Telemetry Status
                   </h3>
-                  <p className="text-xs text-slate-500">Live operational sync across IMD numerical models, Doppler radars, and field AWS nodes ({selectedDistrict}, {selectedState})</p>
+                  <p className="text-xs text-slate-500">Provider and pilot-data readiness for {selectedDistrict}, {selectedState}. Unconfigured sources are explicitly unavailable.</p>
                 </div>
-                <span className="text-xs font-bold text-emerald-800 bg-emerald-100 px-3 py-1 rounded-full flex items-center gap-1.5 self-start sm:self-auto">
-                  <span className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse" />
-                  All 4 Ingestion Pipelines Operational
+                <span className="text-xs font-bold text-amber-800 bg-amber-100 px-3 py-1 rounded-full flex items-center gap-1.5 self-start sm:self-auto">
+                  <span className="w-2 h-2 rounded-full bg-amber-600" />
+                  Readiness view
                 </span>
               </div>
 
@@ -2910,16 +2914,16 @@ export const AdminDashboard: React.FC = () => {
                 <div>
                   <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
                     <Cpu size={18} className="text-brand-600" />
-                    Spatial Downscaler Model Evaluation & Benchmark (XGBoost v0.3)
+                    Spatial Downscaler Research Evaluation
                   </h3>
                   <p className="text-xs text-slate-500 mt-0.5">
-                    Evaluated against Nagpur AWS Ground Truth Network (01 Sep – 25 Sep 2026, 1,420 samples)
+                    {modelPerf?.evaluation_period || 'No registered evaluation period'} · research evidence is not production inference
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-ping" />
-                    Status: Healthy (42.7% Error Reduction)
+                  <span className="bg-amber-100 text-amber-800 text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-600" />
+                    Status: {modelPerf?.status || 'UNAVAILABLE'}
                   </span>
                 </div>
               </div>
@@ -2927,23 +2931,23 @@ export const AdminDashboard: React.FC = () => {
               {/* 4 Metric KPI Cards */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
                 <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 text-center">
-                  <span className="text-[10px] uppercase font-bold text-slate-400 block">Baseline IMD MAE</span>
-                  <span className="text-2xl font-black text-slate-800 mt-1 block">{modelPerf?.baseline_mae ?? '2.41'} mm</span>
-                  <span className="text-[10px] text-slate-400">Coarse 40km grid</span>
+                  <span className="text-[10px] uppercase font-bold text-slate-400 block">Research baseline MAE</span>
+                  <span className="text-2xl font-black text-slate-800 mt-1 block">{modelPerf?.baseline_mae_mm ?? '—'}</span>
+                  <span className="text-[10px] text-slate-400">Matched GFS/ISD records</span>
                 </div>
                 <div className="bg-emerald-50 p-4 rounded-xl border border-emerald-200 text-center">
                   <span className="text-[10px] uppercase font-bold text-emerald-800 block">MausamSetu MAE</span>
-                  <span className="text-2xl font-black text-emerald-900 mt-1 block">{modelPerf?.model_mae ?? '1.38'} mm</span>
-                  <span className="text-[10px] text-emerald-700 font-semibold">{modelPerf?.error_reduction_pct ?? '42.7'}% error reduction</span>
+                  <span className="text-2xl font-black text-emerald-900 mt-1 block">{modelPerf?.mausamsetu_mae_mm ?? '—'}</span>
+                  <span className="text-[10px] text-emerald-700 font-semibold">{modelPerf?.error_reduction_pct != null ? `${modelPerf.error_reduction_pct}% error reduction` : 'Evaluation required'}</span>
                 </div>
                 <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 text-center">
                   <span className="text-[10px] uppercase font-bold text-slate-400 block">Baseline RMSE</span>
-                  <span className="text-2xl font-black text-slate-800 mt-1 block">{modelPerf?.baseline_rmse ?? '3.12'} mm</span>
+                  <span className="text-2xl font-black text-slate-800 mt-1 block">{modelPerf?.baseline_rmse ?? '—'}</span>
                   <span className="text-[10px] text-slate-400">Regional variance</span>
                 </div>
                 <div className="bg-blue-50 p-4 rounded-xl border border-blue-200 text-center">
                   <span className="text-[10px] uppercase font-bold text-blue-800 block">Model RMSE</span>
-                  <span className="text-2xl font-black text-blue-900 mt-1 block">{modelPerf?.model_rmse ?? '1.84'} mm</span>
+                  <span className="text-2xl font-black text-blue-900 mt-1 block">{modelPerf?.model_rmse ?? '—'}</span>
                   <span className="text-[10px] text-blue-700 font-semibold">Low outlier skew</span>
                 </div>
               </div>
@@ -2972,17 +2976,18 @@ export const AdminDashboard: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="h-64 w-full pt-2">
+                {benchmarkCurve.length === 0 ? (
+                  <div className="h-64 grid place-items-center rounded-xl border border-dashed border-amber-300 bg-amber-50 px-5 text-center">
+                    <div>
+                      <AlertTriangle size={22} className="mx-auto mb-2 text-amber-700" />
+                      <p className="text-sm font-bold text-amber-950">Evaluation data unavailable</p>
+                      <p className="mt-1 text-xs text-amber-800">Register an approved held-out evaluation artifact before publishing a baseline-versus-downscaler comparison.</p>
+                    </div>
+                  </div>
+                ) : <div className="h-64 w-full pt-2">
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart
-                      data={benchmarkCurve.length > 0 ? benchmarkCurve : [
-                        { day: '01 Sep', baseline_mae: 2.52, model_mae: 1.45 },
-                        { day: '05 Sep', baseline_mae: 2.10, model_mae: 1.28 },
-                        { day: '10 Sep', baseline_mae: 2.85, model_mae: 1.50 },
-                        { day: '15 Sep', baseline_mae: 2.70, model_mae: 1.48 },
-                        { day: '20 Sep', baseline_mae: 2.30, model_mae: 1.30 },
-                        { day: '25 Sep', baseline_mae: 2.41, model_mae: 1.38 },
-                      ]}
+                      data={benchmarkCurve}
                       margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
                     >
                       <defs>
@@ -3041,7 +3046,7 @@ export const AdminDashboard: React.FC = () => {
                       />
                     </AreaChart>
                   </ResponsiveContainer>
-                </div>
+                </div>}
               </div>
 
               {/* Automated Fallback Engine Logic Flow */}
@@ -3057,7 +3062,7 @@ export const AdminDashboard: React.FC = () => {
                     className="text-xs font-bold px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white flex items-center gap-1.5 shadow-sm transition-all disabled:opacity-50"
                   >
                     <Play size={13} className={cn(simulating && 'animate-spin')} />
-                    {simulating ? 'Simulating Failover...' : 'Test Telemetry Outage & Run Fallback'}
+                    {simulating ? 'Checking drill readiness...' : 'Check fallback drill readiness'}
                   </button>
                 </div>
 
@@ -3091,31 +3096,16 @@ export const AdminDashboard: React.FC = () => {
                       <div className="flex items-center gap-2">
                         <AlertTriangle size={16} className="text-amber-600" />
                         <strong className="text-slate-900 font-bold">
-                          Failover Simulation Result: {fallbackSimulation.simulation_id}
+                          {fallbackSimulation.status === 'NOT_AVAILABLE' ? 'Fallback drill unavailable' : `Failover Simulation Result: ${fallbackSimulation.simulation_id}`}
                         </strong>
                       </div>
-                      <span className="badge-green text-[10px] font-bold">
-                        PASS: 4/4 Safety Checks Passed
+                      <span className="badge-amber text-[10px] font-bold">
+                        {fallbackSimulation.status}
                       </span>
                     </div>
 
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px]">
-                      <div>
-                        <span className="text-slate-400 block">Simulated Event:</span>
-                        <strong className="text-slate-800">{fallbackSimulation.scenario}</strong>
-                      </div>
-                      <div>
-                        <span className="text-slate-400 block">Station Target:</span>
-                        <strong className="text-slate-800">{fallbackSimulation.affected_station}</strong>
-                      </div>
-                      <div>
-                        <span className="text-slate-400 block">Failover Latency:</span>
-                        <strong className="text-emerald-700 font-mono">18 ms (Sub-second)</strong>
-                      </div>
-                      <div>
-                        <span className="text-slate-400 block">Advisory Status:</span>
-                        <strong className="text-brand-700">Fallback Grade B Preserved</strong>
-                      </div>
+                    <div className="text-[11px] text-amber-900 bg-amber-50 border border-amber-200 rounded-lg p-3">
+                      {fallbackSimulation.reason || 'No fallback drill result is available.'}
                     </div>
                   </div>
                 )}
@@ -3549,15 +3539,13 @@ export const AdminDashboard: React.FC = () => {
                     Launch the full-featured interactive slider simulator with live SHAP attribution and bio-climatic controls.
                   </p>
                 </div>
-                <a
-                  href="/app/ml-showcase"
-                  target="_blank"
-                  rel="noreferrer"
+                <Link
+                  to="/app/ml-lab"
                   className="px-4 py-2 bg-white text-brand-900 hover:bg-emerald-50 rounded-xl font-bold text-xs flex items-center gap-1.5 shadow-xs whitespace-nowrap transition-all"
                 >
                   <span>Launch Interactive Simulator</span>
                   <ExternalLink size={14} />
-                </a>
+                </Link>
               </div>
             </div>
           </div>

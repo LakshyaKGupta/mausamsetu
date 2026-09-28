@@ -257,82 +257,83 @@ export const FarmerAnimatedWeatherMap: React.FC<FarmerAnimatedWeatherMapProps> =
   useEffect(() => {
     if (!mapContainerRef.current) return
 
-    let map = mapInstanceRef.current
-    let L: any = null
+    let disposed = false
+    let resizeTimer: ReturnType<typeof setTimeout> | null = null
 
     const initMap = async () => {
       // @ts-ignore
-      L = await import('leaflet')
+      const L = await import('leaflet')
       // @ts-ignore
       await import('leaflet/dist/leaflet.css')
 
-      if (!mapContainerRef.current) return
+      if (disposed || !mapContainerRef.current) return
 
-      if (!map) {
-        map = L.map(mapContainerRef.current, {
-          center: [lat, lon],
-          zoom: 12,
-          zoomControl: false,
-          attributionControl: false,
-          scrollWheelZoom: false,
-          dragging: true,
-          doubleClickZoom: false,
-        })
+      const map = L.map(mapContainerRef.current, {
+        center: [lat, lon],
+        zoom: 12,
+        zoomControl: false,
+        attributionControl: false,
+        scrollWheelZoom: false,
+        dragging: true,
+        doubleClickZoom: false,
+      })
 
-        // Standard crisp OpenStreetMap tiles
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          maxZoom: 18,
-        }).addTo(map)
+      // Standard crisp OpenStreetMap tiles
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 18,
+      }).addTo(map)
 
-        // Custom Radar 5km & 10km & 15km GP Agro-Zone Circles
-        L.circle([lat, lon], {
-          radius: 4000,
-          color: '#059669',
-          fillColor: '#10B981',
-          fillOpacity: 0.08,
-          weight: 1.5,
-          dashArray: '4, 4',
-        }).addTo(map)
+      // Custom Radar 5km & 10km & 15km GP Agro-Zone Circles
+      L.circle([lat, lon], {
+        radius: 4000,
+        color: '#059669',
+        fillColor: '#10B981',
+        fillOpacity: 0.08,
+        weight: 1.5,
+        dashArray: '4, 4',
+      }).addTo(map)
 
-        L.circle([lat, lon], {
-          radius: 10000,
-          color: '#3B82F6',
-          fillColor: '#60A5FA',
-          fillOpacity: 0.04,
-          weight: 1,
-          dashArray: '6, 6',
-        }).addTo(map)
+      L.circle([lat, lon], {
+        radius: 10000,
+        color: '#3B82F6',
+        fillColor: '#60A5FA',
+        fillOpacity: 0.04,
+        weight: 1,
+        dashArray: '6, 6',
+      }).addTo(map)
 
-        // Gram Panchayat Center Pin Icon
-        const gpIcon = L.divIcon({
-          html: `<div style="display:flex;flex-direction:column;align-items:center;">
-            <div style="background:#047857;color:white;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:bold;white-space:nowrap;box-shadow:0 3px 8px rgba(0,0,0,0.3);border:2px solid white;display:flex;align-items:center;gap:4px;">
-              <span>🏛️</span>
-              <span>${gpDetails.panchayatName}</span>
-            </div>
-            <div style="width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:6px solid #047857;"></div>
-            <div style="width:10px;height:10px;background:#10B981;border-radius:50%;border:2px solid white;box-shadow:0 0 10px #10B981;margin-top:-2px;" class="animate-ping"></div>
-          </div>`,
-          className: '',
-          iconSize: [120, 40],
-          iconAnchor: [60, 20],
-        })
+      // Gram Panchayat Center Pin Icon
+      const gpIcon = L.divIcon({
+        html: `<div style="display:flex;flex-direction:column;align-items:center;">
+          <div style="background:#047857;color:white;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:bold;white-space:nowrap;box-shadow:0 3px 8px rgba(0,0,0,0.3);border:2px solid white;display:flex;align-items:center;gap:4px;">
+            <span>🏛️</span>
+            <span>${gpDetails.panchayatName}</span>
+          </div>
+          <div style="width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:6px solid #047857;"></div>
+          <div style="width:10px;height:10px;background:#10B981;border-radius:50%;border:2px solid white;box-shadow:0 0 10px #10B981;margin-top:-2px;" class="animate-ping"></div>
+        </div>`,
+        className: '',
+        iconSize: [120, 40],
+        iconAnchor: [60, 20],
+      })
 
-        L.marker([lat, lon], { icon: gpIcon }).addTo(map)
-        mapInstanceRef.current = map
-      } else {
-        map.setView([lat, lon], 12)
-      }
+      L.marker([lat, lon], { icon: gpIcon }).addTo(map)
+      mapInstanceRef.current = map
 
-      setTimeout(() => {
-        if (mapInstanceRef.current) mapInstanceRef.current.invalidateSize()
+      resizeTimer = setTimeout(() => {
+        if (!disposed) map.invalidateSize()
       }, 150)
     }
 
-    initMap().catch(console.error)
+    initMap().catch((error) => {
+      if (!disposed) console.error(error)
+    })
 
     return () => {
-      // Keep map reference across re-renders
+      disposed = true
+      if (resizeTimer) clearTimeout(resizeTimer)
+      mapInstanceRef.current?.remove()
+      mapInstanceRef.current = null
     }
   }, [lat, lon, gpDetails.panchayatName])
 

@@ -127,16 +127,17 @@ export function resolvePanchayatDetails(
     farmerData?.panchayat_name ||
     farmerData?.panchayat ||
     selectedLoc?.name ||
-    'Dhapewada'
+    farmerData?.name ||
+    'Location not selected'
 
   const normalized = rawPanchayat.toLowerCase().trim()
   const match = PANCHAYAT_TRANSLATIONS[normalized]
 
   let pName = rawPanchayat
-  let bName = selectedLoc?.block || farmerData?.block || 'Kalmeshwar'
-  let dName = selectedLoc?.district || farmerData?.district || 'Nagpur'
-  let sName = selectedLoc?.state || farmerData?.state || 'Maharashtra'
-  let lgd = match?.lgd || (selectedLoc?.panchayat_id ? `LGD: ${184590 + selectedLoc.panchayat_id}` : '184592')
+  let bName = selectedLoc?.block || farmerData?.block || ''
+  let dName = selectedLoc?.district || farmerData?.district || ''
+  let sName = selectedLoc?.state || farmerData?.state || ''
+  let lgd = match?.lgd || (selectedLoc?.panchayat_id ? `LGD: ${selectedLoc.panchayat_id}` : 'Not linked')
 
   if (match) {
     pName = lang === 'en' ? match.en : lang === 'mr' ? match.mr : match.hi
@@ -166,7 +167,7 @@ export function resolvePanchayatDetails(
 
   // Nav label (compact)
   const navPrefix = lang === 'en' ? '🏛️ GP:' : '🏛️ ग्रा.पं.'
-  const navLabel = `${navPrefix} ${pName} · ${dName}`
+  const navLabel = `${navPrefix} ${pName}${dName ? ` · ${dName}` : ''}`
 
   // Hero title
   const heroPrefix = lang === 'en' ? 'Gram Panchayat' : lang === 'mr' ? 'ग्रामपंचायत' : 'ग्राम पंचायत'

@@ -1,0 +1,26 @@
+{
+  "status": "RESEARCH_DEMO",
+  "model_id": "phase6-lapse-rate-b2-research",
+  "artifact_checksum": "3e6a4fb22b153048a1e73a721872de89b590de3cdc667db0578e32245c56a680",
+  "dataset_id": "phase6_real_gfs_isd_expanded",
+  "evaluation_period": "2023-01-01 matched GFS/ISD records",
+  "metrics": {
+    "baseline_mae_mm": 1.8545,
+    "model_mae_mm": 1.8142,
+    "baseline_rmse": 2.5424,
+    "model_rmse": 2.5149,
+    "error_reduction_pct": 2.17,
+    "observation_pairs": 892
+  },
+  "station_locations": [
+    {"station_id": "43063099999", "label": "Pune Synoptic/Airport", "status": "RESEARCH_ONLY"},
+    {"station_id": "43003014732", "label": "Maharashtra matched station", "status": "RESEARCH_ONLY"},
+    {"station_id": "43014099999", "label": "Maharashtra matched station", "status": "RESEARCH_ONLY"},
+    {"station_id": "43150099999", "label": "Maharashtra matched station", "status": "RESEARCH_ONLY"}
+  ],
+  "limitations": [
+    "Research/demo artifact only; not an active production model.",
+    "Matched NOAA GFS and ISD observations; it does not validate the Open-Meteo production path.",
+    "No model-derived Panchayat advisory may be published from this artifact."
+  ]
+}

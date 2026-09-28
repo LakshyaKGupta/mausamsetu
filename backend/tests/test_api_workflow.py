@@ -96,6 +96,21 @@ def test_officer_review_and_audit(client):
     assert "Officer Verification" in stages
 
 
+def test_approval_creates_one_idempotent_delivery_job(client):
+    response = client.patch(
+        "/advisories/1/review?officer_id=1",
+        json={"action": "approved", "note": "Approved for farmer delivery."},
+    )
+    assert response.status_code == 200
+
+    deliveries = client.get("/advisories/1/deliveries")
+    assert deliveries.status_code == 200
+    jobs = deliveries.json()
+    assert len(jobs) == 1
+    assert jobs[0]["status"] == "queued"
+    assert jobs[0]["channel"] == "pwa"
+
+
 def test_district_operations_summary(client):
     res = client.get("/advisories/district/operations-summary")
     assert res.status_code == 200
@@ -106,10 +121,19 @@ def test_district_operations_summary(client):
     assert len(data["blocks"]) == 4
 
 
+def test_district_summary_pending_count_matches_advisory_queue(client):
+    summary_response = client.get("/advisories/district/operations-summary?district=Nagpur")
+    queue_response = client.get("/advisories/?district=Nagpur&status=pending")
+
+    assert summary_response.status_code == 200
+    assert queue_response.status_code == 200
+    assert summary_response.json()["pending_advisories"] == len(queue_response.json())
+
+
 def test_model_health(client):
     res = client.get("/advisories/district/model-health")
     assert res.status_code == 200
     data = res.json()
-    assert data["baseline_mae_mm"] == 2.41
-    assert data["mausamsetu_mae_mm"] == 1.38
-    assert data["error_reduction_pct"] > 40
+    assert data["status"] == "RESEARCH_DEMO"
+    assert data["baseline_mae_mm"] == 1.8545
+    assert "not active for production" in data["reason"]

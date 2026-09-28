@@ -33,8 +33,13 @@ def get_auth_context(
     Extract caller identity & RBAC role from Bearer JWT, X-Demo-Role header, or query param.
     Supports seamless test execution and hackathon demo evaluation.
     """
-    # 1. Direct role override via X-Demo-Role header (used in RBAC tests and demo toggles)
+    # 1. Direct role override exists only for isolated development/demo runs.
     if x_demo_role:
+        if not settings.is_development:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Demo authorization is disabled outside development.",
+            )
         role = x_demo_role.lower().strip()
         if role == "farmer":
             return AuthContext(
@@ -105,7 +110,14 @@ def get_auth_context(
         except Exception:
             pass  # Fall through to default
 
-    # 3. Default fallback for existing endpoints passing ?officer_id=...
+    # 3. Legacy demo fallbacks are never a production authorization mechanism.
+    if not settings.is_development:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication is required.",
+        )
+
+    # Development compatibility for existing endpoints passing ?officer_id=...
     if officer_id:
         return AuthContext(
             user_id=officer_id,

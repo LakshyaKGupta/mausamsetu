@@ -5,7 +5,7 @@ from typing import Any, Optional, Union
 
 from pydantic import BaseModel, ConfigDict
 
-from app.models.models import AdvisoryStatus, ApprovalAction, Language
+from app.models.models import AdvisoryStatus, ApprovalAction, DeliveryStatus, Language
 
 
 # ---------------------------------------------------------------------------
@@ -185,6 +185,20 @@ class AdvisoryAuditResponse(BaseModel):
     history: list[AdvisoryAuditItem]
 
 
+class DeliveryJobOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    advisory_id: int
+    channel: str
+    status: DeliveryStatus
+    attempt_count: int
+    scheduled_at: Optional[datetime] = None
+    provider_message_id: Optional[str] = None
+    failure_reason: Optional[str] = None
+    created_at: datetime
+    updated_at: datetime
+
+
 # ---------------------------------------------------------------------------
 # Officer & Auth
 # ---------------------------------------------------------------------------
@@ -305,19 +319,18 @@ class DistrictOperationsSummary(BaseModel):
 
 
 class ModelPerformanceResponse(BaseModel):
-    model_version: str = "MausamSetu XGBoost v0.3.1"
-    evaluation_period: str = "01 Sep 2026 – 25 Sep 2026"
-    total_evaluation_samples: int = 480
-    baseline_mae_mm: float = 2.41
-    mausamsetu_mae_mm: float = 1.38
-    error_reduction_pct: float = 42.7
-    status: str = "Active"
-    last_evaluated_at: str = "Today, 08:30 IST"
-    fallback_rules: list[str] = [
-        "Uncertainty Interval > ±3.5 mm triggers automated fallback to IMD official forecast",
-        "Empirical Confidence < 0.65 flags advisory for mandatory manual officer inspection",
-        "If AWS local station telemetry is offline > 12h, uses regional spatial interpolation"
-    ]
+    model_version: Optional[str] = None
+    evaluation_period: Optional[str] = None
+    total_evaluation_samples: Optional[int] = None
+    baseline_mae_mm: Optional[float] = None
+    mausamsetu_mae_mm: Optional[float] = None
+    baseline_rmse: Optional[float] = None
+    model_rmse: Optional[float] = None
+    error_reduction_pct: Optional[float] = None
+    status: str
+    last_evaluated_at: Optional[str] = None
+    fallback_rules: list[str] = []
+    reason: Optional[str] = None
 
 
 # ---------------------------------------------------------------------------
@@ -505,4 +518,3 @@ class OfficerBlockDashboardOut(BaseModel):
     approved_today: int
     field_reports_count: int
     weather_watch_alerts: list[dict]
-

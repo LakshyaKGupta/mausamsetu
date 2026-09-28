@@ -5,7 +5,6 @@ import "leaflet/dist/leaflet.css";
 import { BasemapSelector, BasemapType } from "./BasemapSelector";
 
 // Fix leaflet default icon issue
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
@@ -14,7 +13,6 @@ L.Icon.Default.mergeOptions({
 });
 
 interface MapProps {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   geoJson: any | null;
   lat?: number;
   lon?: number;
@@ -48,7 +46,6 @@ function ChangeView({ center, zoom }: { center: [number, number]; zoom: number }
   return null;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function FitBounds({ geoJson }: { geoJson: any | null }) {
   const map = useMap();
   useEffect(() => {

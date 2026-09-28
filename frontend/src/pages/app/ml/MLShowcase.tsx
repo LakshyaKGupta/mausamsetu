@@ -150,14 +150,14 @@ export default function MLShowcasePage() {
         <div className="max-w-6xl mx-auto space-y-3">
           <div className="inline-flex items-center gap-2 bg-emerald-100 text-emerald-900 px-3 py-1 rounded-full text-xs font-bold">
             <Sparkles size={14} className="text-emerald-700" />
-            <span>Interactive Machine Learning & Topographic Physics Engine</span>
+            <span>Interactive Terrain Diagnostics</span>
           </div>
           <h1 className="text-xl sm:text-3xl lg:text-4xl font-display font-black text-slate-900 tracking-tight">
             Microclimate Downscaling & Agro-Ecological Risk Models
           </h1>
           <p className="text-slate-600 text-xs sm:text-sm max-w-3xl leading-relaxed">
             Explore how MausamSetu transforms coarse 40km synoptic weather grids into hyper-local 3km panchayat-level
-            intelligence using XGBoost coupled with SRTM 90m topographic lapse physics and bio-climatic pest activation functions.
+            diagnostic terrain calculations and controlled bio-climatic rules. This workspace is not a production Panchayat forecast until an evaluated model is registered.
           </p>
 
           {/* Model Switcher Tabs */}
@@ -682,31 +682,25 @@ export default function MLShowcasePage() {
 
         {/* SUBTAB 3: SCIENTIFIC RIGOR & VALIDATION (PHASE 12/13) */}
         {activeSubTab === 'validation' && (() => {
-          const valMetrics = metrics?.metrics || {
-            baseline_mae_mm: 2.41,
-            downscaler_mae_mm: 1.38,
-            error_reduction_pct: 42.7,
-            baseline_rmse_deg_c: 1.91,
-            downscaler_rmse_deg_c: 1.42,
-            pest_classifier_roc_auc: 0.942,
-            pest_classifier_f1: 0.891,
+          if (!metrics?.metrics) {
+            return (
+              <div className="bg-white border border-amber-200 rounded-3xl p-8 sm:p-12 text-center space-y-4">
+                <AlertTriangle size={34} className="mx-auto text-amber-600" />
+                <div>
+                  <h3 className="text-lg font-bold text-slate-900">Interactive evaluation unavailable</h3>
+                  <p className="max-w-lg mx-auto mt-2 text-sm leading-relaxed text-slate-600">
+                    {metrics?.reason || 'No validated evaluation dataset is currently registered.'}
+                  </p>
+                </div>
+                <p className="text-xs text-slate-500">
+                  Register a versioned held-out evaluation with baseline comparison before marking a spatial model active.
+                </p>
+              </div>
+            )
           }
-          const cm = metrics?.confusion_matrix || {
-            true_positives: 342,
-            false_positives: 28,
-            false_negatives: 21,
-            true_negatives: 889
-          }
-          const stationList = metrics?.station_locations || [
-            { station: 'JALGAON', elevation_m: 201, distance_km: 3.8, mae_reduction: '44.2%' },
-            { station: 'NASHIK ARPT', elevation_m: 598, distance_km: 2.4, mae_reduction: '48.1%' },
-            { station: 'AKOLA', elevation_m: 282, distance_km: 3.1, mae_reduction: '39.5%' },
-            { station: 'WARDHA', elevation_m: 283, distance_km: 1.8, mae_reduction: '41.8%' },
-            { station: 'PUNE', elevation_m: 558, distance_km: 4.2, mae_reduction: '46.0%' },
-            { station: 'MAHABALESHWAR', elevation_m: 1382, distance_km: 5.1, mae_reduction: '58.4%' },
-            { station: 'SOLAPUR', elevation_m: 483, distance_km: 2.9, mae_reduction: '40.2%' },
-            { station: 'KOLHAPUR', elevation_m: 608, distance_km: 3.4, mae_reduction: '45.7%' },
-          ]
+          const valMetrics = metrics.metrics
+          const cm = metrics.confusion_matrix
+          const stationList = metrics.station_locations
 
           return (
           <div className="space-y-6">

@@ -34,6 +34,15 @@ class AdvisoryStatus(str, enum.Enum):
     sent = "sent"
 
 
+class DeliveryStatus(str, enum.Enum):
+    queued = "queued"
+    processing = "processing"
+    sent = "sent"
+    delivered = "delivered"
+    failed = "failed"
+    retry_exhausted = "retry_exhausted"
+
+
 class ApprovalAction(str, enum.Enum):
     approved = "approved"
     modified = "modified"
@@ -255,6 +264,25 @@ class Approval(Base):
     # Relationships
     advisory = relationship("Advisory", back_populates="approvals")
     officer = relationship("OfficerProfile", back_populates="approvals")
+
+
+class DeliveryJob(Base):
+    """Durable outbox record; a provider worker owns all external delivery."""
+    __tablename__ = "delivery_jobs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    advisory_id = Column(Integer, ForeignKey("advisories.id"), nullable=False, index=True)
+    channel = Column(String(30), nullable=False, default="pwa")
+    # Keep this as a string so the Alembic migration is portable across SQLite
+    # and PostgreSQL without requiring a separately-created native enum type.
+    status = Column(String(30), nullable=False, default=DeliveryStatus.queued.value, index=True)
+    idempotency_key = Column(String(200), nullable=False, unique=True, index=True)
+    attempt_count = Column(Integer, nullable=False, default=0)
+    scheduled_at = Column(DateTime, nullable=True, index=True)
+    provider_message_id = Column(String(200), nullable=True, index=True)
+    failure_reason = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=func.now(), nullable=False)
+    updated_at = Column(DateTime, default=func.now(), onupdate=func.now(), nullable=False)
 
 
 class ChatbotSession(Base):

@@ -35,7 +35,6 @@ export default function LocationSelector({ onSelectionChange, disabled }: Locati
     fetchNic(0, "1=1")
       .then((features) => {
         const unique = new Map();
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         features.forEach((f: any) => {
           if (f.attributes.State_LGD && f.attributes.STNAME) {
             unique.set(f.attributes.State_LGD, f.attributes.STNAME);
@@ -54,7 +53,6 @@ export default function LocationSelector({ onSelectionChange, disabled }: Locati
     fetchNic(1, `State_LGD=${selectedState}`)
       .then((features) => {
         const unique = new Map();
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         features.forEach((f: any) => {
           if (f.attributes.Dist_LGD && f.attributes.D_Pan_Name) {
             unique.set(f.attributes.Dist_LGD, f.attributes.D_Pan_Name);
@@ -75,7 +73,6 @@ export default function LocationSelector({ onSelectionChange, disabled }: Locati
     fetchNic(2, `dist_lgd=${selectedDistrict}`)
       .then((features) => {
         const unique = new Map();
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         features.forEach((f: any) => {
           if (f.attributes.block_lgd && f.attributes.B_Pan_Name) {
             unique.set(f.attributes.block_lgd, f.attributes.B_Pan_Name);
@@ -95,7 +92,6 @@ export default function LocationSelector({ onSelectionChange, disabled }: Locati
     fetchNic(3, `blklgdcode='${selectedBlock}'`)
       .then((features) => {
         const unique = new Map();
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         features.forEach((f: any) => {
           if (f.attributes.gp_code && f.attributes.gp_name) {
             unique.set(f.attributes.gp_code, f.attributes.gp_name);

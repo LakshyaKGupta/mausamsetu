@@ -5,10 +5,6 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api import auth, advisories, weather, panchayats, chatbot, geography, field_reports, officers, nic, farmer_routes, admin, ml_showcase, officer_routes, locations, advice_engine
 from app.config import settings
-from app.db.session import Base, engine
-
-# Create all tables
-Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title="MausamSetu API",
@@ -21,7 +17,7 @@ app = FastAPI(
 # CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:3000", "*"],
+    allow_origins=settings.cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -82,4 +78,3 @@ def root():
 @app.get("/api/health", tags=["health"])
 def health():
     return {"status": "ok"}
-

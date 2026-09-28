@@ -5,9 +5,12 @@ with orographic physics guidance) and crop pest/disease risk prediction.
 """
 
 import math
+import json
+from pathlib import Path
 from typing import List, Optional
 from fastapi import APIRouter
 from pydantic import BaseModel, Field
+from app.config import settings
 
 router = APIRouter(prefix="/ml", tags=["ml-showcase"])
 
@@ -73,7 +76,7 @@ class PestRiskResponse(BaseModel):
 
 @router.post("/infer-downscale", response_model=DownscaleInferenceResponse)
 def infer_downscale(req: DownscaleInferenceRequest):
-    """Real-time spatial microclimate downscaling inference combining XGBoost and orographic physical lapse."""
+    """Diagnostic terrain calculation; it is not an active production forecast model."""
     delta_z = req.target_elevation_m - req.reference_elevation_m
     delta_t = (delta_z / 1000.0) * req.lapse_rate_c_per_km
     downscaled_temp = round(req.base_temperature_c + delta_t, 2)
@@ -128,7 +131,7 @@ def infer_downscale(req: DownscaleInferenceRequest):
     )
 
     return DownscaleInferenceResponse(
-        model_version="MausamSetu-XGBoost-SpatialDownscaler-v0.3",
+        model_version="DIAGNOSTIC_SIMULATOR_UNVALIDATED",
         elevation_diff_m=round(delta_z, 1),
         predicted_temperature_c=downscaled_temp,
         predicted_precipitation_mm=downscaled_precip,
@@ -221,35 +224,30 @@ def predict_pest_risk(req: PestRiskRequest):
 
 @router.get("/metrics")
 def get_ml_metrics():
-    """Phase 12 and 13 scientific validation benchmarks across 18 synoptic ground stations."""
-    return {
-        "model_architecture": "XGBoost v0.3 with SRTM 90m Topographic Physics",
-        "training_samples": 1420,
-        "validation_stations_count": 18,
-        "validation_dataset": "NOAA ISD Synoptic Network & Vidarbha AWS Ground Truth",
-        "metrics": {
-            "baseline_mae_mm": 2.41,
-            "downscaler_mae_mm": 1.38,
-            "error_reduction_pct": 42.7,
-            "baseline_rmse_deg_c": 1.91,
-            "downscaler_rmse_deg_c": 1.42,
-            "pest_classifier_roc_auc": 0.942,
-            "pest_classifier_f1": 0.891,
-        },
-        "confusion_matrix": {
-            "true_positives": 342,
-            "false_positives": 28,
-            "false_negatives": 21,
-            "true_negatives": 889
-        },
-        "station_locations": [
-            {"station": "JALGAON", "elevation_m": 201, "distance_km": 3.8, "mae_reduction": "44.2%"},
-            {"station": "NASHIK", "elevation_m": 598, "distance_km": 2.4, "mae_reduction": "48.1%"},
-            {"station": "AKOLA", "elevation_m": 282, "distance_km": 3.1, "mae_reduction": "39.5%"},
-            {"station": "WARDHA", "elevation_m": 283, "distance_km": 1.8, "mae_reduction": "41.8%"},
-            {"station": "PUNE", "elevation_m": 558, "distance_km": 4.2, "mae_reduction": "46.0%"},
-            {"station": "MAHABALESHWAR", "elevation_m": 1382, "distance_km": 5.1, "mae_reduction": "58.4%"},
-            {"station": "SOLAPUR", "elevation_m": 483, "distance_km": 2.9, "mae_reduction": "40.2%"},
-            {"station": "KOLHAPUR", "elevation_m": 608, "distance_km": 3.4, "mae_reduction": "45.7%"},
-        ]
-    }
+    """Return only metrics backed by a registered evaluation artifact."""
+    if not settings.MODEL_EVALUATION_PATH:
+        return {
+            "status": "NOT_PRODUCTION_READY",
+            "reason": "No validated evaluation dataset is currently registered.",
+            "metrics": None,
+        }
+    try:
+        artifact = json.loads(Path(settings.MODEL_EVALUATION_PATH).read_text())
+    except (OSError, json.JSONDecodeError):
+        artifact = {}
+
+    required_fields = {"status", "model_id", "artifact_checksum", "metrics", "station_locations"}
+    if (
+        not required_fields.issubset(artifact)
+        or artifact.get("status") not in {"ACTIVE", "RESEARCH_DEMO"}
+        or not artifact.get("artifact_checksum")
+        or not isinstance(artifact.get("metrics"), dict)
+        or not isinstance(artifact.get("station_locations"), list)
+    ):
+        return {
+            "status": "NOT_PRODUCTION_READY",
+            "reason": "The registered evaluation artifact is missing required evaluation evidence.",
+            "metrics": None,
+        }
+
+    return artifact

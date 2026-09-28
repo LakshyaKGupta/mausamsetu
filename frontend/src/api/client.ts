@@ -6,14 +6,14 @@ const api = axios.create({
   headers: { 'Content-Type': 'application/json' },
 })
 
-// Attach auth token if present
-// Attach auth token and demo role if present
+// Attach the authenticated identity. Demo-only headers are opt-in so a saved
+// browser profile can never grant a production role by itself.
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('mausamsetu_token')
   if (token) config.headers.Authorization = `Bearer ${token}`
   
   const userJson = localStorage.getItem('mausamsetu_user')
-  if (userJson) {
+  if (import.meta.env.VITE_DEMO_MODE === 'true' && userJson) {
     try {
       const user = JSON.parse(userJson)
       if (user.role) {
@@ -266,6 +266,5 @@ export const mlApi = {
 
   getMetrics: () => api.get('/ml/metrics').then((r) => r.data),
 }
-
 
 

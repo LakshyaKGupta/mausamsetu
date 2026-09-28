@@ -12,8 +12,8 @@ Endpoints:
   GET /map/panchayats                  — Panchayat map pins, filtered by district/block/bbox
   GET /search                          — Global location search
 
-  GET /admin/data-quality              — Data quality summary
-  GET /admin/data-quality/districts    — Per-district data quality breakdown
+  GET /locations/admin/data-quality              — Data quality summary
+  GET /locations/admin/data-quality/districts    — Per-district data quality breakdown
 """
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -600,7 +600,7 @@ async def search_locations(
 # Data quality / Admin endpoints
 # ──────────────────────────────────────────────────────────────────────────────
 
-@router.get("/admin/data-quality")
+@router.get("/locations/admin/data-quality")
 async def get_data_quality_summary(
     state_id: Optional[int] = Query(None),
     db: AsyncSession = Depends(get_db),
@@ -679,7 +679,7 @@ async def get_data_quality_summary(
     }
 
 
-@router.get("/admin/data-quality/districts")
+@router.get("/locations/admin/data-quality/districts")
 async def get_district_data_quality(
     state_id: Optional[int] = Query(None),
     db: AsyncSession = Depends(get_db),

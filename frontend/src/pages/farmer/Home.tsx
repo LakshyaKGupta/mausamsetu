@@ -281,6 +281,8 @@ export default function FarmerHome() {
             is_gps: true,
             accuracy_m: Math.round(accuracy || 0),
             nearest_panchayat: res.nearest_panchayat?.name,
+            source: 'gps',
+            hierarchy_status: district ? 'resolved' : 'pending',
           }
           localStorage.setItem('mausamsetu_selected_location', JSON.stringify(newLoc))
           localStorage.setItem('mausamsetu_location_detected', 'true')
@@ -295,6 +297,8 @@ export default function FarmerHome() {
             lon: longitude,
             is_gps: true,
             accuracy_m: Math.round(accuracy || 0),
+            source: 'gps',
+            hierarchy_status: 'pending',
           }
           localStorage.setItem('mausamsetu_selected_location', JSON.stringify(newLoc))
           localStorage.setItem('mausamsetu_location_detected', 'true')

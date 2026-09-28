@@ -52,10 +52,25 @@ export const AppLayout: React.FC = () => {
   })
   const [showLocationModal, setShowLocationModal] = useState(false)
 
+  // GPS can be requested from a Farmer page as well as the shared picker.
+  // Keep the shell (navbar and every Outlet consumer) synchronized either way.
+  useEffect(() => {
+    const syncScope = (event: Event) => {
+      const locationEvent = event as CustomEvent<SelectedLocation | undefined>
+      const scope = locationEvent.detail
+      if (!scope) return
+      setSelectedLoc(scope)
+      localStorage.setItem('mausamsetu_selected_location', JSON.stringify(scope))
+    }
+    window.addEventListener('mausamsetu_location_change', syncScope)
+    return () => window.removeEventListener('mausamsetu_location_change', syncScope)
+  }, [])
+
   const handleSelectLocation = (loc: SelectedLocation) => {
-    setSelectedLoc(loc)
-    localStorage.setItem('mausamsetu_selected_location', JSON.stringify(loc))
-    window.dispatchEvent(new CustomEvent('mausamsetu_location_change', { detail: loc }))
+    const scope = { ...loc, source: loc.source || (loc.is_gps ? 'gps' : 'manual'), selected_at: loc.selected_at || new Date().toISOString() }
+    setSelectedLoc(scope)
+    localStorage.setItem('mausamsetu_selected_location', JSON.stringify(scope))
+    window.dispatchEvent(new CustomEvent('mausamsetu_location_change', { detail: scope }))
   }
 
   // Parse logged in user details from localStorage
@@ -83,24 +98,16 @@ export const AppLayout: React.FC = () => {
   let districtName = gpDetails.districtName
   let blockName = gpDetails.blockName
 
-  if (role === 'officer') {
-    panchayatName = officerData.block || 'कलमेश्वर'
-  } else if (role === 'admin') {
-    panchayatName =
-      adminData.district && adminData.district !== 'Nagpur'
-        ? adminData.district
-        : lang === 'en'
-        ? 'All-India'
-        : 'अखिल भारतीय'
+  if (role === 'officer' && !selectedLoc) {
+    panchayatName = officerData.block || 'Location not selected'
+  } else if (role === 'admin' && !selectedLoc) {
+    panchayatName = adminData.district || (lang === 'en' ? 'All-India' : 'अखिल भारतीय')
   }
 
   // Translated location names for display with Gram Panchayat priority
   const getLocationDisplay = () => {
     if (role === 'admin') {
-      const dist =
-        adminData.district && adminData.district !== 'Nagpur' && adminData.district !== 'All-India'
-          ? adminData.district
-          : null
+      const dist = selectedLoc?.district || adminData.district
       if (dist) {
         return `🇮🇳 ${dist} · ${lang === 'en' ? 'Administration' : 'प्रशासन'}`
       }
@@ -112,8 +119,8 @@ export const AppLayout: React.FC = () => {
     }
 
     if (role === 'officer') {
-      const b = selectedLoc?.block || selectedLoc?.name || officerData.block || 'Kalmeshwar'
-      const d = selectedLoc?.district || officerData.district || 'Nagpur'
+      const b = selectedLoc?.block || selectedLoc?.name || officerData.block || 'Location not selected'
+      const d = selectedLoc?.district || officerData.district || ''
       return lang === 'en' ? `Sub-Div: ${b} · ${d}` : `🏛️ उप-विभाग: ${b} · ${d}`
     }
 

@@ -167,14 +167,14 @@ export interface DistrictOperationsSummary {
 }
 
 export interface ModelPerformanceResponse {
-  model_version: string
-  evaluation_period: string
-  total_evaluation_samples: number
-  baseline_mae_mm: number
-  mausamsetu_mae_mm: number
-  error_reduction_pct: number
+  model_version?: string
+  evaluation_period?: string
+  total_evaluation_samples?: number
+  baseline_mae_mm?: number
+  mausamsetu_mae_mm?: number
+  error_reduction_pct?: number
   status: string
-  last_evaluated_at: string
+  last_evaluated_at?: string
   fallback_rules: string[]
   baseline_mae?: number
   model_mae?: number
@@ -365,4 +365,3 @@ export interface OfficerBlockDashboard {
     details: string
   }>
 }
-

@@ -489,18 +489,18 @@ async def reverse_geocode(
                 "state": best_p.state,
                 "distance_km": round(min_dist_km, 2),
             }
-            # Set prominent top-level Gram Panchayat attributes
-            result["panchayat"] = best_p.name
-            result["panchayat_id"] = best_p.id
-            result["panchayat_block"] = best_p.block
-            result["panchayat_district"] = best_p.district
             result["panchayat_distance_km"] = round(min_dist_km, 2)
-            result["panchayat_label"] = f"ग्राम पंचायत {best_p.name}"
 
             if min_dist_km < 35.0:
+                # Only promote a seeded/local Panchayat when it is genuinely
+                # close to the GPS fix. Otherwise preserve the reverse-geocoded
+                # location instead of relabelling another district as the user.
+                result["panchayat"] = best_p.name
+                result["panchayat_id"] = best_p.id
+                result["panchayat_block"] = best_p.block
+                result["panchayat_district"] = best_p.district
+                result["panchayat_label"] = f"ग्राम पंचायत {best_p.name}"
                 result["display_label"] = f"ग्रा.पं. {best_p.name} ({result.get('name', best_p.name)}) · {best_p.district}"
-            else:
-                result["display_label"] = f"ग्रा.पं. {best_p.name} · {best_p.district}"
     except Exception:
         pass
 
@@ -929,5 +929,4 @@ async def get_live_weather(
         },
         "forecast": forecast_days,
     }
-
 

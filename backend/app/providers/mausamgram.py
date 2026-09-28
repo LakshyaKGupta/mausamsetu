@@ -10,8 +10,10 @@ logger = logging.getLogger(__name__)
 
 class IMausamGramProvider:
     """
-    IMD MausamGram Official Provider Interface.
-    Phase F: IMD Provider Interface implementation.
+    Panchayat forecast adapter.
+
+    IMD is used only when its authorised integration is configured. Until then
+    this adapter uses the explicitly-labelled Open-Meteo public forecast source.
     """
     
     def __init__(self):
@@ -20,7 +22,7 @@ class IMausamGramProvider:
         
     async def get_forecast_by_gpcode(self, gpcode: str, lat: float = None, lon: float = None, interval: int = 3) -> dict:
         """
-        Fetches the forecast using Open-Meteo as the real data source (fallback for IMD).
+        Fetches a public Open-Meteo forecast with explicit provenance.
         Supported intervals: 1, 3, 6.
         """
         if interval not in [1, 3, 6]:
@@ -53,8 +55,9 @@ class IMausamGramProvider:
         except Exception as e:
             logger.error(f"Failed to fetch real data from Open-Meteo: {e}")
             return {
-                "provider": "IMD_MAUSAMGRAM_OPENMETEO_FALLBACK",
+                "provider": "OPEN_METEO_PUBLIC",
                 "status": "ERROR",
+                "reason": "Open-Meteo request failed; no IMD provider is configured.",
                 "forecasts": []
             }
 
@@ -76,8 +79,13 @@ class IMausamGramProvider:
             })
 
         return {
-            "provider": "IMD_MAUSAMGRAM",
-            "status": "AUTHORIZED",
+            "provider": "OPEN_METEO_PUBLIC",
+            "status": "AVAILABLE",
+            "provenance": {
+                "source_type": "PUBLIC_OPEN_METEO",
+                "attribution": "Weather data by Open-Meteo.com (CC BY 4.0)",
+                "imd_authorized": False,
+            },
             "forecasts": forecasts
         }
 

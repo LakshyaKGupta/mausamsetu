@@ -106,7 +106,7 @@ export default function OfficerDashboard() {
     setRefreshing(true)
     try {
       const [advData, statsData, dashData, reportsData, panchayatData] = await Promise.all([
-        advisoryApi.list(),
+        advisoryApi.list({ block: blockName, district: districtName }),
         advisoryApi.stats(blockName),
         officerApi.getDashboard(officerId, blockName, districtName).catch(() => null),
         fieldReportApi.list({ block: blockName }).catch(() => []),
@@ -144,6 +144,12 @@ export default function OfficerDashboard() {
     const matchesStatus = filter === 'all' || a.status === filter
     return matchesSearch && matchesStatus
   })
+  const pendingAdvisoryCount = advisories.filter((a) => a.status === 'pending').length
+  const pendingAdvisorySummary = advisories
+    .filter((a) => a.status === 'pending')
+    .slice(0, 2)
+    .map((a) => `${a.panchayat_name || 'Panchayat'} (${a.crop})`)
+    .join(' and ')
 
   const handleReviewed = () => {
     setSelectedId(null)
@@ -152,7 +158,7 @@ export default function OfficerDashboard() {
 
   const subviewList: Array<{ id: SubView; label: string; icon: any; badge?: number }> = [
     { id: 'dashboard', label: 'Dashboard', icon: Activity, badge: undefined },
-    { id: 'queue', label: 'Advisory Queue', icon: Clock, badge: blockDashboard?.pending_advisories ?? stats?.pending_advisories ?? 2 },
+    { id: 'queue', label: 'Advisory Queue', icon: Clock, badge: pendingAdvisoryCount },
     { id: 'panchayats', label: `Panchayats (${blockDashboard?.total_panchayats || panchayats.length || stats?.total_panchayats || 24})`, icon: MapPin, badge: undefined },
     { id: 'weather', label: 'Weather Watch', icon: CloudRain, badge: undefined },
     { id: 'reports', label: 'Field Reports', icon: FileText, badge: fieldReports.length || blockDashboard?.field_reports_count || 2 },
@@ -162,7 +168,7 @@ export default function OfficerDashboard() {
   ]
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-slate-50 flex flex-col md:flex-row">
+    <div className="min-h-[calc(100vh-4rem)] bg-slate-50 flex flex-col md:flex-row md:h-[calc(100dvh-4rem)] md:overflow-hidden">
       {/* Mobile Top Subview Navigation Strip (< md) */}
       <div className="md:hidden bg-white border-b border-slate-200 sticky top-14 z-30 shadow-2xs">
         <div className="flex items-center justify-between px-3 py-2 border-b border-slate-100">
@@ -270,7 +276,7 @@ export default function OfficerDashboard() {
       </aside>
 
       {/* Main Content Area */}
-      <main className="flex-1 p-3.5 sm:p-6 md:p-8 overflow-y-auto">
+      <main className="flex-1 min-w-0 p-3.5 sm:p-6 md:p-8 md:overflow-y-auto">
         {/* Location Search Modal for switching jurisdiction anywhere */}
         <LocationSearchModal
           isOpen={showLocationModal}
@@ -451,7 +457,7 @@ export default function OfficerDashboard() {
                 <div>
                   <span className="text-[10px] uppercase font-bold text-amber-800 block tracking-wider">Pending Review</span>
                   <span className="text-xl font-bold font-display text-amber-900 block mt-0.5">
-                    {blockDashboard?.pending_advisories ?? stats?.pending_advisories ?? 2}
+                    {pendingAdvisoryCount}
                   </span>
                 </div>
                 <span className="text-[11px] font-semibold text-amber-800 block mt-1 group-hover:underline">Immediate Action</span>
@@ -496,7 +502,7 @@ export default function OfficerDashboard() {
                     Priority Actions Required
                   </h3>
                   <span className="text-[11px] font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded-full">
-                    {stats?.pending_advisories ?? 2} Pending
+                    {pendingAdvisoryCount} Pending
                   </span>
                 </div>
                 <div className="space-y-3">
@@ -510,11 +516,13 @@ export default function OfficerDashboard() {
                           HIGH
                         </span>
                         <strong className="text-xs text-amber-950 font-bold">
-                          {stats?.pending_advisories ?? 2} Advisories Require Review
+                          {pendingAdvisoryCount} Advisories Require Review
                         </strong>
                       </div>
                       <p className="text-[11px] text-amber-900 mt-1">
-                        Dhapewada (Soybean) and Ubali (Cotton) downscaled forecasts awaiting verification.
+                        {pendingAdvisoryCount > 0
+                          ? `${pendingAdvisorySummary} ${pendingAdvisoryCount === 1 ? 'is' : 'are'} awaiting verification.`
+                          : 'No advisories currently require verification.'}
                       </p>
                     </div>
                     <ChevronRight size={16} className="text-amber-700 flex-shrink-0" />
@@ -1310,7 +1318,7 @@ function EmergencyBroadcastModal({
     }
   }
 
-  const farmerCount = (selectedPanchayats.length || panchayats.length || 24) * 77
+  const targetPanchayatCount = selectedPanchayats.length || panchayats.length
 
   return (
     <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 flex items-center justify-center p-4">
@@ -1332,31 +1340,16 @@ function EmergencyBroadcastModal({
 
         {result ? (
           <div className="space-y-4 py-4 text-center animate-in fade-in">
-            <div className="w-16 h-16 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center mx-auto">
-              <CheckCircle size={32} />
+            <div className="w-16 h-16 bg-amber-100 text-amber-700 rounded-full flex items-center justify-center mx-auto">
+              <AlertTriangle size={32} />
             </div>
             <div>
-              <h4 className="text-lg font-bold text-slate-900">Broadcast Dispatched Successfully</h4>
-              <p className="text-xs text-slate-500 mt-1">Broadcast ID: <strong className="font-mono">{result.broadcast_id}</strong></p>
-            </div>
-
-            <div className="grid grid-cols-3 gap-2 text-xs bg-slate-50 p-4 rounded-2xl border border-slate-200">
-              <div>
-                <span className="text-[10px] uppercase text-slate-400 font-bold block">SMS Delivered</span>
-                <span className="text-base font-bold text-slate-900 font-mono">{result.sms_sent}</span>
-              </div>
-              <div>
-                <span className="text-[10px] uppercase text-slate-400 font-bold block">WhatsApp Push</span>
-                <span className="text-base font-bold text-emerald-700 font-mono">{result.whatsapp_sent}</span>
-              </div>
-              <div>
-                <span className="text-[10px] uppercase text-slate-400 font-bold block">Delivery Rate</span>
-                <span className="text-base font-bold text-brand-700 font-mono">{result.delivery_rate_pct}%</span>
-              </div>
+              <h4 className="text-lg font-bold text-slate-900">Broadcast delivery unavailable</h4>
+              <p className="text-xs text-slate-500 mt-1">{result.summary}</p>
             </div>
 
             <button onClick={onClose} className="btn-primary w-full py-2.5 text-xs font-bold">
-              Done & Return to Dashboard
+              Return to Dashboard
             </button>
           </div>
         ) : (
@@ -1416,7 +1409,7 @@ function EmergencyBroadcastModal({
               <div className="flex items-center justify-between mb-1.5">
                 <label className="font-bold text-slate-700">Target Gram Panchayats</label>
                 <span className="text-[11px] font-bold text-brand-700">
-                  ~{farmerCount} Farmers Reached
+                  {targetPanchayatCount || 'No'} Panchayats selected · farmer count unavailable
                 </span>
               </div>
               <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto p-2 bg-slate-50 border border-slate-200 rounded-xl">
@@ -1503,7 +1496,7 @@ function EmergencyBroadcastModal({
                 className="flex-1 py-2 text-xs font-bold bg-rose-600 hover:bg-rose-700 text-white rounded-xl shadow-sm flex items-center justify-center gap-1.5 disabled:opacity-50"
               >
                 <Send size={14} className={cn(sending && 'animate-spin')} />
-                {sending ? 'Broadcasting...' : `Transmit to ~${farmerCount} Farmers`}
+                {sending ? 'Checking delivery readiness...' : 'Check delivery readiness'}
               </button>
             </div>
           </div>

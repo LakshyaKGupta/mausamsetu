@@ -1,0 +1,26 @@
+services:
+  - type: web
+    name: mausamsetu-api
+    runtime: python
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    preDeployCommand: alembic upgrade head
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: SECRET_KEY
+        generateValue: true
+      - key: CORS_ORIGINS
+        sync: false
+      - key: IMD_API_KEY
+        sync: false
+      - key: DELIVERY_PROVIDER
+        sync: false
+      - key: DELIVERY_API_KEY
+        sync: false
+      - key: MODEL_EVALUATION_PATH
+        sync: false

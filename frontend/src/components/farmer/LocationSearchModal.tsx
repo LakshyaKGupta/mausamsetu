@@ -19,6 +19,9 @@ export interface SelectedLocation {
   accuracy_m?: number
   nearest_panchayat?: string
   is_panchayat?: boolean
+  source?: 'gps' | 'manual' | 'account-default'
+  selected_at?: string
+  hierarchy_status?: 'resolved' | 'pending'
 }
 
 interface LocationSearchModalProps {
@@ -178,8 +181,13 @@ export const LocationSearchModal: React.FC<LocationSearchModalProps> = ({
   const t = T[lang] || T.hi
 
   const handleSelect = useCallback((loc: SelectedLocation) => {
-    saveRecentLocation(loc)
-    onSelectLocation(loc)
+    const selected = {
+      ...loc,
+      source: loc.source || (loc.is_gps ? 'gps' : 'manual'),
+      selected_at: new Date().toISOString(),
+    } satisfies SelectedLocation
+    saveRecentLocation(selected)
+    onSelectLocation(selected)
     onClose()
   }, [onSelectLocation, onClose])
 
@@ -198,10 +206,10 @@ export const LocationSearchModal: React.FC<LocationSearchModalProps> = ({
         try {
           const res = await weatherApi.reverseGeocode(latitude, longitude, lang)
           
-          const gpName = res.panchayat || res.nearest_panchayat?.name || res.village || res.name || 'Dhapewada'
-          const blockName = res.panchayat_block || res.taluka || 'Kalmeshwar'
-          const districtName = res.panchayat_district || res.district || 'Nagpur'
-          const stateName = res.state || 'Maharashtra'
+          const gpName = res.panchayat || res.nearest_panchayat?.name || res.village || res.name || `GPS ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`
+          const blockName = res.panchayat_block || res.taluka || res.nearest_panchayat?.block || ''
+          const districtName = res.panchayat_district || res.district || res.nearest_panchayat?.district || ''
+          const stateName = res.state || ''
 
           const loc: SelectedLocation = {
             id: `gps_${latitude.toFixed(4)}_${longitude.toFixed(4)}`,
@@ -213,12 +221,14 @@ export const LocationSearchModal: React.FC<LocationSearchModalProps> = ({
             state: stateName,
             lat: latitude,
             lon: longitude,
-            elevation_m: res.elevation_m || 300,
-            display_label: `🏛️ ग्रा.पं. ${gpName} · ${districtName}`,
+            elevation_m: res.elevation_m,
+            display_label: districtName ? `📍 ${gpName} · ${districtName}` : `📍 ${gpName}`,
             is_gps: true,
-            is_panchayat: true,
+            is_panchayat: Boolean(res.panchayat || res.nearest_panchayat?.name),
             accuracy_m: Math.round(accuracy || 0),
             nearest_panchayat: gpName,
+            source: 'gps',
+            hierarchy_status: districtName ? 'resolved' : 'pending',
           }
 
           localStorage.setItem('mausamsetu_location_detected', 'true')
@@ -232,18 +242,15 @@ export const LocationSearchModal: React.FC<LocationSearchModalProps> = ({
           console.error('Reverse geocode error:', err)
           const loc: SelectedLocation = {
             id: `gps_${latitude.toFixed(4)}_${longitude.toFixed(4)}`,
-            name: 'Dhapewada',
-            panchayat: 'Dhapewada',
-            panchayat_id: 1,
-            block: 'Kalmeshwar',
-            district: 'Nagpur',
-            state: 'Maharashtra',
+            name: `GPS ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`,
             lat: latitude,
             lon: longitude,
-            display_label: '🏛️ ग्राम पंचायत: Dhapewada · Nagpur',
+            display_label: `📍 GPS location awaiting hierarchy resolution`,
             is_gps: true,
-            is_panchayat: true,
+            is_panchayat: false,
             accuracy_m: Math.round(accuracy || 0),
+            source: 'gps',
+            hierarchy_status: 'pending',
           }
           localStorage.setItem('mausamsetu_location_detected', 'true')
           handleSelect(loc)

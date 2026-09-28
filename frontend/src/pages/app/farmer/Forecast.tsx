@@ -201,7 +201,6 @@ function WeatherTimelinePlayer({ forecasts, lang }: { forecasts: HourlyForecast[
 
   // Take first 24 hourly slots max
   const slots = forecasts.slice(0, 24)
-  if (slots.length === 0) return null
 
   // Sky gradient by hour
   const getSkyGradient = (h: number) => {
@@ -226,21 +225,22 @@ function WeatherTimelinePlayer({ forecasts, lang }: { forecasts: HourlyForecast[
   }
 
   useEffect(() => {
-    if (isPlaying) {
-      timerRef.current = setInterval(() => {
-        setPlayheadIdx(prev => {
-          const next = (prev + 1) % slots.length
-          // scroll thumb into view
-          const el = scrollRef.current?.children[next] as HTMLElement
-          el?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' })
-          return next
-        })
-      }, 800)
-    } else {
-      if (timerRef.current) clearInterval(timerRef.current)
-    }
+    if (!isPlaying || slots.length === 0) return
+
+    timerRef.current = setInterval(() => {
+      setPlayheadIdx(prev => {
+        const next = (prev + 1) % slots.length
+        // scroll thumb into view
+        const el = scrollRef.current?.children[next] as HTMLElement
+        el?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' })
+        return next
+      })
+    }, 800)
+
     return () => { if (timerRef.current) clearInterval(timerRef.current) }
   }, [isPlaying, slots.length])
+
+  if (slots.length === 0) return null
 
   const active = slots[playheadIdx]
   const activeHour = active ? new Date(active.time).getHours() : 12

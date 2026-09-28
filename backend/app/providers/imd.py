@@ -24,8 +24,7 @@ class IMDProvider(WeatherProvider):
         
     async def _fetch_with_retry(self, url: str, params: dict = None, retries: int = 3):
         if not self.api_key:
-            logger.warning("IMD API key missing. Using mocked response.")
-            return self._get_mocked_response()
+            raise RuntimeError("IMD API credentials are not configured")
 
         for attempt in range(retries):
             try:
@@ -47,25 +46,11 @@ class IMDProvider(WeatherProvider):
 
         raise Exception("Failed to fetch from IMD after multiple retries.")
         
-    def _get_mocked_response(self):
-        # Mocked response structure for when API key is not available yet
-        return {
-            "Date": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
-            "Station_Name": "Nearest IMD Station (Mock)",
-            "Todays_Forecast_Max_Temp": 34.5,
-            "Todays_Forecast_Min_temp": 24.2,
-            "Past_24_hrs_Rainfall": 0.0,
-            "Todays_Forecast": "Partly Cloudy",
-            "Day_2_Max_Temp": 35.0,
-            "Day_2_Min_temp": 24.5,
-            "Day_2_Forecast": "Clear Sky"
-        }
-
     async def get_forecast(self, lat: float, lon: float, panchayat_id: int) -> List[NormalizedForecast]:
         """
         Fetches the 7-day city weather forecast from IMD.
-        Since exact coordinate-to-city mapping documentation is limited,
-        we mock the bounding logic.
+        This is called only after IMD credentials and the documented endpoint
+        mapping have been configured.
         """
         # Endpoint: /api/v1/cityforecastloc
         url = f"{self.base_url}/cityforecastloc"

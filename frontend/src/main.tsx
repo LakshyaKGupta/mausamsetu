@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { Suspense, lazy } from 'react'
 import ReactDOM from 'react-dom/client'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import './index.css'
@@ -10,26 +10,30 @@ import { AuthLayout } from './layouts/AuthLayout'
 import { AppLayout } from './layouts/AppLayout'
 
 // Public Landing Pages
-import Home from './pages/landing/Home'
-import HowItWorksPage from './pages/landing/HowItWorks'
-import FarmersPage from './pages/landing/Farmers'
-import OfficersPage from './pages/landing/Officers'
+const Home = lazy(() => import('./pages/landing/Home'))
+const HowItWorksPage = lazy(() => import('./pages/landing/HowItWorks'))
+const FarmersPage = lazy(() => import('./pages/landing/Farmers'))
+const OfficersPage = lazy(() => import('./pages/landing/Officers'))
 
 // Auth Pages
-import LoginPage from './pages/auth/Login'
-import SignupPage from './pages/auth/Signup'
-import VerifyOTPPage from './pages/auth/VerifyOTP'
-import ForgotPasswordPage from './pages/auth/ForgotPassword'
+const LoginPage = lazy(() => import('./pages/auth/Login'))
+const SignupPage = lazy(() => import('./pages/auth/Signup'))
+const VerifyOTPPage = lazy(() => import('./pages/auth/VerifyOTP'))
+const ForgotPasswordPage = lazy(() => import('./pages/auth/ForgotPassword'))
 
 // Authenticated Application Pages
-import FarmerHome from './pages/app/farmer/Home'
-import FarmerForecastPage from './pages/app/farmer/Forecast'
-import FarmerMyCropsPage from './pages/app/farmer/MyCrops'
-import FarmerAdvisoryListPage from './pages/app/farmer/AdvisoryList'
-import FarmerAskPage from './pages/app/farmer/Ask'
-import OfficerDashboard from './pages/app/officer/Dashboard'
-import AdminDashboard from './pages/app/admin/Admin'
-import MLShowcasePage from './pages/app/ml/MLShowcase'
+const FarmerHome = lazy(() => import('./pages/app/farmer/Home'))
+const FarmerForecastPage = lazy(() => import('./pages/app/farmer/Forecast'))
+const FarmerMyCropsPage = lazy(() => import('./pages/app/farmer/MyCrops'))
+const FarmerAdvisoryListPage = lazy(() => import('./pages/app/farmer/AdvisoryList'))
+const FarmerAskPage = lazy(() => import('./pages/app/farmer/Ask'))
+const OfficerDashboard = lazy(() => import('./pages/app/officer/Dashboard'))
+const AdminDashboard = lazy(() => import('./pages/app/admin/Admin'))
+const MLShowcasePage = lazy(() => import('./pages/app/ml/MLShowcase'))
+
+function RouteLoading() {
+  return <div className="min-h-screen grid place-items-center bg-slate-50 p-6 text-center text-sm font-medium text-slate-600">Loading MausamSetu…</div>
+}
 
 // Officer Auth Guard
 function OfficerRoute({ children }: { children: React.ReactNode }) {
@@ -54,6 +58,7 @@ function AdminRoute({ children }: { children: React.ReactNode }) {
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <BrowserRouter>
+      <Suspense fallback={<RouteLoading />}>
       <Routes>
         {/* 1. Public Product Website */}
         <Route element={<PublicLayout />}>
@@ -127,6 +132,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         {/* 5. Catch-All Redirect */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+      </Suspense>
     </BrowserRouter>
   </React.StrictMode>
 )
@@ -144,4 +150,3 @@ if ('serviceWorker' in navigator) {
       })
   })
 }
-

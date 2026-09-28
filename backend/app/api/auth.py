@@ -2,7 +2,7 @@
 
 import random
 import string
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 
 from pydantic import BaseModel
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -46,7 +46,7 @@ def get_password_hash(password: str) -> str:
 
 
 def _create_token(user_id: int, role: str = "farmer") -> str:
-    expire = datetime.utcnow() + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    expire = datetime.now(UTC) + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     payload = {"sub": str(user_id), "role": role, "exp": expire}
     return jwt.encode(payload, settings.SECRET_KEY, algorithm=ALGORITHM)
 
@@ -61,6 +61,11 @@ def login(body: UnifiedLoginRequest, db: Session = Depends(get_db)):
     """Unified login for Farmers, Agricultural Officers, and District Admins."""
     if body.phone:
         clean_phone = body.phone.strip()
+        if not settings.is_development:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Phone-only login is disabled in production. Farmers must verify an OTP; staff must use provisioned credentials.",
+            )
         # Admin special phone or user lookup
         if clean_phone == "9999999999":
             token = _create_token(user_id=999, role="admin")
@@ -205,6 +210,12 @@ class OTPVerifyRequest(BaseModel):
 def request_otp(body: OTPRequest, db: Session = Depends(get_db)):
     """Generate and send OTP for farmer login/signup."""
     clean_phone = body.phone.strip()
+
+    if not settings.is_development and not (settings.DELIVERY_PROVIDER and settings.DELIVERY_API_KEY):
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="OTP delivery is not configured. Contact the programme administrator.",
+        )
     
     otp = "123456" if settings.ENVIRONMENT == "development" else "".join(random.choices(string.digits, k=6))
     
@@ -214,7 +225,7 @@ def request_otp(body: OTPRequest, db: Session = Depends(get_db)):
     new_otp = OTPVerification(
         phone_number=clean_phone,
         otp_hash=get_password_hash(otp),
-        expires_at=datetime.utcnow() + timedelta(minutes=5),
+        expires_at=datetime.now(UTC).replace(tzinfo=None) + timedelta(minutes=5),
         attempts=0,
     )
     db.add(new_otp)
@@ -425,4 +436,3 @@ def get_demo_session(role: str, db: Session = Depends(get_db)):
             preferred_language=profile.preferred_language.value if profile and profile.preferred_language else "hi",
             crops=farmer_crops,
         )
-

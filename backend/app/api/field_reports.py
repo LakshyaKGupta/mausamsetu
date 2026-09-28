@@ -20,21 +20,23 @@ def list_field_reports(
     db: Session = Depends(get_db),
 ):
     """Retrieve field reports submitted by agricultural extension officers."""
-    q = db.query(FieldReport)
+    q = (
+        db.query(FieldReport, OfficerProfile, Panchayat)
+        .outerjoin(OfficerProfile, OfficerProfile.id == FieldReport.officer_id)
+        .outerjoin(Panchayat, Panchayat.id == FieldReport.panchayat_id)
+    )
     
     if panchayat_id:
         q = q.filter(FieldReport.panchayat_id == panchayat_id)
     if officer_id:
         q = q.filter(FieldReport.officer_id == officer_id)
     if block:
-        q = q.join(Panchayat).filter(Panchayat.block.ilike(f"%{block}%"))
+        q = q.filter(Panchayat.block.ilike(f"%{block}%"))
         
     reports = q.order_by(FieldReport.created_at.desc()).limit(limit).all()
     
     result = []
-    for r in reports:
-        officer = db.query(OfficerProfile).filter(OfficerProfile.id == r.officer_id).first()
-        panchayat = db.query(Panchayat).filter(Panchayat.id == r.panchayat_id).first()
+    for r, officer, panchayat in reports:
         result.append(
             FieldReportOut(
                 id=r.id,
