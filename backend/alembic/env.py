@@ -22,13 +22,27 @@ if config.config_file_name is not None:
 
 target_metadata = Base.metadata
 
+
+def _async_database_url(database_url: str) -> str:
+    """Return an asyncpg URL for Alembic without changing the app's sync URL.
+
+    Render's internal PostgreSQL connection string is deliberately supplied in
+    the standard ``postgresql://`` form.  The application has synchronous
+    SQLAlchemy paths, whereas this Alembic environment uses an async engine.
+    Normalising only at the migration boundary lets both use the same single
+    DATABASE_URL setting.
+    """
+    if database_url.startswith("postgresql://"):
+        return database_url.replace("postgresql://", "postgresql+asyncpg://", 1)
+    return database_url
+
 def include_object(object, name, type_, reflected, compare_to):
     if type_ == "table" and reflected and compare_to is None:
         return False
     return True
 
 def run_migrations_offline() -> None:
-    url = settings.DATABASE_URL
+    url = _async_database_url(settings.DATABASE_URL)
     context.configure(
         url=url,
         target_metadata=target_metadata,
@@ -53,7 +67,7 @@ def do_run_migrations(connection: Connection) -> None:
 
 async def run_async_migrations() -> None:
     configuration = config.get_section(config.config_ini_section, {})
-    configuration["sqlalchemy.url"] = settings.DATABASE_URL
+    configuration["sqlalchemy.url"] = _async_database_url(settings.DATABASE_URL)
     connectable = async_engine_from_config(
         configuration,
         prefix="sqlalchemy.",
