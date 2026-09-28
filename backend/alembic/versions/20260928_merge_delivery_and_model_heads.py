@@ -1,6 +1,6 @@
 """merge delivery outbox and national model migration heads
 
-Revision ID: 20260928_merge_delivery_and_model_heads
+Revision ID: 20260928_merge_delivery_heads
 Revises: 20260928_delivery_outbox, f61b7ae2d551
 Create Date: 2026-09-28
 """
@@ -8,7 +8,7 @@ Create Date: 2026-09-28
 from typing import Sequence, Union
 
 
-revision: str = "20260928_merge_delivery_and_model_heads"
+revision: str = "20260928_merge_delivery_heads"
 down_revision: Union[str, Sequence[str], None] = (
     "20260928_delivery_outbox",
     "f61b7ae2d551",
