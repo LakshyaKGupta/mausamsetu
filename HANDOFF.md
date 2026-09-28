@@ -5,6 +5,14 @@ Read this before making any changes.
 
 ---
 
+## Deployment Update — 2026-09-28
+
+- The Vercel frontend project `mausamsetu` is deployed and reports `Ready` at `https://mausamsetu-eta.vercel.app`.
+- Render PostgreSQL has been provisioned, but the FastAPI web service still needs to be created in the Render dashboard with fresh database credentials and production environment variables. Do not treat the public frontend as end-to-end ready until `/health` on that service succeeds.
+- The Docker entrypoint now applies Alembic migrations before starting Uvicorn on Render's assigned `PORT`; production fails closed if PostgreSQL is unavailable rather than silently using local SQLite.
+
+---
+
 ## Session Update — 2026-09-19
 
 ### Objective

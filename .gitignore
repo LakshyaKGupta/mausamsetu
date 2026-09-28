@@ -90,3 +90,4 @@ backend/test_centroid.py
 backend/test_fetch.js
 backend/test_live_provider.py
 backend/query_maha.py
+.vercel

@@ -21,6 +21,10 @@ else:
         engine = test_engine
         logger.info("Connected to PostgreSQL database.")
     except Exception as e:
+        if not settings.is_development:
+            raise RuntimeError(
+                "PostgreSQL is required outside development; refusing to fall back to SQLite."
+            ) from e
         logger.warning(f"PostgreSQL not reachable ({e}). Falling back to local SQLite for development.")
         sqlite_path = os.path.join(os.path.dirname(__file__), "../../mausamsetu.db")
         engine = create_engine(f"sqlite:///{sqlite_path}", connect_args={"check_same_thread": False})
