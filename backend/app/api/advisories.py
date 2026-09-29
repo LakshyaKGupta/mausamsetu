@@ -572,6 +572,10 @@ def get_stats(block: Optional[str] = Query(None), district: Optional[str] = Quer
                 .all()
             )
         except Exception as e:
+            try:
+                db.rollback()
+            except Exception:
+                pass
             logger.info(f"Could not query block advisory statuses from DB ({e})")
 
         if block_advisory_statuses:
@@ -586,7 +590,10 @@ def get_stats(block: Optional[str] = Query(None), district: Optional[str] = Quer
                 if db_p > 0 and not prof:
                     total_panchayats = db_p
             except Exception:
-                pass
+                try:
+                    db.rollback()
+                except Exception:
+                    pass
             total_farmers = prof["farmers"] if prof else total_panchayats * 77
             return StatsResponse(
                 total_panchayats=total_panchayats,
@@ -609,7 +616,10 @@ def get_stats(block: Optional[str] = Query(None), district: Optional[str] = Quer
             try:
                 db_panchayats = db.query(Panchayat).filter(Panchayat.block.ilike(block)).count()
             except Exception:
-                pass
+                try:
+                    db.rollback()
+                except Exception:
+                    pass
             p_count = db_panchayats if db_panchayats > 0 else (18 + (sum(ord(c) for c in b_key) % 15))
             f_count = p_count * 77
             return StatsResponse(

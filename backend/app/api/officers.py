@@ -395,33 +395,36 @@ def get_officer_dashboard(
     try:
         db_pending = (
             db.query(Advisory)
-            .join(Panchayat)
+            .join(Panchayat, Advisory.panchayat_id == Panchayat.id)
             .filter(Panchayat.block.ilike(active_block), Advisory.status == AdvisoryStatus.pending)
             .count()
         )
         if db_pending > 0:
             pending_c = db_pending
-    except Exception as e:
-        logger.info(f"Could not load live DB pending advisories count ({e}); using curated/computed value {pending_c}")
 
-    try:
         db_approved = (
             db.query(Advisory)
-            .join(Panchayat)
+            .join(Panchayat, Advisory.panchayat_id == Panchayat.id)
             .filter(Panchayat.block.ilike(active_block), Advisory.status == AdvisoryStatus.approved)
             .count()
         )
         if db_approved > 0:
             approved_c = db_approved
-    except Exception as e:
-        logger.info(f"Could not load live DB approved advisories count ({e}); using curated/computed value {approved_c}")
 
-    try:
-        db_reports = db.query(FieldReport).join(Panchayat).filter(Panchayat.block.ilike(active_block)).count()
+        db_reports = (
+            db.query(FieldReport)
+            .join(Panchayat, FieldReport.panchayat_id == Panchayat.id)
+            .filter(Panchayat.block.ilike(active_block))
+            .count()
+        )
         if db_reports > 0:
             field_r = db_reports
     except Exception as e:
-        logger.info(f"Could not load live DB field reports count ({e}); using curated/computed value {field_r}")
+        try:
+            db.rollback()
+        except Exception:
+            pass
+        logger.info(f"Using curated/computed metrics for {active_block}: ({e})")
 
     return OfficerBlockDashboardOut(
         officer_id=officer_id,
