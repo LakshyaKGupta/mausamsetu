@@ -1,6 +1,6 @@
 // MausamSetu Service Worker - Offline Agricultural Decision Support
-const CACHE_NAME = 'mausamsetu-static-v1';
-const DATA_CACHE_NAME = 'mausamsetu-data-v1';
+const CACHE_NAME = 'mausamsetu-static-v2';
+const DATA_CACHE_NAME = 'mausamsetu-data-v2';
 
 const STATIC_ASSETS = [
   '/',
