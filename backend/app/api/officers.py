@@ -4,6 +4,9 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from typing import Optional
+import logging
+
+logger = logging.getLogger(__name__)
 
 from app.db.session import get_db
 from app.models.models import OfficerProfile, Panchayat, Advisory, AdvisoryStatus, FieldReport
