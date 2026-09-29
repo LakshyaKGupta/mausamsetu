@@ -87,6 +87,18 @@ export const GramWeatherDemo: React.FC<{
 
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
 
+  const [localBoundaries, setLocalBoundaries] = useState<any>(null);
+
+  useEffect(() => {
+    fetch('/data/boundaries_cache.json')
+      .then(res => {
+        if (!res.ok) throw new Error('Cache not found');
+        return res.json();
+      })
+      .then(data => setLocalBoundaries(data))
+      .catch(err => console.debug('Local boundaries cache loading deferred', err));
+  }, []);
+
   const fetchBoundary = async (level: string, code: string, stcode?: string, dtcode?: string, bpcode?: string) => {
     let layer = 1;
     let where = "";
@@ -94,8 +106,34 @@ export const GramWeatherDemo: React.FC<{
 
     if (level === "state") {
       layer = 0; where = `State_LGD=${code}`;
+      if (localBoundaries?.states) {
+        const match = Object.values(localBoundaries.states).find((s: any) => String(s.state_lgd) === String(code));
+        if (match && (match as any).geometry) {
+          setGeoJson({
+            type: "FeatureCollection",
+            features: [{
+              type: "Feature",
+              properties: { State_LGD: Number(code), STNAME: (match as any).name, TYPE: "State" },
+              geometry: (match as any).geometry
+            }]
+          });
+        }
+      }
     } else if (level === "district") {
       layer = 1; where = `Dist_LGD=${code}`;
+      if (localBoundaries?.districts) {
+        const match = Object.values(localBoundaries.districts).find((d: any) => String(d.dist_lgd) === String(code));
+        if (match && (match as any).geometry) {
+          setGeoJson({
+            type: "FeatureCollection",
+            features: [{
+              type: "Feature",
+              properties: { Dist_LGD: Number(code), D_Pan_Name: (match as any).district, State: (match as any).state },
+              geometry: (match as any).geometry
+            }]
+          });
+        }
+      }
     } else if (level === "block") {
       layer = 2; where = `block_lgd=${code}`;
     } else if (level === "gp") {
@@ -110,13 +148,10 @@ export const GramWeatherDemo: React.FC<{
         const data = await res.json();
         if (data.features && data.features.length > 0) {
           setGeoJson(data);
-        } else {
-          setGeoJson(null);
         }
       }
     } catch (e) {
       console.error("Failed to fetch boundary", e);
-      setGeoJson(null);
     }
   };
 

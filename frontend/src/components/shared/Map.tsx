@@ -122,6 +122,13 @@ export default function Map({ geoJson, lat, lon, zoom = 7 }: MapProps) {
         <FitBounds geoJson={geoJson} />
         <MapController onBoundsChange={fetchPins} />
 
+        {/* Resilient base tile layer guarantees map is never a blank gray canvas */}
+        <TileLayer
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+          maxZoom={19}
+        />
+
         {activeBasemap === 'bhuvan' && (
           <WMSTileLayer
             url="https://bhuvan-vec1.nrsc.gov.in/bhuvan/gwc/service/wms"
@@ -178,7 +185,13 @@ export default function Map({ geoJson, lat, lon, zoom = 7 }: MapProps) {
           <GeoJSON
             key={JSON.stringify(geoJson)}
             data={geoJson}
-            style={{ color: '#4f46e5', weight: 3, fillColor: '#4f46e5', fillOpacity: 0.2 }}
+            style={{
+              color: '#059669',
+              weight: 3.2,
+              opacity: 0.95,
+              fillColor: '#10b981',
+              fillOpacity: 0.16,
+            }}
           />
         )}
 
