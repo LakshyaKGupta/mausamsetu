@@ -4,10 +4,13 @@ services:
     runtime: python
     rootDir: backend
     buildCommand: pip install -r requirements.txt
-    preDeployCommand: alembic upgrade head
+    preDeployCommand: python scripts/render_predeploy.py
     startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /health
+    autoDeploy: true
     envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.8
       - key: ENVIRONMENT
         value: production
       - key: DATABASE_URL
@@ -15,8 +18,10 @@ services:
       - key: SECRET_KEY
         generateValue: true
       - key: CORS_ORIGINS
-        sync: false
+        value: "https://mausamsetu.vercel.app,https://*.vercel.app,http://localhost:5173,http://localhost:3000"
       - key: IMD_API_KEY
+        sync: false
+      - key: OPEN_METEO_API_KEY
         sync: false
       - key: DELIVERY_PROVIDER
         sync: false

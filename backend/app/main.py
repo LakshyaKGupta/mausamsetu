@@ -1,10 +1,27 @@
 """MausamSetu FastAPI application entry point."""
 
+from contextlib import asynccontextmanager
+import logging
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api import auth, advisories, weather, panchayats, chatbot, geography, field_reports, officers, nic, farmer_routes, admin, ml_showcase, officer_routes, locations, advice_engine
 from app.config import settings
+
+logger = logging.getLogger("mausamsetu")
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Initialize DB tables and seed foundational users on application startup
+    try:
+        from app.db.session import init_db_and_seed
+        init_db_and_seed()
+    except Exception as e:
+        logger.warning(f"Startup DB initialization notice: {e}")
+    yield
+
 
 app = FastAPI(
     title="MausamSetu API",
@@ -12,15 +29,18 @@ app = FastAPI(
     version="1.0.0",
     docs_url="/docs",
     redoc_url="/redoc",
+    lifespan=lifespan,
 )
 
-# CORS
+# CORS — Support local development, Vercel deployments (*.vercel.app), Render (*.onrender.com), and custom domains
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins,
+    allow_origin_regex=r"https://.*\.vercel\.app|https://.*\.onrender\.com|http://localhost(:\d+)?|http://127\.0\.0\.1(:\d+)?",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"],
 )
 
 # Routers (Direct root paths)

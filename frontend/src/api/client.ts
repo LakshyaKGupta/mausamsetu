@@ -1,14 +1,108 @@
 import axios from 'axios'
 
+/**
+ * Intelligently resolve the backend API Base URL across local development,
+ * Vercel production/preview deployments, Render web services, and user overrides.
+ */
+export function getApiBaseUrl(): string {
+  // 1. URL search parameter override (e.g. ?api_url=https://my-service.onrender.com)
+  if (typeof window !== 'undefined') {
+    try {
+      const params = new URLSearchParams(window.location.search)
+      const queryApi = params.get('api_url')
+      if (queryApi && queryApi.trim().startsWith('http')) {
+        const clean = queryApi.trim().replace(/\/$/, '')
+        localStorage.setItem('mausamsetu_api_url', clean)
+        return clean
+      }
+    } catch {
+      // Ignore URL parsing errors
+    }
+  }
+
+  // 2. Saved user/admin preference in localStorage
+  if (typeof window !== 'undefined') {
+    const saved = localStorage.getItem('mausamsetu_api_url')
+    if (saved && saved.trim().startsWith('http')) {
+      return saved.trim().replace(/\/$/, '')
+    }
+  }
+
+  // 3. Injected runtime window global variable
+  if (typeof window !== 'undefined' && (window as any).__MAUSAMSETU_API_URL__) {
+    return (window as any).__MAUSAMSETU_API_URL__.replace(/\/$/, '')
+  }
+
+  // 4. Vite build-time environment variable
+  const envUrl = import.meta.env.VITE_API_URL
+  if (envUrl && typeof envUrl === 'string' && envUrl.trim() !== '') {
+    const trimmed = envUrl.trim().replace(/\/$/, '')
+    const isRemote = typeof window !== 'undefined' && 
+      window.location.hostname !== 'localhost' && 
+      window.location.hostname !== '127.0.0.1'
+    
+    // If running in browser on Vercel/remote domain, avoid accidentally pointing to localhost
+    if (!(isRemote && trimmed.includes('localhost'))) {
+      return trimmed
+    }
+  }
+
+  // 5. Default production fallback when running on Vercel or remote host
+  if (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+    return 'https://mausamsetu-api.onrender.com'
+  }
+
+  // 6. Local development default
+  return 'http://localhost:8000'
+}
+
+export function setApiBaseUrl(url: string): void {
+  if (typeof window !== 'undefined') {
+    const clean = url.trim().replace(/\/$/, '')
+    localStorage.setItem('mausamsetu_api_url', clean)
+    window.dispatchEvent(new CustomEvent('mausamsetu_api_url_changed', { detail: clean }))
+  }
+}
+
+export function resetApiBaseUrl(): void {
+  if (typeof window !== 'undefined') {
+    localStorage.removeItem('mausamsetu_api_url')
+    window.dispatchEvent(new CustomEvent('mausamsetu_api_url_changed', { detail: getApiBaseUrl() }))
+  }
+}
+
+export async function checkBackendHealth(targetUrl?: string): Promise<{ ok: boolean; statusText: string; latencyMs: number }> {
+  const base = (targetUrl || getApiBaseUrl()).replace(/\/$/, '')
+  const startTime = Date.now()
+  try {
+    const resp = await axios.get(`${base}/health`, { timeout: 8000 })
+    return {
+      ok: resp.status === 200,
+      statusText: resp.data?.status || 'ok',
+      latencyMs: Date.now() - startTime,
+    }
+  } catch (err: any) {
+    return {
+      ok: false,
+      statusText: err.message || 'unreachable',
+      latencyMs: Date.now() - startTime,
+    }
+  }
+}
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000',
-  timeout: 15000,
+  baseURL: getApiBaseUrl(),
+  timeout: 45000, // 45 seconds to gracefully accommodate Render free-tier cold-start wake-up
   headers: { 'Content-Type': 'application/json' },
 })
 
-// Attach the authenticated identity. Demo-only headers are opt-in so a saved
-// browser profile can never grant a production role by itself.
+// Attach dynamically updated baseURL and authenticated identity
 api.interceptors.request.use((config) => {
+  const currentBase = getApiBaseUrl()
+  if (currentBase) {
+    config.baseURL = currentBase
+  }
+
   const token = localStorage.getItem('mausamsetu_token')
   if (token) config.headers.Authorization = `Bearer ${token}`
   
@@ -32,13 +126,26 @@ api.interceptors.request.use((config) => {
   return config
 })
 
-// Redirect to login on 401
+// Redirect to login on 401 & dispatch connection notice on failure
 api.interceptors.response.use(
   (r) => r,
   (err) => {
     if (err.response?.status === 401) {
       localStorage.removeItem('mausamsetu_token')
       window.location.href = '/login'
+    }
+    if (typeof window !== 'undefined') {
+      if (err.code === 'ECONNABORTED' || err.message === 'Network Error' || !err.response) {
+        window.dispatchEvent(
+          new CustomEvent('mausamsetu_backend_connection_issue', {
+            detail: {
+              url: err.config?.baseURL || getApiBaseUrl(),
+              message: err.message,
+              isTimeout: err.code === 'ECONNABORTED',
+            },
+          })
+        )
+      }
     }
     return Promise.reject(err)
   }

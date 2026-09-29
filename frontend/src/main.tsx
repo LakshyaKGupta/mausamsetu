@@ -8,6 +8,7 @@ import './styles/design-system.css'
 import { PublicLayout } from './layouts/PublicLayout'
 import { AuthLayout } from './layouts/AuthLayout'
 import { AppLayout } from './layouts/AppLayout'
+import { BackendStatusIndicator } from './components/shared/BackendStatusIndicator'
 
 // Public Landing Pages
 const Home = lazy(() => import('./pages/landing/Home'))
@@ -132,6 +133,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         {/* 5. Catch-All Redirect */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+      <BackendStatusIndicator />
       </Suspense>
     </BrowserRouter>
   </React.StrictMode>

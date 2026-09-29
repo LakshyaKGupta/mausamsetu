@@ -28,8 +28,20 @@ class Settings(BaseSettings):
         return self.ENVIRONMENT.lower() in {"development", "demo", "test"}
 
     @property
+    def normalized_database_url(self) -> str:
+        url = self.DATABASE_URL
+        if url.startswith("postgres://"):
+            return url.replace("postgres://", "postgresql://", 1)
+        return url
+
+    @property
     def cors_origins(self) -> list[str]:
-        return [origin.strip() for origin in self.CORS_ORIGINS.split(",") if origin.strip()]
+        origins = [origin.strip() for origin in self.CORS_ORIGINS.split(",") if origin.strip()]
+        defaults = ["http://localhost:5173", "http://localhost:3000", "https://mausamsetu.vercel.app"]
+        for d in defaults:
+            if d not in origins:
+                origins.append(d)
+        return origins
 
 
 settings = Settings()

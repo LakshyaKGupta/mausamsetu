@@ -48,6 +48,8 @@ dist-ssr/
 .DS_Store
 .idea/
 .vscode/
+.code-intel/
+.playwright-cli/
 *.swp
 *.swo
 

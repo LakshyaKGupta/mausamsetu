@@ -33,6 +33,16 @@ from app.schemas.schemas import (
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
+# Ensure passlib works cleanly with bcrypt >= 4.0
+try:
+    import bcrypt
+    if not hasattr(bcrypt, "__about__"):
+        class _About:
+            __version__ = getattr(bcrypt, "__version__", "4.0.1")
+        bcrypt.__about__ = _About()
+except Exception:
+    pass
+
 ALGORITHM = "HS256"
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
