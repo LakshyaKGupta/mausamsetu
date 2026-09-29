@@ -179,6 +179,14 @@ class Panchayat(Base):
     elevation_m = Column(Float, nullable=True)
     created_at = Column(DateTime, default=func.now())
 
+    @property
+    def latitude(self):
+        return self.lat
+
+    @property
+    def longitude(self):
+        return self.lng
+
     # Relationships
     farmers = relationship("FarmerProfile", back_populates="panchayat")
     advisories = relationship("Advisory", back_populates="panchayat")

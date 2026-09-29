@@ -11,8 +11,47 @@ interface LocationSelectorProps {
   disabled: boolean;
 }
 
+const DEFAULT_INDIAN_STATES: LocationOption[] = [
+  { code: '35', name: 'Telangana' },
+  { code: '26', name: 'Maharashtra' },
+  { code: '3', name: 'Punjab' },
+  { code: '24', name: 'Gujarat' },
+  { code: '23', name: 'Madhya Pradesh' },
+  { code: '8', name: 'Rajasthan' },
+  { code: '9', name: 'Uttar Pradesh' },
+  { code: '6', name: 'Haryana' },
+  { code: '28', name: 'Karnataka' },
+  { code: '27', name: 'Andhra Pradesh' },
+  { code: '32', name: 'Tamil Nadu' },
+  { code: '31', name: 'Kerala' },
+  { code: '19', name: 'West Bengal' },
+  { code: '10', name: 'Bihar' },
+  { code: '21', name: 'Odisha' },
+  { code: '20', name: 'Jharkhand' },
+  { code: '22', name: 'Chhattisgarh' },
+  { code: '18', name: 'Assam' },
+  { code: '2', name: 'Himachal Pradesh' },
+  { code: '5', name: 'Uttarakhand' },
+  { code: '29', name: 'Goa' },
+  { code: '1', name: 'Jammu And Kashmir' },
+  { code: '7', name: 'Delhi' },
+  { code: '36', name: 'Ladakh' },
+  { code: '4', name: 'Chandigarh' },
+  { code: '33', name: 'Puducherry' },
+  { code: '11', name: 'Sikkim' },
+  { code: '12', name: 'Arunachal Pradesh' },
+  { code: '14', name: 'Manipur' },
+  { code: '17', name: 'Meghalaya' },
+  { code: '15', name: 'Mizoram' },
+  { code: '13', name: 'Nagaland' },
+  { code: '16', name: 'Tripura' },
+  { code: '34', name: 'Andaman And Nicobar Islands' },
+  { code: '30', name: 'Lakshadweep' },
+  { code: '25', name: 'Dadra and Nagar Haveli and Daman and Diu' },
+].sort((a, b) => a.name.localeCompare(b.name));
+
 export default function LocationSelector({ onSelectionChange, disabled }: LocationSelectorProps) {
-  const [states, setStates] = useState<LocationOption[]>([]);
+  const [states, setStates] = useState<LocationOption[]>(DEFAULT_INDIAN_STATES);
   const [districts, setDistricts] = useState<LocationOption[]>([]);
   const [blocks, setBlocks] = useState<LocationOption[]>([]);
   const [panchayats, setPanchayats] = useState<LocationOption[]>([]);
@@ -25,24 +64,35 @@ export default function LocationSelector({ onSelectionChange, disabled }: Locati
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
 
   const fetchNic = useCallback(async (layerId: number, where: string) => {
-    const res = await fetch(`${API_URL}/nic/query?layer_id=${layerId}&where=${encodeURIComponent(where)}&outFields=*`);
-    const data = await res.json();
-    return data.features || [];
+    try {
+      const res = await fetch(`${API_URL}/nic/query?layer_id=${layerId}&where=${encodeURIComponent(where)}&outFields=*`);
+      if (!res.ok) return [];
+      const data = await res.json();
+      return data.features || [];
+    } catch (e) {
+      console.warn("NIC query failed, using local hierarchy", e);
+      return [];
+    }
   }, [API_URL]);
 
-  // Load States initially
+  // Load States initially from API or keep default
   useEffect(() => {
     fetchNic(0, "1=1")
       .then((features) => {
+        if (!features || features.length === 0) return;
         const unique = new Map();
         features.forEach((f: any) => {
-          if (f.attributes.State_LGD && f.attributes.STNAME) {
-            unique.set(f.attributes.State_LGD, f.attributes.STNAME);
+          if (f.attributes && (f.attributes.State_LGD || f.attributes.state_lgd) && (f.attributes.STNAME || f.attributes.stname)) {
+            const code = f.attributes.State_LGD || f.attributes.state_lgd;
+            const name = f.attributes.STNAME || f.attributes.stname;
+            unique.set(code, name);
           }
         });
-        const arr = Array.from(unique, ([code, name]) => ({ code: String(code), name }));
-        arr.sort((a, b) => a.name.localeCompare(b.name));
-        setStates(arr);
+        if (unique.size > 0) {
+          const arr = Array.from(unique, ([code, name]) => ({ code: String(code), name }));
+          arr.sort((a, b) => a.name.localeCompare(b.name));
+          setStates(arr);
+        }
       })
       .catch((err) => console.error("Failed to load states", err));
   }, [fetchNic]);
