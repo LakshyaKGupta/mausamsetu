@@ -20,7 +20,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, or_, and_
 from app.database.session import get_db
 from app.models.location import Panchayat, Block, District, State
-from typing import Optional, List
+from typing import Optional, List, Any
 import json
 
 router = APIRouter()
