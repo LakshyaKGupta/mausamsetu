@@ -619,81 +619,102 @@ def list_panchayats_hierarchy(
         "Pandavapura": "Ramesh Gowda",
     }
     
-    if not panchayats and (district or block):
-        target_dist = district or "Selected"
-        target_blk = block or f"{target_dist} Central"
-        base_lat, base_lon, base_elev = 21.15, 79.08, 310.0
-        for s in STATES_DATA:
-            for d in s.get("districts", []):
-                if d.get("district", "").lower() == target_dist.lower():
-                    base_lat = d.get("lat", base_lat)
-                    base_lon = d.get("lon", base_lon)
-                    base_elev = d.get("elevation_m", base_elev)
-                    break
+    # Curated block configuration
+    CURATED_BLOCK_CONFIG = {
+        "kalmeshwar": {"count": 24, "officer": "Rajesh Sharma", "crops": ["soybean", "cotton", "gram"]},
+        "ramtek": {"count": 26, "officer": "Pooja Raut", "crops": ["paddy", "cotton", "gram"]},
+        "katol": {"count": 16, "officer": "Anil Thakre", "crops": ["orange", "cotton", "soybean"]},
+        "saoner": {"count": 18, "officer": "Vikas Deshmukh", "crops": ["cotton", "soybean", "wheat"]},
+        "hingna": {"count": 20, "officer": "Sunita Patil", "crops": ["soybean", "cotton", "gram"]},
+        "baramati": {"count": 30, "officer": "Amol Jagtap", "crops": ["sugarcane", "wheat", "grapes"]},
+        "junnar": {"count": 24, "officer": "Sneha More", "crops": ["tomato", "grapes", "sugarcane"]},
+        "jagraon": {"count": 28, "officer": "Harpreet Singh", "crops": ["wheat", "rice", "maize"]},
+        "nagpur rural": {"count": 22, "officer": "Sanjay Deshmukh", "crops": ["soybean", "cotton", "gram"]},
+        "nagpur": {"count": 25, "officer": "Rajesh Sharma", "crops": ["soybean", "cotton", "gram"]},
+    }
 
-        synthetic_names = [
-            f"{target_blk} Central GP",
-            f"{target_blk} East GP",
-            f"{target_blk} West GP",
-            f"{target_blk} North GP",
-            f"{target_blk} South GP",
-            f"{target_blk} Mandi GP",
-            f"{target_blk} Kalan GP",
-            f"{target_blk} Khurd GP",
-            f"{target_blk} Rampur GP",
-            f"{target_blk} Govindpur GP",
-            f"{target_blk} Shivpuri GP",
-            f"{target_blk} Mohanpur GP",
-            f"{target_blk} Haripur GP",
-            f"{target_blk} Kalyanpur GP",
-            f"{target_blk} Anandpur GP",
-            f"{target_blk} Krishnapur GP",
-            f"{target_blk} Gopalpur GP",
-            f"{target_blk} Sundarpur GP",
-        ]
-        return [
+    target_dist = district or "Nagpur"
+    target_blk = block or "Kalmeshwar"
+    b_key = target_blk.lower().strip()
+    cfg = CURATED_BLOCK_CONFIG.get(b_key)
+    desired_count = cfg["count"] if cfg else 18
+    assigned_officer = cfg["officer"] if cfg else officer_map.get(target_blk, "Extension Officer")
+    block_crops = cfg["crops"] if cfg else (["wheat", "rice"] if any(k in target_dist.lower() for k in ["ludhiana", "punjab", "haryana"]) else ["sugarcane", "wheat"] if "pune" in target_dist.lower() else ["soybean", "cotton"])
+
+    # Base coords
+    base_lat, base_lon, base_elev = 21.15, 79.08, 310.0
+    for s in STATES_DATA:
+        for d in s.get("districts", []):
+            if d.get("district", "").lower() == target_dist.lower():
+                base_lat = d.get("lat", base_lat)
+                base_lon = d.get("lon", base_lon)
+                base_elev = d.get("elevation_m", base_elev)
+                break
+
+    output_list: list[PanchayatHierarchyOut] = []
+
+    # If DB has panchayats, add them first
+    if panchayats:
+        for p in panchayats:
+            output_list.append(
+                PanchayatHierarchyOut(
+                    id=p.id,
+                    name=p.name,
+                    block=getattr(p, 'block', target_blk),
+                    district=getattr(p, 'district', target_dist),
+                    state=getattr(p, 'state', 'Maharashtra'),
+                    lat=getattr(p, 'lat', None) or getattr(p, 'latitude', base_lat),
+                    lng=getattr(p, 'lng', None) or getattr(p, 'longitude', base_lon),
+                    elevation_m=getattr(p, 'elevation_m', base_elev),
+                    assigned_officer=assigned_officer,
+                    registered_farmers=max(50, 77 + ((p.id * 7) % 31) - 15),
+                    primary_crops=block_crops,
+                    telemetry_status="FRESH" if p.id % 5 != 0 else "DELAYED",
+                    last_sync="10:30 AM",
+                    weather_status_text="0.1 mm (Clear)" if p.id % 2 == 0 else "1.2 mm (Scattered)",
+                    advisory_status="Approved" if p.id % 3 == 0 else "Pending",
+                    model_state="Normal (XGB-03)",
+                )
+            )
+
+    # Supplement if fewer than desired count or if DB was empty
+    existing_count = len(output_list)
+    needed = max(0, desired_count - existing_count)
+
+    all_suffixes = [
+        "Central", "East", "West", "North", "South", "Mandi", "Kalan", "Khurd",
+        "Rampur", "Govindpur", "Shivpuri", "Mohanpur", "Haripur", "Kalyanpur",
+        "Anandpur", "Krishnapur", "Gopalpur", "Sundarpur", "Belgaon", "Shrirampur",
+        "Chandrapur", "Laxmipur", "Vasantpur", "Jagdishpur", "Narayanpur",
+        "Babulgaon", "Pimpalgaon", "Daryapur", "Umred Road", "MIDC", "Kondhali",
+        "Malegaon", "Otur", "Sidhwan", "Dhapewada"
+    ]
+
+    for i in range(needed):
+        idx = existing_count + i
+        sfx = all_suffixes[idx % len(all_suffixes)]
+        output_list.append(
             PanchayatHierarchyOut(
-                id=2000 + i,
-                name=name,
+                id=2000 + idx,
+                name=f"{target_blk} {sfx}",
                 block=target_blk,
                 district=target_dist,
-                state="India",
-                lat=round(base_lat + (i * 0.02) - 0.04, 4),
-                lng=round(base_lon + (i * 0.02) - 0.04, 4),
-                elevation_m=base_elev + (i * 8),
-                assigned_officer=officer_map.get(target_blk, "Extension Officer"),
-                registered_farmers=95 + (i * 12),
-                primary_crops=["wheat", "rice"] if any(k in target_dist.lower() for k in ["ludhiana", "bathinda", "moga", "karnal"]) else ["soybean", "cotton"],
-                telemetry_status="FRESH" if i % 4 != 0 else "DELAYED",
+                state="Punjab" if "ludhiana" in target_dist.lower() else "Maharashtra",
+                lat=round(base_lat + (idx * 0.015) - 0.03, 4),
+                lng=round(base_lon + (idx * 0.015) - 0.03, 4),
+                elevation_m=base_elev + (idx * 6),
+                assigned_officer=assigned_officer,
+                registered_farmers=max(50, 77 + ((idx * 11) % 31) - 15),
+                primary_crops=block_crops,
+                telemetry_status="FRESH" if idx % 4 != 0 else "DELAYED",
                 last_sync="10:30 AM",
-                weather_status_text="0.1 mm (Clear)" if i % 2 == 0 else "0.8 mm (Scattered)",
-                advisory_status="Approved" if i % 2 == 0 else "Pending",
+                weather_status_text="0.1 mm (Clear)" if idx % 2 == 0 else "0.8 mm (Scattered)",
+                advisory_status="Approved" if idx % 2 == 0 else "Pending",
                 model_state="Normal (XGB-03)",
             )
-            for i, name in enumerate(synthetic_names)
-        ]
-
-    return [
-        PanchayatHierarchyOut(
-            id=p.id,
-            name=p.name,
-            block=getattr(p, 'block', 'Block'),
-            district=getattr(p, 'district', 'District'),
-            state=getattr(p, 'state', 'State'),
-            lat=getattr(p, 'lat', None) or getattr(p, 'latitude', 21.15),
-            lng=getattr(p, 'lng', None) or getattr(p, 'longitude', 79.08),
-            elevation_m=getattr(p, 'elevation_m', 310.0),
-            assigned_officer=officer_map.get(getattr(p, 'block', ''), "Rajesh Sharma"),
-            registered_farmers=75 + (p.id * 7) % 60,
-            primary_crops=["soybean", "cotton"] if getattr(p, 'block', '') in ["Kalmeshwar", "Saoner"] else ["orange", "chickpea"],
-            telemetry_status="FRESH" if p.id % 5 != 0 else "DELAYED",
-            last_sync="10:30 AM",
-            weather_status_text="0.1 mm (Clear)" if p.id % 2 == 0 else "1.2 mm (Scattered)",
-            advisory_status="Approved" if p.id % 3 == 0 else "Pending",
-            model_state="Normal (XGB-03)",
         )
-        for p in panchayats
-    ]
+
+    return output_list
 
 
 @router.get("/crops", response_model=list[CropMetadataOut])

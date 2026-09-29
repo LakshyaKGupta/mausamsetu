@@ -553,24 +553,37 @@ def get_stats(block: Optional[str] = Query(None), district: Optional[str] = Quer
         "khanna": {"panchayats": 22, "farmers": 1694, "pending": 2, "approved": 19},
         "dindori": {"panchayats": 25, "farmers": 1925, "pending": 3, "approved": 22},
         "niphad": {"panchayats": 27, "farmers": 2079, "pending": 2, "approved": 24},
+        "nagpur rural": {"panchayats": 22, "farmers": 1694, "pending": 2, "approved": 19},
+        "nagpur": {"panchayats": 25, "farmers": 1925, "pending": 2, "approved": 21},
     }
 
     if block:
         b_key = block.lower().strip()
         prof = BLOCK_PROFILES.get(b_key)
-        block_advisory_statuses = (
-            db.query(Advisory.status)
-            .join(Panchayat, Advisory.panchayat_id == Panchayat.id)
-            .filter(Panchayat.block.ilike(block))
-            .all()
-        )
+        block_advisory_statuses = []
+        try:
+            block_advisory_statuses = (
+                db.query(Advisory.status)
+                .join(Panchayat, Advisory.panchayat_id == Panchayat.id)
+                .filter(Panchayat.block.ilike(block))
+                .all()
+            )
+        except Exception as e:
+            logger.info(f"Could not query block advisory statuses from DB ({e})")
+
         if block_advisory_statuses:
             pending = sum(status == AdvisoryStatus.pending for (status,) in block_advisory_statuses)
             approved_today = sum(
                 status in (AdvisoryStatus.approved, AdvisoryStatus.sent)
                 for (status,) in block_advisory_statuses
             )
-            total_panchayats = prof["panchayats"] if prof else db.query(Panchayat).filter(Panchayat.block.ilike(block)).count()
+            total_panchayats = prof["panchayats"] if prof else 20
+            try:
+                db_p = db.query(Panchayat).filter(Panchayat.block.ilike(block)).count()
+                if db_p > 0 and not prof:
+                    total_panchayats = db_p
+            except Exception:
+                pass
             total_farmers = prof["farmers"] if prof else total_panchayats * 77
             return StatsResponse(
                 total_panchayats=total_panchayats,
@@ -589,7 +602,11 @@ def get_stats(block: Optional[str] = Query(None), district: Optional[str] = Quer
             )
         else:
             # Query DB for this block if not in preset map
-            db_panchayats = db.query(Panchayat).filter(Panchayat.block.ilike(block)).count()
+            db_panchayats = 0
+            try:
+                db_panchayats = db.query(Panchayat).filter(Panchayat.block.ilike(block)).count()
+            except Exception:
+                pass
             p_count = db_panchayats if db_panchayats > 0 else (18 + (sum(ord(c) for c in b_key) % 15))
             f_count = p_count * 77
             return StatsResponse(

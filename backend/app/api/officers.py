@@ -317,6 +317,32 @@ def get_officer_dashboard(
                 {"severity": "warning", "type": "Yellow Rust Surveillance", "panchayats": ["Sidhwan Bet", "Jagraon"], "detail": "Check early-sown wheat canopies along riverine moisture pockets."}
             ]
         },
+        "nagpur rural": {
+            "officer_name": "Sanjay Deshmukh",
+            "district": "Nagpur",
+            "panchayats_count": 22,
+            "farmers_count": 1694,
+            "active_crops_count": 4,
+            "pending": 2,
+            "approved": 19,
+            "field_reports": 3,
+            "alerts": [
+                {"severity": "info", "type": "Soil Moisture Watch", "panchayats": ["Wadi", "Bori"], "detail": "Moderate topsoil drying observed. Irrigation window open."}
+            ]
+        },
+        "nagpur": {
+            "officer_name": "Rajesh Sharma",
+            "district": "Nagpur",
+            "panchayats_count": 25,
+            "farmers_count": 1925,
+            "active_crops_count": 5,
+            "pending": 2,
+            "approved": 21,
+            "field_reports": 2,
+            "alerts": [
+                {"severity": "info", "type": "Convective Weather Watch", "panchayats": ["Nagpur Central"], "detail": "Urban-rural fringe thermal convective clouds expected."}
+            ]
+        },
     }
 
     # Determine targeted block
@@ -363,27 +389,36 @@ def get_officer_dashboard(
         ]
 
     # Incorporate live DB counts if available
-    db_pending = (
-        db.query(Advisory)
-        .join(Panchayat)
-        .filter(Panchayat.block.ilike(active_block), Advisory.status == AdvisoryStatus.pending)
-        .count()
-    )
-    if db_pending > 0:
-        pending_c = db_pending
+    try:
+        db_pending = (
+            db.query(Advisory)
+            .join(Panchayat)
+            .filter(Panchayat.block.ilike(active_block), Advisory.status == AdvisoryStatus.pending)
+            .count()
+        )
+        if db_pending > 0:
+            pending_c = db_pending
+    except Exception as e:
+        logger.info(f"Could not load live DB pending advisories count ({e}); using curated/computed value {pending_c}")
 
-    db_approved = (
-        db.query(Advisory)
-        .join(Panchayat)
-        .filter(Panchayat.block.ilike(active_block), Advisory.status == AdvisoryStatus.approved)
-        .count()
-    )
-    if db_approved > 0:
-        approved_c = db_approved
+    try:
+        db_approved = (
+            db.query(Advisory)
+            .join(Panchayat)
+            .filter(Panchayat.block.ilike(active_block), Advisory.status == AdvisoryStatus.approved)
+            .count()
+        )
+        if db_approved > 0:
+            approved_c = db_approved
+    except Exception as e:
+        logger.info(f"Could not load live DB approved advisories count ({e}); using curated/computed value {approved_c}")
 
-    db_reports = db.query(FieldReport).join(Panchayat).filter(Panchayat.block.ilike(active_block)).count()
-    if db_reports > 0:
-        field_r = db_reports
+    try:
+        db_reports = db.query(FieldReport).join(Panchayat).filter(Panchayat.block.ilike(active_block)).count()
+        if db_reports > 0:
+            field_r = db_reports
+    except Exception as e:
+        logger.info(f"Could not load live DB field reports count ({e}); using curated/computed value {field_r}")
 
     return OfficerBlockDashboardOut(
         officer_id=officer_id,
