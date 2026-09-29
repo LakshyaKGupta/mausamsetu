@@ -597,13 +597,17 @@ def list_panchayats_hierarchy(
     db: Session = Depends(get_db),
 ):
     """List Gram Panchayats with geographic coordinates and assigned extension officer."""
-    q = db.query(Panchayat)
-    if block:
-        q = q.filter(Panchayat.block.ilike(f"%{block}%"))
-    if district:
-        q = q.filter(Panchayat.district.ilike(f"%{district}%"))
-    
-    panchayats = q.all()
+    panchayats = []
+    try:
+        q = db.query(Panchayat)
+        if block:
+            q = q.filter(Panchayat.block.ilike(f"%{block}%"))
+        if district:
+            q = q.filter(Panchayat.district.ilike(f"%{district}%"))
+        panchayats = q.all()
+    except Exception as e:
+        logger.warning(f"Error querying panchayats table from DB ({e}). Falling back to geographic master data.")
+        panchayats = []
     
     # Map officer based on block
     officer_map = {
@@ -620,8 +624,8 @@ def list_panchayats_hierarchy(
         target_blk = block or f"{target_dist} Central"
         base_lat, base_lon, base_elev = 21.15, 79.08, 310.0
         for s in STATES_DATA:
-            for d in s["districts"]:
-                if d["district"].lower() == target_dist.lower():
+            for d in s.get("districts", []):
+                if d.get("district", "").lower() == target_dist.lower():
                     base_lat = d.get("lat", base_lat)
                     base_lon = d.get("lon", base_lon)
                     base_elev = d.get("elevation_m", base_elev)
@@ -673,15 +677,15 @@ def list_panchayats_hierarchy(
         PanchayatHierarchyOut(
             id=p.id,
             name=p.name,
-            block=p.block,
-            district=p.district,
-            state=p.state,
-            lat=p.lat,
-            lng=p.lng,
-            elevation_m=p.elevation_m,
-            assigned_officer=officer_map.get(p.block, "Rajesh Sharma"),
+            block=getattr(p, 'block', 'Block'),
+            district=getattr(p, 'district', 'District'),
+            state=getattr(p, 'state', 'State'),
+            lat=getattr(p, 'lat', None) or getattr(p, 'latitude', 21.15),
+            lng=getattr(p, 'lng', None) or getattr(p, 'longitude', 79.08),
+            elevation_m=getattr(p, 'elevation_m', 310.0),
+            assigned_officer=officer_map.get(getattr(p, 'block', ''), "Rajesh Sharma"),
             registered_farmers=75 + (p.id * 7) % 60,
-            primary_crops=["soybean", "cotton"] if p.block in ["Kalmeshwar", "Saoner"] else ["orange", "chickpea"],
+            primary_crops=["soybean", "cotton"] if getattr(p, 'block', '') in ["Kalmeshwar", "Saoner"] else ["orange", "chickpea"],
             telemetry_status="FRESH" if p.id % 5 != 0 else "DELAYED",
             last_sync="10:30 AM",
             weather_status_text="0.1 mm (Clear)" if p.id % 2 == 0 else "1.2 mm (Scattered)",
