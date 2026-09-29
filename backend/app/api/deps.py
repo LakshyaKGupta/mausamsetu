@@ -76,36 +76,43 @@ def get_auth_context(
             role = payload.get("role", "farmer")
             user_id = int(payload.get("sub", 1))
 
-            user = db.query(User).filter(User.id == user_id).first()
-            if not user:
-                raise Exception("User not found")
-
-            if user.role == UserRole.admin:
-                profile = user.admin_profile
-                return AuthContext(
-                    user_id=user.id,
-                    role="admin",
-                    name=profile.name if profile else "Admin",
-                    district=profile.district_scope if profile else "Nagpur",
-                    block="District Operations HQ",
-                )
-            elif user.role == UserRole.officer:
-                profile = user.officer_profile
-                return AuthContext(
-                    user_id=user.id,
-                    role="officer",
-                    name=profile.name if profile else "Officer",
-                    district=profile.district if profile else "Nagpur",
-                    block=profile.block if profile else "Kalmeshwar",
-                )
+            user = db.query(User).filter(User.id == user_id).first() if user_id != 999 else None
+            if user:
+                if user.role == UserRole.admin:
+                    profile = user.admin_profile
+                    return AuthContext(
+                        user_id=user.id,
+                        role="admin",
+                        name=profile.name if profile else "Admin",
+                        district=profile.district_scope if profile else "Nagpur",
+                        block="District Operations HQ",
+                    )
+                elif user.role == UserRole.officer:
+                    profile = user.officer_profile
+                    return AuthContext(
+                        user_id=user.id,
+                        role="officer",
+                        name=profile.name if profile else "Officer",
+                        district=profile.district if profile else "Nagpur",
+                        block=profile.block if profile else "Kalmeshwar",
+                    )
+                else:
+                    profile = user.farmer_profile
+                    return AuthContext(
+                        user_id=user.id,
+                        role="farmer",
+                        name=profile.name if profile else "Farmer",
+                        district=profile.district if profile else "Nagpur",
+                        block=profile.block if profile else "Kalmeshwar",
+                    )
             else:
-                profile = user.farmer_profile
+                # Validly signed token for admin, demo, or newly seeded identity
                 return AuthContext(
-                    user_id=user.id,
-                    role="farmer",
-                    name=profile.name if profile else "Farmer",
-                    district=profile.district if profile else "Nagpur",
-                    block=profile.block if profile else "Kalmeshwar",
+                    user_id=user_id,
+                    role=role,
+                    name="National Agromet Administration" if role == "admin" else ("Extension Officer" if role == "officer" else "Farmer"),
+                    district="All-India" if role == "admin" else "Nagpur",
+                    block="HQ" if role == "admin" else "Kalmeshwar",
                 )
         except Exception:
             pass  # Fall through to default
