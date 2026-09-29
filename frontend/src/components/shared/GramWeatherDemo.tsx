@@ -107,7 +107,11 @@ export const GramWeatherDemo: React.FC<{
     if (level === "state") {
       layer = 0; where = `State_LGD=${code}`;
       if (localBoundaries?.states) {
-        const match = Object.values(localBoundaries.states).find((s: any) => String(s.state_lgd) === String(code));
+        const match = localBoundaries.states[code] || 
+          Object.values(localBoundaries.states).find((s: any) => 
+            String(s.state_lgd) === String(code) || 
+            (Array.isArray(s.aliases) && s.aliases.map(String).includes(String(code)))
+          );
         if (match && (match as any).geometry) {
           setGeoJson({
             type: "FeatureCollection",
@@ -122,7 +126,11 @@ export const GramWeatherDemo: React.FC<{
     } else if (level === "district") {
       layer = 1; where = `Dist_LGD=${code}`;
       if (localBoundaries?.districts) {
-        const match = Object.values(localBoundaries.districts).find((d: any) => String(d.dist_lgd) === String(code));
+        const match = localBoundaries.districts[code] || 
+          Object.values(localBoundaries.districts).find((d: any) => 
+            String(d.dist_lgd) === String(code) || 
+            (d.district && d.district.toLowerCase() === code.toLowerCase())
+          );
         if (match && (match as any).geometry) {
           setGeoJson({
             type: "FeatureCollection",

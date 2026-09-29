@@ -119,6 +119,49 @@ def _create_natural_polygon(lat: float, lon: float, radius: float = 0.07, num_po
     }
 
 
+# Standard BharatMaps / Census to State mapping covering both LGD and Census sequences
+BHARATMAPS_STATE_LGD = {
+    1: "Jammu And Kashmir",
+    2: "Himachal Pradesh",
+    3: "Punjab",
+    4: "Chandigarh",
+    5: "Uttarakhand",
+    6: "Haryana",
+    7: "Delhi",
+    8: "Rajasthan",
+    9: "Uttar Pradesh",
+    10: "Bihar",
+    11: "Sikkim",
+    12: "Arunachal Pradesh",
+    13: "Nagaland",
+    14: "Manipur",
+    15: "Mizoram",
+    16: "Tripura",
+    17: "Meghalaya",
+    18: "Assam",
+    19: "West Bengal",
+    20: "Jharkhand",
+    21: "Odisha",
+    22: "Chhattisgarh",
+    23: "Madhya Pradesh",
+    24: "Gujarat",
+    25: "Dadra,Nagar Haveli,Daman & Diu",
+    26: "Maharashtra",
+    27: "Maharashtra",
+    28: "Andhra Pradesh",
+    29: "Karnataka",
+    30: "Goa",
+    31: "Lakshadweep",
+    32: "Kerala",
+    33: "Tamil Nadu",
+    34: "Puducherry",
+    35: "Andaman & Nicobar",
+    36: "Telangana",
+    37: "Ladakh",
+    38: "Dadra,Nagar Haveli,Daman & Diu",
+}
+
+
 def _build_fallback_response(layer_id: int, where: str, return_geometry: bool, f: str):
     """Construct an official ArcGis / GeoJSON structure from built-in national geographic directory."""
     features = []
@@ -131,22 +174,27 @@ def _build_fallback_response(layer_id: int, where: str, return_geometry: bool, f
         target_lgd = int(st_match.group(1)) if st_match else None
         target_name = name_match.group(1).lower() if name_match else None
 
-        # If a specific state was requested (e.g. State_LGD=26 for Maharashtra)
         filtered_states = ALL_INDIA_STATES_UTS
         if target_lgd is not None:
-            filtered_states = [s for s in ALL_INDIA_STATES_UTS if s["State_LGD"] == target_lgd]
+            mapped_name = BHARATMAPS_STATE_LGD.get(target_lgd)
+            if mapped_name:
+                filtered_states = [s for s in ALL_INDIA_STATES_UTS if mapped_name.lower() in s["STNAME"].lower()]
+            else:
+                filtered_states = [s for s in ALL_INDIA_STATES_UTS if s["State_LGD"] == target_lgd]
         elif target_name and target_name != "1=1":
             filtered_states = [s for s in ALL_INDIA_STATES_UTS if target_name in s["STNAME"].lower()]
 
         for s in filtered_states:
             attrs = {
-                "State_LGD": s["State_LGD"],
+                "State_LGD": target_lgd if target_lgd else s["State_LGD"],
                 "STNAME": s["STNAME"],
                 "TYPE": s["type"],
             }
             feat = {"attributes": attrs}
             if return_geometry:
                 cached_st = BOUNDARIES_DATA.get("states", {}).get(s["STNAME"].lower())
+                if not cached_st and target_lgd:
+                    cached_st = BOUNDARIES_DATA.get("states", {}).get(str(target_lgd))
                 if cached_st and cached_st.get("geometry"):
                     feat["geometry"] = cached_st["geometry"]
                 else:
@@ -160,12 +208,12 @@ def _build_fallback_response(layer_id: int, where: str, return_geometry: bool, f
         dname_match = re.search(r"(?:d_pan_name|district)\s*=\s*['\"]?([^'\"]+)['\"]?", where, re.IGNORECASE)
 
         target_dist_lgd = int(dist_match.group(1)) if dist_match else None
-        target_state_lgd = int(st_match.group(1)) if st_match else 26
+        target_state_lgd = int(st_match.group(1)) if st_match else 27
         target_dname = dname_match.group(1).lower() if dname_match else None
 
-        # Find target state info
-        target_state_info = next((s for s in ALL_INDIA_STATES_UTS if s["State_LGD"] == target_state_lgd), None)
-        target_state_name = target_state_info["STNAME"] if target_state_info else "Maharashtra"
+        # Resolve state name
+        target_state_name = BHARATMAPS_STATE_LGD.get(target_state_lgd, "Maharashtra")
+        target_state_info = next((s for s in ALL_INDIA_STATES_UTS if target_state_name.lower() in s["STNAME"].lower()), None)
 
         districts_list = []
         matched_state_entry = next((s for s in STATES_DATA if s["state"].lower() == target_state_name.lower()), None)
@@ -180,7 +228,11 @@ def _build_fallback_response(layer_id: int, where: str, return_geometry: bool, f
                 })
 
         # Add all cached districts belonging to this state
-        cached_dists = [d for d in BOUNDARIES_DATA.get("districts", {}).values() if d.get("state_lgd") == target_state_lgd or d.get("state", "").lower() == target_state_name.lower()]
+        cached_dists = [
+            d for d in BOUNDARIES_DATA.get("districts", {}).values()
+            if target_state_name.lower() in d.get("state", "").lower()
+            or d.get("state_lgd") == target_state_lgd
+        ]
         for idx, cd in enumerate(cached_dists):
             if not any(dl["D_Pan_Name"].lower() == cd["district"].lower() for dl in districts_list):
                 districts_list.append({
@@ -193,17 +245,28 @@ def _build_fallback_response(layer_id: int, where: str, return_geometry: bool, f
 
         # Filter by Dist_LGD or District Name if requested
         if target_dist_lgd:
-            matching = [d for d in districts_list if d["Dist_LGD"] == target_dist_lgd]
-            if matching:
-                districts_list = [matching[0]]
-            else:
+            # Check directly in BOUNDARIES_DATA across all districts first
+            found_district = next((d for d in BOUNDARIES_DATA.get("districts", {}).values() if d.get("dist_lgd") == target_dist_lgd), None)
+            if found_district:
                 districts_list = [{
-                    "Dist_LGD": target_dist_lgd,
-                    "D_Pan_Name": "District",
-                    "State_LGD": target_state_lgd,
-                    "lat": target_state_info["lat"] if target_state_info else 21.145,
-                    "lon": target_state_info["lon"] if target_state_info else 79.088,
+                    "Dist_LGD": found_district.get("dist_lgd", target_dist_lgd),
+                    "D_Pan_Name": found_district["district"],
+                    "State_LGD": found_district.get("state_lgd", target_state_lgd),
+                    "lat": found_district.get("geometry", {}).get("coordinates", [[[78.0, 20.0]]])[0][0][1],
+                    "lon": found_district.get("geometry", {}).get("coordinates", [[[78.0, 20.0]]])[0][0][0],
                 }]
+            else:
+                matching = [d for d in districts_list if d["Dist_LGD"] == target_dist_lgd]
+                if matching:
+                    districts_list = [matching[0]]
+                else:
+                    districts_list = [{
+                        "Dist_LGD": target_dist_lgd,
+                        "D_Pan_Name": "District",
+                        "State_LGD": target_state_lgd,
+                        "lat": target_state_info["lat"] if target_state_info else 21.145,
+                        "lon": target_state_info["lon"] if target_state_info else 79.088,
+                    }]
         elif target_dname:
             matching = [d for d in districts_list if target_dname in d["D_Pan_Name"].lower()]
             districts_list = [matching[0]] if matching else []
