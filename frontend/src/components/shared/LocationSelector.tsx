@@ -20,6 +20,7 @@ interface LocationSelectorProps {
   initialState?: string;
   initialDistrict?: string;
   initialBlock?: string;
+  selectedGpCode?: string;
 }
 
 const DEFAULT_INDIAN_STATES: LocationOption[] = [
@@ -67,6 +68,7 @@ export default function LocationSelector({
   initialState,
   initialDistrict,
   initialBlock,
+  selectedGpCode,
 }: LocationSelectorProps) {
   const [states, setStates] = useState<LocationOption[]>(DEFAULT_INDIAN_STATES);
   const [districts, setDistricts] = useState<LocationOption[]>([]);
@@ -183,8 +185,16 @@ export default function LocationSelector({
     );
     if (match) {
       setSelectedBlock(match.code);
+      onSelectionChange("block", match.code, selectedState, selectedDistrict, match.code, match.name);
     }
-  }, [initialBlock, selectedBlock, blocks]);
+  }, [initialBlock, selectedBlock, blocks, onSelectionChange, selectedState, selectedDistrict]);
+
+  // Sync external GP selection (e.g. from map pin clicks)
+  useEffect(() => {
+    if (selectedGpCode !== undefined && selectedGpCode !== selectedPanchayat) {
+      setSelectedPanchayat(selectedGpCode);
+    }
+  }, [selectedGpCode, selectedPanchayat]);
 
   // Load Panchayats when Block changes
   useEffect(() => {
