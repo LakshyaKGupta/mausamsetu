@@ -612,9 +612,9 @@ def _build_fallback_response(layer_id: int, where: str, return_geometry: bool, f
 
 @router.get("/nic/query")
 async def proxy_nic_query(
-    layer_id: int,
-    where: str,
-    outFields: str,
+    layer_id: int = 0,
+    where: str = "1=1",
+    outFields: str = "*",
     returnGeometry: bool = False,
     is_bharatmaps: bool = False,
     f: str = "json"
