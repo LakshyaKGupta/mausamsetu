@@ -36,13 +36,15 @@ interface MapPin {
 
 // API_URL removed
 
-function ChangeView({ center, zoom }: { center: [number, number]; zoom: number }) {
+function ChangeView({ center, zoom, hasGeoJson }: { center: [number, number]; zoom: number; hasGeoJson: boolean }) {
   const map = useMap();
+  const cLat = center[0];
+  const cLon = center[1];
   useEffect(() => {
-    if (center[0] && center[1]) {
-      map.setView(center, zoom);
+    if (!hasGeoJson && cLat && cLon) {
+      map.setView([cLat, cLon], zoom);
     }
-  }, [center, zoom, map]);
+  }, [cLat, cLon, zoom, map, hasGeoJson]);
   return null;
 }
 
@@ -54,7 +56,7 @@ function FitBounds({ geoJson }: { geoJson: any | null }) {
         const layer = L.geoJSON(geoJson);
         const bounds = layer.getBounds();
         if (bounds.isValid()) {
-          map.fitBounds(bounds, { padding: [20, 20], maxZoom: 14 });
+          map.fitBounds(bounds, { padding: [30, 30], maxZoom: 14 });
         }
       } catch (e) {
         console.error("Error fitting bounds", e);
@@ -118,7 +120,7 @@ export default function Map({ geoJson, lat, lon, zoom = 7 }: MapProps) {
         zoom={zoom}
         style={{ height: "100%", width: "100%", zIndex: 0 }}
       >
-        <ChangeView center={center} zoom={zoom} />
+        <ChangeView center={center} zoom={zoom} hasGeoJson={!!geoJson} />
         <FitBounds geoJson={geoJson} />
         <MapController onBoundsChange={fetchPins} />
 

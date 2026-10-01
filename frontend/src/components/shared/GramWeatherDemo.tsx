@@ -178,12 +178,12 @@ export const GramWeatherDemo: React.FC<{
     } else if (level === "block") {
       layer = 2;
       where = `block_lgd=${code}`;
-      if (name) where += `&block=${encodeURIComponent(name)}`;
-      if (dtcode) where += `&dist_lgd=${dtcode}`;
+      if (name) where += ` AND block='${name}'`;
+      if (dtcode) where += ` AND dist_lgd=${dtcode}`;
     } else if (level === "gp") {
       layer = 3;
       where = `gp_code='${code}'`;
-      if (bpcode) where += `&blklgdcode='${bpcode}'`;
+      if (bpcode) where += ` AND blklgdcode='${bpcode}'`;
       is_bharatmaps = false;
     }
 
