@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { MapPin } from "lucide-react";
+import { getApiBaseUrl } from "@/api/client";
 
 interface LocationOption {
   code: string;
@@ -7,8 +8,18 @@ interface LocationOption {
 }
 
 interface LocationSelectorProps {
-  onSelectionChange: (level: "state" | "district" | "block" | "gp" | "none", code: string, stateCode?: string, districtCode?: string, blockCode?: string) => void;
+  onSelectionChange: (
+    level: "state" | "district" | "block" | "gp" | "none",
+    code: string,
+    stateCode?: string,
+    districtCode?: string,
+    blockCode?: string,
+    name?: string
+  ) => void;
   disabled: boolean;
+  initialState?: string;
+  initialDistrict?: string;
+  initialBlock?: string;
 }
 
 const DEFAULT_INDIAN_STATES: LocationOption[] = [
@@ -50,7 +61,13 @@ const DEFAULT_INDIAN_STATES: LocationOption[] = [
   { code: '38', name: 'Dadra,Nagar Haveli,Daman & Diu' },
 ].sort((a, b) => a.name.localeCompare(b.name));
 
-export default function LocationSelector({ onSelectionChange, disabled }: LocationSelectorProps) {
+export default function LocationSelector({
+  onSelectionChange,
+  disabled,
+  initialState,
+  initialDistrict,
+  initialBlock,
+}: LocationSelectorProps) {
   const [states, setStates] = useState<LocationOption[]>(DEFAULT_INDIAN_STATES);
   const [districts, setDistricts] = useState<LocationOption[]>([]);
   const [blocks, setBlocks] = useState<LocationOption[]>([]);
@@ -61,7 +78,7 @@ export default function LocationSelector({ onSelectionChange, disabled }: Locati
   const [selectedBlock, setSelectedBlock] = useState<string>("");
   const [selectedPanchayat, setSelectedPanchayat] = useState<string>("");
 
-  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
+  const API_URL = `${getApiBaseUrl()}/api`;
 
   const fetchNic = useCallback(async (layerId: number, where: string) => {
     try {
@@ -85,7 +102,7 @@ export default function LocationSelector({ onSelectionChange, disabled }: Locati
           if (f.attributes && (f.attributes.State_LGD || f.attributes.state_lgd) && (f.attributes.STNAME || f.attributes.stname)) {
             const code = f.attributes.State_LGD || f.attributes.state_lgd;
             const name = f.attributes.STNAME || f.attributes.stname;
-            unique.set(code, name);
+            unique.set(String(code), name);
           }
         });
         if (unique.size > 0) {
@@ -96,6 +113,17 @@ export default function LocationSelector({ onSelectionChange, disabled }: Locati
       })
       .catch((err) => console.error("Failed to load states", err));
   }, [fetchNic]);
+
+  // Pre-select State from props if specified
+  useEffect(() => {
+    if (!initialState || selectedState || states.length === 0) return;
+    const match = states.find(
+      (s) => s.name.toLowerCase() === initialState.toLowerCase() || s.code === String(initialState)
+    );
+    if (match) {
+      setSelectedState(match.code);
+    }
+  }, [initialState, selectedState, states]);
 
   // Load Districts when State changes
   useEffect(() => {
@@ -117,6 +145,17 @@ export default function LocationSelector({ onSelectionChange, disabled }: Locati
       });
   }, [selectedState, fetchNic]);
 
+  // Pre-select District from props if specified
+  useEffect(() => {
+    if (!initialDistrict || selectedDistrict || districts.length === 0) return;
+    const match = districts.find(
+      (d) => d.name.toLowerCase() === initialDistrict.toLowerCase() || d.code === String(initialDistrict)
+    );
+    if (match) {
+      setSelectedDistrict(match.code);
+    }
+  }, [initialDistrict, selectedDistrict, districts]);
+
   // Load Blocks when District changes
   useEffect(() => {
     if (!selectedDistrict) return;
@@ -135,6 +174,17 @@ export default function LocationSelector({ onSelectionChange, disabled }: Locati
         setPanchayats([]);
       });
   }, [selectedDistrict, selectedState, fetchNic]);
+
+  // Pre-select Block from props if specified
+  useEffect(() => {
+    if (!initialBlock || selectedBlock || blocks.length === 0) return;
+    const match = blocks.find(
+      (b) => b.name.toLowerCase() === initialBlock.toLowerCase() || b.code === String(initialBlock)
+    );
+    if (match) {
+      setSelectedBlock(match.code);
+    }
+  }, [initialBlock, selectedBlock, blocks]);
 
   // Load Panchayats when Block changes
   useEffect(() => {
@@ -156,32 +206,36 @@ export default function LocationSelector({ onSelectionChange, disabled }: Locati
 
   const handleStateChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const val = e.target.value;
+    const sObj = states.find((s) => s.code === val);
     setSelectedState(val);
     setSelectedDistrict("");
     setSelectedBlock("");
     setSelectedPanchayat("");
-    onSelectionChange("state", val);
+    onSelectionChange("state", val, val, undefined, undefined, sObj?.name);
   };
 
   const handleDistrictChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const val = e.target.value;
+    const dObj = districts.find((d) => d.code === val);
     setSelectedDistrict(val);
     setSelectedBlock("");
     setSelectedPanchayat("");
-    onSelectionChange("district", val, selectedState);
+    onSelectionChange("district", val, selectedState, val, undefined, dObj?.name);
   };
 
   const handleBlockChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const val = e.target.value;
+    const bObj = blocks.find((b) => b.code === val);
     setSelectedBlock(val);
     setSelectedPanchayat("");
-    onSelectionChange("block", val, selectedState, selectedDistrict);
+    onSelectionChange("block", val, selectedState, selectedDistrict, val, bObj?.name);
   };
 
   const handlePanchayatChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const val = e.target.value;
+    const gpObj = panchayats.find((p) => p.code === val);
     setSelectedPanchayat(val);
-    onSelectionChange("gp", val, selectedState, selectedDistrict, selectedBlock);
+    onSelectionChange("gp", val, selectedState, selectedDistrict, selectedBlock, gpObj?.name);
   };
 
   return (

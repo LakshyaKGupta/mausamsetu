@@ -34,26 +34,29 @@ def list_field_reports(
         q = q.filter(Panchayat.block.ilike(f"%{block}%"))
         
     limit_val = 50 if not isinstance(limit, int) else limit
-    reports = q.order_by(FieldReport.created_at.desc()).limit(limit_val).all()
-    
     result = []
-    for r, officer, panchayat in reports:
-        result.append(
-            FieldReportOut(
-                id=r.id,
-                officer_id=r.officer_id,
-                officer_name=officer.name if officer else "Extension Officer",
-                panchayat_id=r.panchayat_id,
-                panchayat_name=panchayat.name if panchayat else None,
-                block=panchayat.block if panchayat else None,
-                crop=r.crop,
-                observation_type=r.observation_type,
-                severity=r.severity,
-                description=r.description,
-                photo_url=r.photo_url,
-                created_at=r.created_at,
+    try:
+        reports = q.order_by(FieldReport.created_at.desc()).limit(limit_val).all()
+        for r, officer, panchayat in reports:
+            result.append(
+                FieldReportOut(
+                    id=r.id,
+                    officer_id=r.officer_id,
+                    officer_name=officer.name if officer else "Extension Officer",
+                    panchayat_id=r.panchayat_id,
+                    panchayat_name=panchayat.name if panchayat else None,
+                    block=panchayat.block if panchayat else None,
+                    crop=r.crop,
+                    observation_type=r.observation_type,
+                    severity=r.severity,
+                    description=r.description,
+                    photo_url=r.photo_url,
+                    created_at=r.created_at,
+                )
             )
-        )
+    except Exception as e:
+        db.rollback()
+
     if not result and block:
         from datetime import datetime, timedelta
         observations = [

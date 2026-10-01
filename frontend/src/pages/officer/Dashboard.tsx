@@ -1479,6 +1479,9 @@ export default function OfficerDashboard() {
               initialLat={selectedLoc?.lat || 21.28}
               initialLon={selectedLoc?.lon || 78.89}
               initialZoom={11}
+              initialState={selectedLoc?.state || officerData.state || 'Maharashtra'}
+              initialDistrict={districtName}
+              initialBlock={blockName}
             />
           </div>
         )}

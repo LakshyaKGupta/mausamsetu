@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import LocationSelector from "./LocationSelector";
 import MapWrapper from "./MapWrapper";
 import { cn } from "@/lib/utils";
+import { getApiBaseUrl } from "@/api/client";
 
 interface HourlyRecord {
   valid_time: string;
@@ -67,11 +68,14 @@ interface ForecastResponse {
 }
 
 export const GramWeatherDemo: React.FC<{
-  className?: string
-  initialLat?: number
-  initialLon?: number
-  initialZoom?: number
-}> = ({ className, initialLat, initialLon, initialZoom }) => {
+  className?: string;
+  initialLat?: number;
+  initialLon?: number;
+  initialZoom?: number;
+  initialState?: string;
+  initialDistrict?: string;
+  initialBlock?: string;
+}> = ({ className, initialLat, initialLon, initialZoom, initialState, initialDistrict, initialBlock }) => {
   const [selectedGpCode, setSelectedGpCode] = useState<string>("");
   const [interval, setInterval] = useState<number>(3);
   const [forecastData, setForecastData] = useState<ForecastResponse | null>(null);
@@ -85,7 +89,7 @@ export const GramWeatherDemo: React.FC<{
     zoom: initialZoom ?? 4,
   };
 
-  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
+  const API_URL = `${getApiBaseUrl()}/api`;
 
   const [localBoundaries, setLocalBoundaries] = useState<any>(null);
 
@@ -99,58 +103,94 @@ export const GramWeatherDemo: React.FC<{
       .catch(err => console.debug('Local boundaries cache loading deferred', err));
   }, []);
 
-  const fetchBoundary = async (level: string, code: string, stcode?: string, dtcode?: string, bpcode?: string) => {
+  const fetchBoundary = async (
+    level: string,
+    code: string,
+    stcode?: string,
+    dtcode?: string,
+    bpcode?: string,
+    name?: string
+  ) => {
     let layer = 1;
     let where = "";
     let is_bharatmaps = false;
 
     if (level === "state") {
-      layer = 0; where = `State_LGD=${code}`;
+      layer = 0;
+      where = `State_LGD=${code}`;
       if (localBoundaries?.states) {
-        const match = localBoundaries.states[code] || 
-          Object.values(localBoundaries.states).find((s: any) => 
-            String(s.state_lgd) === String(code) || 
-            (Array.isArray(s.aliases) && s.aliases.map(String).includes(String(code)))
+        const cleanName = (name || "").toLowerCase();
+        const match =
+          localBoundaries.states[code] ||
+          (cleanName && localBoundaries.states[cleanName]) ||
+          Object.values(localBoundaries.states).find(
+            (s: any) =>
+              String(s.state_lgd) === String(code) ||
+              (cleanName && s.name && s.name.toLowerCase() === cleanName) ||
+              (Array.isArray(s.aliases) &&
+                (s.aliases.map(String).includes(String(code)) ||
+                  (cleanName && s.aliases.map((a: string) => a.toLowerCase()).includes(cleanName))))
           );
         if (match && (match as any).geometry) {
           setGeoJson({
             type: "FeatureCollection",
-            features: [{
-              type: "Feature",
-              properties: { State_LGD: Number(code), STNAME: (match as any).name, TYPE: "State" },
-              geometry: (match as any).geometry
-            }]
+            features: [
+              {
+                type: "Feature",
+                properties: { State_LGD: Number(code), STNAME: (match as any).name || name, TYPE: "State" },
+                geometry: (match as any).geometry,
+              },
+            ],
           });
         }
       }
     } else if (level === "district") {
-      layer = 1; where = `Dist_LGD=${code}`;
+      layer = 1;
+      where = `Dist_LGD=${code}`;
+      if (name) where += `&district=${encodeURIComponent(name)}`;
       if (localBoundaries?.districts) {
-        const match = localBoundaries.districts[code] || 
-          Object.values(localBoundaries.districts).find((d: any) => 
-            String(d.dist_lgd) === String(code) || 
-            (d.district && d.district.toLowerCase() === code.toLowerCase())
+        const cleanName = (name || "").toLowerCase();
+        const match =
+          (cleanName && localBoundaries.districts[cleanName]) ||
+          localBoundaries.districts[code] ||
+          Object.values(localBoundaries.districts).find(
+            (d: any) =>
+              String(d.dist_lgd) === String(code) ||
+              (cleanName && d.district && d.district.toLowerCase() === cleanName)
           );
         if (match && (match as any).geometry) {
           setGeoJson({
             type: "FeatureCollection",
-            features: [{
-              type: "Feature",
-              properties: { Dist_LGD: Number(code), D_Pan_Name: (match as any).district, State: (match as any).state },
-              geometry: (match as any).geometry
-            }]
+            features: [
+              {
+                type: "Feature",
+                properties: {
+                  Dist_LGD: Number(code),
+                  D_Pan_Name: (match as any).district || name,
+                  State: (match as any).state,
+                },
+                geometry: (match as any).geometry,
+              },
+            ],
           });
         }
       }
     } else if (level === "block") {
-      layer = 2; where = `block_lgd=${code}`;
+      layer = 2;
+      where = `block_lgd=${code}`;
+      if (name) where += `&block=${encodeURIComponent(name)}`;
+      if (dtcode) where += `&dist_lgd=${dtcode}`;
     } else if (level === "gp") {
-      layer = 3; where = `gp_code='${code}'`;
+      layer = 3;
+      where = `gp_code='${code}'`;
+      if (bpcode) where += `&blklgdcode='${bpcode}'`;
       is_bharatmaps = false;
     }
 
     try {
-      const url = `${API_URL}/nic/query?layer_id=${layer}&where=${encodeURIComponent(where)}&outFields=*&returnGeometry=true&f=geojson&is_bharatmaps=${is_bharatmaps}`;
+      const url = `${API_URL}/nic/query?layer_id=${layer}&where=${encodeURIComponent(
+        where
+      )}&outFields=*&returnGeometry=true&f=geojson&is_bharatmaps=${is_bharatmaps}`;
       const res = await fetch(url);
       if (res.ok) {
         const data = await res.json();
@@ -163,7 +203,23 @@ export const GramWeatherDemo: React.FC<{
     }
   };
 
-  const handleSelectionChange = (level: "state" | "district" | "block" | "gp" | "none", code: string, stcode?: string, dtcode?: string, bpcode?: string) => {
+  // Pre-load active jurisdiction block boundary on initial view
+  useEffect(() => {
+    if (initialBlock) {
+      fetchBoundary("block", initialBlock, undefined, undefined, undefined, initialBlock);
+    } else if (initialDistrict) {
+      fetchBoundary("district", initialDistrict, undefined, undefined, undefined, initialDistrict);
+    }
+  }, [initialBlock, initialDistrict]);
+
+  const handleSelectionChange = (
+    level: "state" | "district" | "block" | "gp" | "none",
+    code: string,
+    stcode?: string,
+    dtcode?: string,
+    bpcode?: string,
+    name?: string
+  ) => {
     if (level === "none") {
       setGeoJson(null);
       setForecastData(null);
@@ -171,7 +227,7 @@ export const GramWeatherDemo: React.FC<{
       return;
     }
 
-    fetchBoundary(level, code, stcode, dtcode, bpcode);
+    fetchBoundary(level, code, stcode, dtcode, bpcode, name);
 
     if (level === "gp") {
       setSelectedGpCode(code);
@@ -248,6 +304,9 @@ export const GramWeatherDemo: React.FC<{
           <LocationSelector 
             onSelectionChange={handleSelectionChange} 
             disabled={loading} 
+            initialState={initialState}
+            initialDistrict={initialDistrict}
+            initialBlock={initialBlock}
           />
           
           {loading && (
