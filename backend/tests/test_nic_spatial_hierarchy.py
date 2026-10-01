@@ -75,3 +75,30 @@ def test_multi_state_punjab_ludhiana():
     assert len(jagraon_gps["features"]) == 8
     assert "Kalan Gram Panchayat" in [f["attributes"]["gp_name"] for f in jagraon_gps["features"]]
 
+
+def test_all_36_indian_states_and_uts():
+    from app.api.nic import ALL_INDIA_STATES_UTS
+    assert len(ALL_INDIA_STATES_UTS) == 36
+
+    for s in ALL_INDIA_STATES_UTS:
+        lgd = s["State_LGD"]
+        stname = s["STNAME"]
+
+        # 1. State boundary polygon
+        st_resp = _build_fallback_response(0, f"State_LGD={lgd}", True, "geojson")
+        assert len(st_resp["features"]) >= 1, f"State {stname} (LGD {lgd}) returned 0 features"
+        geom = st_resp["features"][0]["geometry"]
+        assert geom["type"] in ["Polygon", "MultiPolygon"], f"Invalid geom type for {stname}"
+        assert len(geom["coordinates"]) > 0
+
+        # 2. Districts list
+        d_resp = _build_fallback_response(1, f"State_LGD={lgd}", False, "json")
+        assert len(d_resp["features"]) >= 1, f"State {stname} (LGD {lgd}) returned 0 districts"
+
+        # 3. First district block hierarchy
+        first_d = d_resp["features"][0]["attributes"]
+        first_d_lgd = first_d["Dist_LGD"]
+        b_resp = _build_fallback_response(2, f"dist_lgd={first_d_lgd}", False, "json")
+        assert len(b_resp["features"]) >= 1, f"District {first_d['D_Pan_Name']} in {stname} returned 0 blocks"
+
+

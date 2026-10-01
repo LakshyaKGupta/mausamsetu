@@ -140,6 +140,21 @@ def _create_natural_polygon(lat: float, lon: float, radius: float = 0.07, num_po
     }
 
 
+def _extract_point_from_geometry(geom: Optional[dict], default_lat: float = 21.0, default_lon: float = 78.0) -> tuple[float, float]:
+    """Safely unnest coordinates from Polygon or MultiPolygon geometry to get a valid (lat, lon) float tuple."""
+    if not geom or not isinstance(geom, dict):
+        return default_lat, default_lon
+    coords = geom.get("coordinates")
+    curr = coords
+    while isinstance(curr, (list, tuple)) and len(curr) > 0 and isinstance(curr[0], (list, tuple)):
+        if len(curr) >= 2 and isinstance(curr[0], (int, float)) and isinstance(curr[1], (int, float)):
+            break
+        curr = curr[0]
+    if isinstance(curr, (list, tuple)) and len(curr) >= 2 and isinstance(curr[0], (int, float)) and isinstance(curr[1], (int, float)):
+        return float(curr[1]), float(curr[0])
+    return default_lat, default_lon
+
+
 # Standard BharatMaps / Census to State mapping covering both LGD and Census sequences
 BHARATMAPS_STATE_LGD = {
     1: "Jammu And Kashmir",
@@ -195,31 +210,78 @@ def _get_district_list_for_state(target_state_lgd: int, target_state_name: str):
             d_lower = d["district"].lower()
             cached_d = BOUNDARIES_DATA.get("districts", {}).get(d_lower)
             dlgd = (target_state_lgd * 100) + idx
+            cached_geom = cached_d.get("geometry") if cached_d else None
+            lat, lon = _extract_point_from_geometry(cached_geom, default_lat=float(d.get("lat", 21.0)), default_lon=float(d.get("lon", 78.0)))
             districts_list.append({
                 "Dist_LGD": dlgd,
                 "D_Pan_Name": d["district"],
                 "State_LGD": target_state_lgd,
-                "lat": d.get("lat", 21.0),
-                "lon": d.get("lon", 78.0),
-                "geometry": cached_d.get("geometry") if cached_d else None,
+                "lat": lat,
+                "lon": lon,
+                "geometry": cached_geom,
                 "blocks": d.get("blocks", []),
             })
             seen_names.add(d_lower)
 
     # 2. Add remaining cached districts for this state from boundaries_cache
     for d_name, d_val in sorted(BOUNDARIES_DATA.get("districts", {}).items()):
-        if (target_state_name.lower() in d_val.get("state", "").lower() or d_val.get("state_lgd") == target_state_lgd) and d_name not in seen_names:
+        is_target_state = False
+        if target_state_lgd == 37:  # Ladakh
+            if d_name in ("ladakh (leh)", "kargil") or d_val.get("state_lgd") == 37:
+                is_target_state = True
+        elif target_state_lgd == 36:  # Telangana
+            if d_val.get("state_lgd") == 36 or d_name in (
+                "hyderabad", "warangal", "karimnagar", "nizamabad", "khammam",
+                "medak", "nalgonda", "mahbubnagar", "adilabad", "rangareddy"
+            ):
+                is_target_state = True
+        elif target_state_lgd == 28:  # Andhra Pradesh (exclude Telangana districts)
+            if (target_state_name.lower() in d_val.get("state", "").lower() or d_val.get("state_lgd") == 28) and d_name not in (
+                "hyderabad", "warangal", "karimnagar", "nizamabad", "khammam",
+                "medak", "nalgonda", "mahbubnagar", "adilabad", "rangareddy"
+            ):
+                is_target_state = True
+        elif target_state_lgd == 1:  # J&K (exclude Ladakh)
+            if (target_state_name.lower() in d_val.get("state", "").lower() or d_val.get("state_lgd") == 1) and d_name not in (
+                "ladakh (leh)", "kargil"
+            ):
+                is_target_state = True
+        elif target_state_lgd in (25, 38):  # Dadra, Nagar Haveli, Daman & Diu
+            if d_val.get("state_lgd") in (25, 38) or "dadra" in d_val.get("state", "").lower() or "daman" in d_val.get("state", "").lower():
+                is_target_state = True
+        else:
+            if target_state_name.lower() in d_val.get("state", "").lower() or d_val.get("state_lgd") == target_state_lgd:
+                is_target_state = True
+
+        if is_target_state and d_name not in seen_names:
             dlgd = (target_state_lgd * 100) + len(districts_list)
+            geom = d_val.get("geometry")
+            lat, lon = _extract_point_from_geometry(geom, default_lat=21.0, default_lon=78.0)
             districts_list.append({
                 "Dist_LGD": dlgd,
                 "D_Pan_Name": d_val.get("district", d_name.title()),
                 "State_LGD": target_state_lgd,
-                "lat": d_val.get("geometry", {}).get("coordinates", [[[78.0, 20.0]]])[0][0][1],
-                "lon": d_val.get("geometry", {}).get("coordinates", [[[78.0, 20.0]]])[0][0][0],
-                "geometry": d_val.get("geometry"),
+                "lat": lat,
+                "lon": lon,
+                "geometry": geom,
                 "blocks": [],
             })
             seen_names.add(d_name)
+
+    # Universal guarantee: Every state has at least one valid district
+    if not districts_list:
+        st_entry = next((s for s in ALL_INDIA_STATES_UTS if s["State_LGD"] == target_state_lgd), None)
+        fallback_lat = float(st_entry["lat"]) if st_entry else 21.0
+        fallback_lon = float(st_entry["lon"]) if st_entry else 78.0
+        districts_list.append({
+            "Dist_LGD": target_state_lgd * 100 + 1,
+            "D_Pan_Name": f"{target_state_name} Administrative District",
+            "State_LGD": target_state_lgd,
+            "lat": fallback_lat,
+            "lon": fallback_lon,
+            "geometry": _create_natural_polygon(fallback_lat, fallback_lon, radius=0.35, num_points=20),
+            "blocks": [],
+        })
 
     return districts_list
 
@@ -232,13 +294,14 @@ def _get_district_info(dist_lgd: Optional[int] = None, dname: Optional[str] = No
         cached = BOUNDARIES_DATA.get("districts", {}).get(clean_name)
         if cached:
             s_lgd = state_lgd or cached.get("state_lgd", 27)
+            lat, lon = _extract_point_from_geometry(cached.get("geometry"), default_lat=21.145, default_lon=79.088)
             return {
                 "Dist_LGD": dist_lgd or (s_lgd * 100),
                 "D_Pan_Name": cached.get("district", dname.title()),
                 "State_LGD": s_lgd,
                 "geometry": cached.get("geometry"),
-                "lat": cached.get("geometry", {}).get("coordinates", [[[78.0, 21.0]]])[0][0][1] if cached.get("geometry") else 21.145,
-                "lon": cached.get("geometry", {}).get("coordinates", [[[78.0, 21.0]]])[0][0][0] if cached.get("geometry") else 79.088,
+                "lat": lat,
+                "lon": lon,
             }
         # Check in STATES_DATA
         for s in STATES_DATA:
@@ -251,14 +314,15 @@ def _get_district_info(dist_lgd: Optional[int] = None, dname: Optional[str] = No
                         "D_Pan_Name": d["district"],
                         "State_LGD": s_lgd,
                         "geometry": None,
-                        "lat": d.get("lat", 21.145),
-                        "lon": d.get("lon", 79.088),
+                        "lat": float(d.get("lat", 21.145)),
+                        "lon": float(d.get("lon", 79.088)),
                     }
 
     # 2. Match by dist_lgd
     if dist_lgd is not None:
         target_s_lgd = state_lgd or (dist_lgd // 100 if dist_lgd >= 100 else 27)
-        target_s_name = BHARATMAPS_STATE_LGD.get(target_s_lgd, "Maharashtra")
+        st_item = next((s for s in ALL_INDIA_STATES_UTS if s["State_LGD"] == target_s_lgd), None)
+        target_s_name = st_item["STNAME"] if st_item else BHARATMAPS_STATE_LGD.get(target_s_lgd, "Maharashtra")
         s_dists = _get_district_list_for_state(target_s_lgd, target_s_name)
         matched = next((d for d in s_dists if d["Dist_LGD"] == dist_lgd), None)
         if matched:
@@ -268,13 +332,16 @@ def _get_district_info(dist_lgd: Optional[int] = None, dname: Optional[str] = No
             return s_dists[idx]
 
     # Fallback default
+    cached_nagpur = BOUNDARIES_DATA.get("districts", {}).get("nagpur", {})
+    fallback_geom = cached_nagpur.get("geometry")
+    fallback_lat, fallback_lon = _extract_point_from_geometry(fallback_geom, default_lat=21.145, default_lon=79.088)
     return {
         "Dist_LGD": dist_lgd or 2700,
         "D_Pan_Name": dname.title() if dname else "Nagpur",
         "State_LGD": state_lgd or 27,
-        "geometry": BOUNDARIES_DATA.get("districts", {}).get("nagpur", {}).get("geometry"),
-        "lat": 21.145,
-        "lon": 79.088,
+        "geometry": fallback_geom,
+        "lat": fallback_lat,
+        "lon": fallback_lon,
     }
 
 
@@ -292,9 +359,8 @@ def _build_fallback_response(layer_id: int, where: str, return_geometry: bool, f
 
         filtered_states = ALL_INDIA_STATES_UTS
         if target_lgd is not None:
-            mapped_name = BHARATMAPS_STATE_LGD.get(target_lgd)
-            if mapped_name:
-                filtered_states = [s for s in ALL_INDIA_STATES_UTS if mapped_name.lower() in s["STNAME"].lower()]
+            if target_lgd in (25, 38):
+                filtered_states = [s for s in ALL_INDIA_STATES_UTS if s["State_LGD"] in (25, 38)]
             else:
                 filtered_states = [s for s in ALL_INDIA_STATES_UTS if s["State_LGD"] == target_lgd]
         elif target_name and target_name != "1=1":
@@ -308,7 +374,9 @@ def _build_fallback_response(layer_id: int, where: str, return_geometry: bool, f
             }
             feat = {"attributes": attrs}
             if return_geometry:
-                cached_st = BOUNDARIES_DATA.get("states", {}).get(s["STNAME"].lower())
+                cached_st = BOUNDARIES_DATA.get("states", {}).get(str(s["State_LGD"]))
+                if not cached_st:
+                    cached_st = BOUNDARIES_DATA.get("states", {}).get(s["STNAME"].lower())
                 if not cached_st and target_lgd:
                     cached_st = BOUNDARIES_DATA.get("states", {}).get(str(target_lgd))
                 if cached_st and cached_st.get("geometry"):
