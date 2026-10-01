@@ -1475,6 +1475,7 @@ export default function OfficerDashboard() {
         {activeTab === 'map' && (
           <div className="w-full bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden h-[calc(100vh-13rem)] min-h-[580px] relative">
             <GramWeatherDemo
+              key={`${selectedLoc?.state || ''}-${districtName}-${blockName}`}
               className="w-full h-full"
               initialLat={selectedLoc?.lat || 21.28}
               initialLon={selectedLoc?.lon || 78.89}
