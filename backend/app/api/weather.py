@@ -182,8 +182,21 @@ def get_weather_history(panchayat_id: int, days: int = 7, db: Session = Depends(
 
 
 @router.get("/gp/{gpcode}")
-async def get_weather_by_gpcode(gpcode: str, interval: int = 3, db: Session = Depends(get_db)):
+async def get_weather_by_gpcode(
+    gpcode: str,
+    interval: int = 3,
+    state: Optional[str] = None,
+    district: Optional[str] = None,
+    block: Optional[str] = None,
+    name: Optional[str] = None,
+    lat: Optional[float] = None,
+    lon: Optional[float] = None,
+    db: Session = Depends(get_db)
+):
     """Weather forecast by GP code supporting multi-interval hourly forecasts for Gram Manchitra GIS integration."""
+    from app.api.nic import _get_district_info, BHARATMAPS_STATE_LGD, BOUNDARIES_DATA, _extract_point_from_geometry
+    from app.api.geography import STATES_DATA
+
     panchayat = None
     if db is not None:
         try:
@@ -196,68 +209,93 @@ async def get_weather_by_gpcode(gpcode: str, interval: int = 3, db: Session = De
                 pass
             panchayat = None
 
-    lat, lon = 21.23, 78.91
-    name = f"Gram Panchayat ({gpcode})"
-    block = "Kalmeshwar"
-    district = "Nagpur"
-    state = "Maharashtra"
-
+    # 1. Base resolution: database
     if panchayat:
-        lat = panchayat.lat or lat
-        lon = panchayat.lng or lon
-        name = panchayat.name or name
-        block = panchayat.block or block
-        district = panchayat.district or district
-        state = panchayat.state or state
-    elif gpcode.isdigit() and len(gpcode) >= 4:
+        lat = lat or panchayat.lat
+        lon = lon or panchayat.lng
+        name = name or panchayat.name
+        block = block or panchayat.block
+        district = district or panchayat.district
+        state = state or panchayat.state
+
+    # 2. Check local high-fidelity cache (e.g. Adegaon 180064, Amgaon 180065, etc.)
+    cached_gp = BOUNDARIES_DATA.get("panchayats", {}).get("by_gp", {}).get(str(gpcode))
+    if cached_gp:
+        props = cached_gp.get("properties", {})
+        if not name:
+            name = props.get("gp_name", f"Gram Panchayat ({gpcode})")
+        if lat is None or lon is None:
+            c_lat, c_lon = _extract_point_from_geometry(cached_gp.get("geometry"), default_lat=21.23, default_lon=78.91)
+            lat = lat or c_lat
+            lon = lon or c_lon
+        blk_code = props.get("blklgdcode")
+        if blk_code and str(blk_code) in BOUNDARIES_DATA.get("blocks", {}):
+            cached_b = BOUNDARIES_DATA["blocks"][str(blk_code)]
+            if not block:
+                block = cached_b.get("name") or cached_b.get("block", "Block")
+            dist_lgd = cached_b.get("dist_lgd")
+            if dist_lgd:
+                d_info = _get_district_info(dist_lgd)
+                if not district:
+                    district = d_info.get("D_Pan_Name", "District")
+                if not state:
+                    st_lgd = d_info.get("State_LGD", 27)
+                    state = BHARATMAPS_STATE_LGD.get(st_lgd, "Maharashtra")
+
+    # 3. Hierarchy decoding when not in DB/cache
+    if gpcode.isdigit() and len(gpcode) >= 4:
         code_num = int(gpcode)
-        from app.api.nic import _get_district_info, BHARATMAPS_STATE_LGD, KNOWN_BLOCK_CENTROIDS
-        from app.api.geography import STATES_DATA
+        gp_idx = code_num % 100
+        rem = code_num // 100
+        blk_idx = rem % 100
+        dist_code = rem // 100
 
-        is_gp = (code_num >= 10_000_000)
-        if is_gp:
-            # 8-digit GP code: (block_code * 100) + gp_idx
-            blk_code = code_num // 100
-            dist_code = blk_code // 100
-            gp_idx = code_num % 100
-        else:
-            # 4, 5, or 6-digit Block code
-            blk_code = code_num
-            dist_code = blk_code // 100
-            gp_idx = None
+        if dist_code > 0:
+            d_info = _get_district_info(dist_code)
+            if not district:
+                district = d_info.get("D_Pan_Name", "District")
+            if not state:
+                st_lgd = d_info.get("State_LGD", 27)
+                state = BHARATMAPS_STATE_LGD.get(st_lgd, "Maharashtra")
 
-        d_info = _get_district_info(dist_code)
-        district = d_info.get("D_Pan_Name", "District")
-        st_lgd = d_info.get("State_LGD", 27)
-        state = BHARATMAPS_STATE_LGD.get(st_lgd, "Maharashtra")
+            if not block:
+                d_lower = district.lower()
+                found_blk = None
+                for s_data in STATES_DATA:
+                    for d in s_data.get("districts", []):
+                        if d["district"].lower() == d_lower:
+                            blocks = d.get("blocks", [])
+                            if 0 <= blk_idx < len(blocks):
+                                found_blk = blocks[blk_idx]
+                if found_blk:
+                    block = found_blk.get("block")
+                else:
+                    block_names = ["Central", "North", "South", "East", "West", "Rural"]
+                    b_suffix = block_names[blk_idx % len(block_names)]
+                    block = f"{district} {b_suffix}"
 
-        # Resolve block name and centroid
-        d_lower = district.lower()
-        blk_idx = blk_code % 100
-        found_blk = None
-        for s_data in STATES_DATA:
-            for d in s_data.get("districts", []):
-                if d["district"].lower() == d_lower:
-                    blocks = d.get("blocks", [])
-                    if 0 <= blk_idx < len(blocks):
-                        found_blk = blocks[blk_idx]
-        if found_blk:
-            block = found_blk.get("block", "Block")
-            lat = found_blk.get("lat", d_info["lat"])
-            lon = found_blk.get("lon", d_info["lon"])
-        else:
-            block = f"{district} Block #{blk_idx + 1}"
-            lat = d_info["lat"]
-            lon = d_info["lon"]
+            if not name:
+                gp_names = ["Kalan", "Khurd", "Mandi", "East", "West", "Central", "Rampur", "Shivpuri"]
+                gp_subname = gp_names[gp_idx % len(gp_names)]
+                name = f"{gp_subname} Gram Panchayat"
 
-        if is_gp and gp_idx is not None:
-            gp_names = ["Kalan", "Khurd", "Mandi", "East", "West", "Central", "Rampur", "Shivpuri"]
-            gp_subname = gp_names[gp_idx % len(gp_names)]
-            name = f"{gp_subname} Gram Panchayat"
-            lat = round(lat + ((gp_idx % 3 - 1) * 0.025), 4)
-            lon = round(lon + ((gp_idx // 3 - 1) * 0.025), 4)
-        else:
-            name = f"{block} Block Operations"
+            if lat is None or lon is None:
+                d_lat = d_info["lat"]
+                d_lon = d_info["lon"]
+                offsets = [(0.0, 0.0), (0.09, 0.01), (-0.09, -0.01), (0.01, 0.10), (-0.01, -0.10), (-0.07, 0.07)]
+                b_dy, b_dx = offsets[blk_idx % len(offsets)]
+                blk_lat = d_lat + b_dy
+                blk_lon = d_lon + b_dx
+                lat = round(blk_lat + ((gp_idx % 3 - 1) * 0.025), 4)
+                lon = round(blk_lon + ((gp_idx // 3 - 1) * 0.025), 4)
+
+    # Defaults if still unassigned
+    lat = lat if lat is not None else 21.23
+    lon = lon if lon is not None else 78.91
+    name = name or f"Gram Panchayat ({gpcode})"
+    block = block or "Block Operations"
+    district = district or "District"
+    state = state or "India"
 
     from app.providers.mausamgram import IMausamGramProvider
     provider = IMausamGramProvider()

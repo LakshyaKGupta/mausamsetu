@@ -81,6 +81,10 @@ export const GramWeatherDemo: React.FC<{
   initialZoom?: number;
 }> = ({ className, initialLat, initialLon, initialZoom }) => {
   const [selectedGpCode, setSelectedGpCode] = useState<string>("");
+  const [selectedStateName, setSelectedStateName] = useState<string>("");
+  const [selectedDistrictName, setSelectedDistrictName] = useState<string>("");
+  const [selectedBlockName, setSelectedBlockName] = useState<string>("");
+  const [selectedGpName, setSelectedGpName] = useState<string>("");
   const [interval, setInterval] = useState<number>(3);
   const [forecastData, setForecastData] = useState<ForecastResponse | null>(null);
   const [geoJson, setGeoJson] = useState<unknown | null>(null);
@@ -196,14 +200,18 @@ export const GramWeatherDemo: React.FC<{
       }
     } else if (level === "block") {
       layer = 2;
-      where = `block_lgd=${code}`;
       if (name) where += ` AND block='${name}'`;
       if (dtcode) where += ` AND dist_lgd=${dtcode}`;
+      if (stcode) where += ` AND State_LGD=${stcode}`;
 
       // Concurrently query both block boundary and its Gram Panchayats
       try {
         const blockUrl = `${API_URL}/nic/query?layer_id=2&where=${encodeURIComponent(where)}&outFields=*&returnGeometry=true&f=geojson`;
-        const gpUrl = `${API_URL}/nic/query?layer_id=3&where=${encodeURIComponent(`blklgdcode='${code}'`)}&outFields=*&returnGeometry=true&f=geojson`;
+        let gpWhere = `blklgdcode='${code}'`;
+        if (dtcode) gpWhere += ` AND dist_lgd=${dtcode}`;
+        if (stcode) gpWhere += ` AND State_LGD=${stcode}`;
+        if (name) gpWhere += ` AND b_pan_name='${name}'`;
+        const gpUrl = `${API_URL}/nic/query?layer_id=3&where=${encodeURIComponent(gpWhere)}&outFields=*&returnGeometry=true&f=geojson`;
         const [blockRes, gpRes] = await Promise.all([fetch(blockUrl), fetch(gpUrl)]);
         const blockData = blockRes.ok ? await blockRes.json() : null;
         const gpData = gpRes.ok ? await gpRes.json() : null;
@@ -254,6 +262,9 @@ export const GramWeatherDemo: React.FC<{
       layer = 3;
       where = `gp_code='${code}'`;
       if (bpcode) where += ` AND blklgdcode='${bpcode}'`;
+      if (dtcode) where += ` AND dist_lgd=${dtcode}`;
+      if (stcode) where += ` AND State_LGD=${stcode}`;
+      if (name) where += ` AND gp_name='${name}'`;
       is_bharatmaps = false;
       setSelectedPinId(code);
 
@@ -330,7 +341,27 @@ export const GramWeatherDemo: React.FC<{
       setPins([]);
       setSelectedPinId(undefined);
       setSelectedPoint(null);
+      setSelectedStateName("");
+      setSelectedDistrictName("");
+      setSelectedBlockName("");
+      setSelectedGpName("");
       return;
+    }
+
+    if (level === "state") {
+      setSelectedStateName(name || "");
+      setSelectedDistrictName("");
+      setSelectedBlockName("");
+      setSelectedGpName("");
+    } else if (level === "district") {
+      setSelectedDistrictName(name || "");
+      setSelectedBlockName("");
+      setSelectedGpName("");
+    } else if (level === "block") {
+      setSelectedBlockName(name || "");
+      setSelectedGpName("");
+    } else if (level === "gp") {
+      setSelectedGpName(name || "");
     }
 
     fetchBoundary(level, code, stcode, dtcode, bpcode, name);
@@ -350,6 +381,8 @@ export const GramWeatherDemo: React.FC<{
     setSelectedGpCode(gpCodeStr);
     setSelectedPinId(gpCodeStr);
     setSelectedPoint([pin.lat, pin.lon]);
+    setSelectedGpName(pin.name || "");
+    if (pin.block_name) setSelectedBlockName(pin.block_name);
     fetchBoundary("gp", gpCodeStr, undefined, undefined, undefined, pin.name);
   };
 
@@ -358,7 +391,19 @@ export const GramWeatherDemo: React.FC<{
     setLoading(true);
     setError("");
 
-    fetch(`${API_URL}/weather/gp/${selectedGpCode}?interval=${interval}`)
+    const params = new URLSearchParams({
+      interval: String(interval),
+    });
+    if (selectedStateName) params.append("state", selectedStateName);
+    if (selectedDistrictName) params.append("district", selectedDistrictName);
+    if (selectedBlockName) params.append("block", selectedBlockName);
+    if (selectedGpName) params.append("name", selectedGpName);
+    if (selectedPoint && selectedPoint.length === 2) {
+      params.append("lat", String(selectedPoint[0]));
+      params.append("lon", String(selectedPoint[1]));
+    }
+
+    fetch(`${API_URL}/weather/gp/${selectedGpCode}?${params.toString()}`)
       .then(async (res) => {
         if (!res.ok) {
           const errData = await res.json().catch(() => ({}));
@@ -375,7 +420,7 @@ export const GramWeatherDemo: React.FC<{
         setError(`Failed to load forecast: ${err.message}`);
         setLoading(false);
       });
-  }, [selectedGpCode, interval, API_URL]);
+  }, [selectedGpCode, interval, API_URL, selectedStateName, selectedDistrictName, selectedBlockName, selectedGpName, selectedPoint]);
 
   return (
     <div className={cn("w-full h-[calc(100vh-64px)] relative overflow-hidden bg-slate-50", className)}>

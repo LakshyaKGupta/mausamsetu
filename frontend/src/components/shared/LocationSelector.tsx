@@ -135,7 +135,11 @@ export default function LocationSelector({
   // Load Blocks when District changes
   useEffect(() => {
     if (!selectedDistrict) return;
-    fetchNic(2, `dist_lgd=${selectedDistrict}`)
+    const dObj = districts.find((d) => d.code === selectedDistrict);
+    const dParam = dObj ? `&d_pan_name=${encodeURIComponent(dObj.name)}` : "";
+    const stParam = selectedState ? `&State_LGD=${selectedState}` : "";
+
+    fetchNic(2, `dist_lgd=${selectedDistrict}${stParam}${dParam}`)
       .then((features) => {
         const unique = new Map();
         features.forEach((f: any) => {
@@ -149,7 +153,7 @@ export default function LocationSelector({
         setSelectedBlock("");
         setPanchayats([]);
       });
-  }, [selectedDistrict, selectedState, fetchNic]);
+  }, [selectedDistrict, selectedState, fetchNic, districts]);
 
 
   // Sync external GP selection (e.g. from map pin clicks)
@@ -162,7 +166,14 @@ export default function LocationSelector({
   // Load Panchayats when Block changes
   useEffect(() => {
     if (!selectedBlock) return;
-    fetchNic(3, `blklgdcode='${selectedBlock}'`)
+    const bObj = blocks.find((b) => b.code === selectedBlock);
+    const bParam = bObj ? `&b_pan_name=${encodeURIComponent(bObj.name)}` : "";
+    const dObj = districts.find((d) => d.code === selectedDistrict);
+    const dParam = dObj ? `&d_pan_name=${encodeURIComponent(dObj.name)}` : "";
+    const distParam = selectedDistrict ? `&dist_lgd=${selectedDistrict}` : "";
+    const stParam = selectedState ? `&State_LGD=${selectedState}` : "";
+
+    fetchNic(3, `blklgdcode='${selectedBlock}'${distParam}${stParam}${dParam}${bParam}`)
       .then((features) => {
         const unique = new Map();
         features.forEach((f: any) => {
@@ -175,7 +186,7 @@ export default function LocationSelector({
         setPanchayats(arr);
         setSelectedPanchayat("");
       });
-  }, [selectedBlock, selectedDistrict, selectedState, fetchNic]);
+  }, [selectedBlock, selectedDistrict, selectedState, fetchNic, blocks, districts]);
 
   const handleStateChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const val = e.target.value;
