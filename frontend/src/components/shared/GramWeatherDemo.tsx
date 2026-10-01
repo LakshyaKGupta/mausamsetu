@@ -79,10 +79,7 @@ export const GramWeatherDemo: React.FC<{
   initialLat?: number;
   initialLon?: number;
   initialZoom?: number;
-  initialState?: string;
-  initialDistrict?: string;
-  initialBlock?: string;
-}> = ({ className, initialLat, initialLon, initialZoom, initialState, initialDistrict, initialBlock }) => {
+}> = ({ className, initialLat, initialLon, initialZoom }) => {
   const [selectedGpCode, setSelectedGpCode] = useState<string>("");
   const [interval, setInterval] = useState<number>(3);
   const [forecastData, setForecastData] = useState<ForecastResponse | null>(null);
@@ -288,14 +285,7 @@ export const GramWeatherDemo: React.FC<{
     }
   }, [API_URL, localBoundaries]);
 
-  // Pre-load active jurisdiction block boundary on initial view
-  useEffect(() => {
-    if (initialBlock) {
-      fetchBoundary("block", initialBlock, undefined, undefined, undefined, initialBlock);
-    } else if (initialDistrict) {
-      fetchBoundary("district", initialDistrict, undefined, undefined, undefined, initialDistrict);
-    }
-  }, [initialBlock, initialDistrict, fetchBoundary]);
+  // No auto-preload — user must explicitly select a location
 
   const handleSelectionChange = (
     level: "state" | "district" | "block" | "gp" | "none",
@@ -317,10 +307,11 @@ export const GramWeatherDemo: React.FC<{
 
     fetchBoundary(level, code, stcode, dtcode, bpcode, name);
 
-    if (level === "gp" || level === "block") {
-      // Both GP and Block codes trigger live weather telemetry
+    // Weather forecast ONLY shows when user explicitly selects a Gram Panchayat
+    if (level === "gp") {
       setSelectedGpCode(code);
     } else {
+      // For state/district/block — clear forecast panel, keep map boundary
       setSelectedGpCode("");
       setForecastData(null);
     }
@@ -407,10 +398,7 @@ export const GramWeatherDemo: React.FC<{
         <div className="p-4 sm:p-5 overflow-y-auto flex-grow scrollbar-thin scrollbar-thumb-slate-300">
           <LocationSelector 
             onSelectionChange={handleSelectionChange} 
-            disabled={loading} 
-            initialState={initialState}
-            initialDistrict={initialDistrict}
-            initialBlock={initialBlock}
+            disabled={loading}
             selectedGpCode={selectedGpCode}
           />
           

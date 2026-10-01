@@ -17,9 +17,6 @@ interface LocationSelectorProps {
     name?: string
   ) => void;
   disabled: boolean;
-  initialState?: string;
-  initialDistrict?: string;
-  initialBlock?: string;
   selectedGpCode?: string;
 }
 
@@ -65,9 +62,6 @@ const DEFAULT_INDIAN_STATES: LocationOption[] = [
 export default function LocationSelector({
   onSelectionChange,
   disabled,
-  initialState,
-  initialDistrict,
-  initialBlock,
   selectedGpCode,
 }: LocationSelectorProps) {
   const [states, setStates] = useState<LocationOption[]>(DEFAULT_INDIAN_STATES);
@@ -116,16 +110,6 @@ export default function LocationSelector({
       .catch((err) => console.error("Failed to load states", err));
   }, [fetchNic]);
 
-  // Pre-select State from props if specified
-  useEffect(() => {
-    if (!initialState || selectedState || states.length === 0) return;
-    const match = states.find(
-      (s) => s.name.toLowerCase() === initialState.toLowerCase() || s.code === String(initialState)
-    );
-    if (match) {
-      setSelectedState(match.code);
-    }
-  }, [initialState, selectedState, states]);
 
   // Load Districts when State changes
   useEffect(() => {
@@ -147,16 +131,6 @@ export default function LocationSelector({
       });
   }, [selectedState, fetchNic]);
 
-  // Pre-select District from props if specified
-  useEffect(() => {
-    if (!initialDistrict || selectedDistrict || districts.length === 0) return;
-    const match = districts.find(
-      (d) => d.name.toLowerCase() === initialDistrict.toLowerCase() || d.code === String(initialDistrict)
-    );
-    if (match) {
-      setSelectedDistrict(match.code);
-    }
-  }, [initialDistrict, selectedDistrict, districts]);
 
   // Load Blocks when District changes
   useEffect(() => {
@@ -177,17 +151,6 @@ export default function LocationSelector({
       });
   }, [selectedDistrict, selectedState, fetchNic]);
 
-  // Pre-select Block from props if specified
-  useEffect(() => {
-    if (!initialBlock || selectedBlock || blocks.length === 0) return;
-    const match = blocks.find(
-      (b) => b.name.toLowerCase() === initialBlock.toLowerCase() || b.code === String(initialBlock)
-    );
-    if (match) {
-      setSelectedBlock(match.code);
-      onSelectionChange("block", match.code, selectedState, selectedDistrict, match.code, match.name);
-    }
-  }, [initialBlock, selectedBlock, blocks, onSelectionChange, selectedState, selectedDistrict]);
 
   // Sync external GP selection (e.g. from map pin clicks)
   useEffect(() => {

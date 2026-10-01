@@ -213,23 +213,43 @@ export default function Map({
             key={JSON.stringify(geoJson)}
             data={geoJson}
             style={(feature: any) => {
-              const isGp = Boolean(feature?.properties?.gp_code);
-              const isSelected = isGp && String(feature?.properties?.gp_code) === String(selectedPinId);
-              if (isGp) {
+              const hasGpCode = Boolean(feature?.properties?.gp_code);
+              const isBlockBoundary = !hasGpCode && Boolean(
+                feature?.properties?.block_lgd ||
+                feature?.properties?.B_Pan_Name ||
+                feature?.properties?.blklgdcode
+              );
+
+              if (isBlockBoundary) {
+                // Thick outer block boundary — distinct, no fill so GP polygons show through
+                return {
+                  color: '#065f46',
+                  weight: 4.5,
+                  opacity: 1,
+                  fillColor: '#10b981',
+                  fillOpacity: 0.04,
+                  dashArray: '8, 4',
+                };
+              }
+
+              if (hasGpCode) {
+                const isSelected = String(feature?.properties?.gp_code) === String(selectedPinId);
                 return {
                   color: isSelected ? '#047857' : '#059669',
-                  weight: isSelected ? 3.5 : 2,
-                  opacity: isSelected ? 1 : 0.85,
+                  weight: isSelected ? 2.5 : 1.5,
+                  opacity: isSelected ? 1 : 0.8,
                   fillColor: isSelected ? '#10b981' : '#34d399',
                   fillOpacity: isSelected ? 0.35 : 0.15,
                 };
               }
+
+              // Generic fallback (state/district)
               return {
                 color: '#047857',
                 weight: 3.2,
                 opacity: 0.95,
                 fillColor: '#10b981',
-                fillOpacity: 0.14,
+                fillOpacity: 0.12,
               };
             }}
             onEachFeature={(feature: any, layer: any) => {
