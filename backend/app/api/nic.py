@@ -288,16 +288,28 @@ def _get_district_list_for_state(target_state_lgd: int, target_state_name: str):
 
 def _get_district_info(dist_lgd: Optional[int] = None, dname: Optional[str] = None, state_lgd: Optional[int] = None):
     """Find district information and geometry from BOUNDARIES_DATA and STATES_DATA."""
+    import urllib.parse
+    if state_lgd and state_lgd > 100:
+        state_lgd = state_lgd // 100
+
     # 1. Match by name if provided
     if dname:
-        clean_name = dname.lower().strip()
+        clean_name = urllib.parse.unquote_plus(dname).lower().strip()
         cached = BOUNDARIES_DATA.get("districts", {}).get(clean_name)
+        if not cached:
+            if "leh" in clean_name:
+                cached = BOUNDARIES_DATA.get("districts", {}).get("ladakh (leh)")
+            else:
+                for k, v in BOUNDARIES_DATA.get("districts", {}).items():
+                    if k == clean_name or clean_name in k or (v.get("district") and clean_name in v["district"].lower()):
+                        cached = v
+                        break
         if cached:
             s_lgd = state_lgd or cached.get("state_lgd", 27)
             lat, lon = _extract_point_from_geometry(cached.get("geometry"), default_lat=21.145, default_lon=79.088)
             return {
                 "Dist_LGD": dist_lgd or (s_lgd * 100),
-                "D_Pan_Name": cached.get("district", dname.title()),
+                "D_Pan_Name": cached.get("district", clean_name.title()),
                 "State_LGD": s_lgd,
                 "geometry": cached.get("geometry"),
                 "lat": lat,
@@ -306,7 +318,7 @@ def _get_district_info(dist_lgd: Optional[int] = None, dname: Optional[str] = No
         # Check in STATES_DATA
         for s in STATES_DATA:
             for d in s.get("districts", []):
-                if d["district"].lower() == clean_name:
+                if d["district"].lower() == clean_name or clean_name in d["district"].lower():
                     s_name = s["state"]
                     s_lgd = next((k for k, v in BHARATMAPS_STATE_LGD.items() if v.lower() == s_name.lower()), 27)
                     return {
@@ -321,6 +333,8 @@ def _get_district_info(dist_lgd: Optional[int] = None, dname: Optional[str] = No
     # 2. Match by dist_lgd
     if dist_lgd is not None:
         target_s_lgd = state_lgd or (dist_lgd // 100 if dist_lgd >= 100 else 27)
+        if target_s_lgd > 100:
+            target_s_lgd = target_s_lgd // 100
         st_item = next((s for s in ALL_INDIA_STATES_UTS if s["State_LGD"] == target_s_lgd), None)
         target_s_name = st_item["STNAME"] if st_item else BHARATMAPS_STATE_LGD.get(target_s_lgd, "Maharashtra")
         s_dists = _get_district_list_for_state(target_s_lgd, target_s_name)
@@ -389,11 +403,15 @@ def _build_fallback_response(layer_id: int, where: str, return_geometry: bool, f
     elif layer_id == 1:
         dist_match = re.search(r"(?:dist_lgd|district_lgd)\s*=\s*['\"]?(\d+)['\"]?", where, re.IGNORECASE)
         st_match = re.search(r"(?:state_lgd|st_lgd)\s*=\s*['\"]?(\d+)['\"]?", where, re.IGNORECASE)
-        dname_match = re.search(r"(?:d_pan_name|district)\s*=\s*['\"]?([^'\"]+)['\"]?", where, re.IGNORECASE)
+        dname_match = re.search(r"(?:d_pan_name|district)\s*=\s*['\"]?([^'\"&]+)['\"]?", where, re.IGNORECASE)
 
         target_dist_lgd = int(dist_match.group(1)) if dist_match else None
-        target_state_lgd = int(st_match.group(1)) if st_match else 27
-        target_dname = dname_match.group(1).lower().strip() if dname_match else None
+        target_state_lgd = int(st_match.group(1)) if st_match else (target_dist_lgd // 100 if target_dist_lgd and target_dist_lgd >= 100 else 27)
+        if target_state_lgd > 100:
+            target_state_lgd = target_state_lgd // 100
+
+        import urllib.parse
+        target_dname = urllib.parse.unquote_plus(dname_match.group(1)).lower().strip() if dname_match else None
 
         target_state_name = BHARATMAPS_STATE_LGD.get(target_state_lgd, "Maharashtra")
 

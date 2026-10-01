@@ -147,16 +147,19 @@ export const GramWeatherDemo: React.FC<{
     } else if (level === "district") {
       layer = 1;
       where = `Dist_LGD=${code}`;
-      if (name) where += `&district=${encodeURIComponent(name)}`;
+      if (stcode) where += ` AND State_LGD=${stcode}`;
+      if (name) where += ` AND district='${encodeURIComponent(name)}'`;
       if (localBoundaries?.districts) {
         const cleanName = (name || "").toLowerCase();
         const match =
           (cleanName && localBoundaries.districts[cleanName]) ||
+          (cleanName.includes("leh") && localBoundaries.districts["ladakh (leh)"]) ||
           localBoundaries.districts[code] ||
           Object.values(localBoundaries.districts).find(
             (d: any) =>
               String(d.dist_lgd) === String(code) ||
-              (cleanName && d.district && d.district.toLowerCase() === cleanName)
+              (cleanName && d.district && d.district.toLowerCase() === cleanName) ||
+              (cleanName && d.district && cleanName.includes(d.district.toLowerCase()))
           );
         if (match && (match as any).geometry) {
           setGeoJson({
