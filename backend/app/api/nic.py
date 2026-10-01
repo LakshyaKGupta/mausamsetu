@@ -629,18 +629,26 @@ async def proxy_nic_query(
         "f": f
     }
 
-    # For geometry requests: ALWAYS try upstream NIC first (real boundaries).
-    # Only use local fallback if upstream is unavailable or returns empty.
-    if returnGeometry or f.lower() == "geojson":
+    is_geojson = f.lower() == "geojson"
+
+    # Layer 0 (States) and Layer 1 (Districts):
+    # boundaries_cache.json now has real polygon data — serve fast from cache.
+    if layer_id in (0, 1):
+        fallback_data = _build_fallback_response(layer_id, where, returnGeometry, f)
+        if fallback_data and len(fallback_data.get("features", [])) > 0:
+            return JSONResponse(content=fallback_data)
+
+    # Layer 2 (Blocks) and Layer 3 (GPs):
+    # These are NOT in the local cache — must fetch from NIC GIS upstream.
+    if layer_id in (2, 3) and (returnGeometry or is_geojson):
         try:
             async with httpx.AsyncClient(verify=False, timeout=6.0) as client:
                 response = await client.get(url, params=params)
                 if response.status_code == 200:
                     data = response.json()
                     features = data.get("features", [])
-                    # Accept real upstream data if it has actual geometry (not just point stubs)
                     if features and len(features) > 0:
-                        # Validate that at least one feature has real multi-point geometry (not a fake circle)
+                        # Validate real geometry (more than just a stub point)
                         has_real_geom = any(
                             isinstance(feat.get("geometry", {}).get("coordinates"), list) and
                             len(str(feat.get("geometry", {}).get("coordinates", []))) > 50
@@ -649,14 +657,14 @@ async def proxy_nic_query(
                         if has_real_geom:
                             return JSONResponse(content=data)
         except Exception as e:
-            logger.info(f"NIC upstream unavailable for geometry ({e}); using authoritative local boundaries.")
+            logger.info(f"NIC upstream unavailable for layer {layer_id} ({e}); using local approximation fallback.")
 
-    # For non-geometry attribute queries: use local directory for speed
-    if not returnGeometry and f.lower() != "geojson":
+    # Attribute-only queries (no geometry): use local directory for speed
+    if not returnGeometry and not is_geojson:
         fallback_data = _build_fallback_response(layer_id, where, returnGeometry, f)
         if fallback_data and len(fallback_data.get("features", [])) > 0:
             return JSONResponse(content=fallback_data)
-        # Also try upstream for attributes if local has nothing
+        # Try upstream if local has nothing
         try:
             async with httpx.AsyncClient(verify=False, timeout=1.5) as client:
                 response = await client.get(url, params=params)
@@ -667,7 +675,9 @@ async def proxy_nic_query(
         except Exception as e:
             logger.info(f"NIC upstream unavailable for attributes ({e}).")
 
-    # Last resort: local approximation (may be circular polygons for blocks/GPs)
+    # Last resort: local approximation
     fallback_data = _build_fallback_response(layer_id, where, returnGeometry, f)
     return JSONResponse(content=fallback_data)
+
+
 
