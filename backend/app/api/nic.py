@@ -284,7 +284,7 @@ def _build_fallback_response(layer_id: int, where: str, return_geometry: bool, f
 
     # LAYER 0: States & Union Territories
     if layer_id == 0:
-        st_match = re.search(r"state_lgd\s*=\s*(\d+)", where, re.IGNORECASE)
+        st_match = re.search(r"(?:state_lgd|st_lgd)\s*=\s*['\"]?(\d+)['\"]?", where, re.IGNORECASE)
         name_match = re.search(r"(?:stname|state)\s*=\s*['\"]?([^'\"]+)['\"]?", where, re.IGNORECASE)
         
         target_lgd = int(st_match.group(1)) if st_match else None
@@ -319,8 +319,8 @@ def _build_fallback_response(layer_id: int, where: str, return_geometry: bool, f
 
     # LAYER 1: Districts
     elif layer_id == 1:
-        dist_match = re.search(r"dist_lgd\s*=\s*(\d+)", where, re.IGNORECASE)
-        st_match = re.search(r"state_lgd\s*=\s*(\d+)", where, re.IGNORECASE)
+        dist_match = re.search(r"(?:dist_lgd|district_lgd)\s*=\s*['\"]?(\d+)['\"]?", where, re.IGNORECASE)
+        st_match = re.search(r"(?:state_lgd|st_lgd)\s*=\s*['\"]?(\d+)['\"]?", where, re.IGNORECASE)
         dname_match = re.search(r"(?:d_pan_name|district)\s*=\s*['\"]?([^'\"]+)['\"]?", where, re.IGNORECASE)
 
         target_dist_lgd = int(dist_match.group(1)) if dist_match else None
@@ -362,9 +362,9 @@ def _build_fallback_response(layer_id: int, where: str, return_geometry: bool, f
 
     # LAYER 2: Blocks (Sub-Districts)
     elif layer_id == 2:
-        blk_match = re.search(r"block_lgd\s*=\s*(\d+)", where, re.IGNORECASE)
+        blk_match = re.search(r"(?:block_lgd|blklgdcode)\s*=\s*['\"]?(\d+)['\"]?", where, re.IGNORECASE)
         bname_match = re.search(r"(?:b_pan_name|block)\s*=\s*['\"]?([^'\"]+)['\"]?", where, re.IGNORECASE)
-        dist_match = re.search(r"dist_lgd\s*=\s*(\d+)", where, re.IGNORECASE)
+        dist_match = re.search(r"(?:dist_lgd|district_lgd)\s*=\s*['\"]?(\d+)['\"]?", where, re.IGNORECASE)
         dname_match = re.search(r"(?:d_pan_name|district)\s*=\s*['\"]?([^'\"]+)['\"]?", where, re.IGNORECASE)
 
         target_blk_lgd = int(blk_match.group(1)) if blk_match else None
@@ -444,7 +444,7 @@ def _build_fallback_response(layer_id: int, where: str, return_geometry: bool, f
     # LAYER 3: Gram Panchayats
     elif layer_id == 3:
         gp_match = re.search(r"gp_code\s*=\s*['\"]?(\d+)['\"]?", where, re.IGNORECASE)
-        blk_match = re.search(r"blklgdcode\s*=\s*['\"]?(\d+)['\"]?", where, re.IGNORECASE)
+        blk_match = re.search(r"(?:blklgdcode|block_lgd)\s*=\s*['\"]?(\d+)['\"]?", where, re.IGNORECASE)
         bname_match = re.search(r"(?:b_pan_name|block)\s*=\s*['\"]?([^'\"]+)['\"]?", where, re.IGNORECASE)
 
         target_gp = int(gp_match.group(1)) if gp_match else None
@@ -543,8 +543,21 @@ async def proxy_nic_query(
         "f": f
     }
 
-    # If asking for high-fidelity geometries, prefer local dataset directly to avoid slow external NIC failure
-    if returnGeometry or "State_LGD=" in where or "Dist_LGD=" in where or "block_lgd=" in where or "gp_code=" in where:
+    where_lower = (where or "").lower()
+
+    # Prioritize authoritative local administrative and polygon dataset for fast, consistent rendering across all states
+    should_use_local = (
+        returnGeometry
+        or "state" in where_lower
+        or "dist" in where_lower
+        or "block" in where_lower
+        or "gp" in where_lower
+        or "blklgdcode" in where_lower
+        or "1=1" in where_lower
+        or f.lower() == "geojson"
+    )
+
+    if should_use_local:
         fallback_data = _build_fallback_response(layer_id, where, returnGeometry, f)
         if fallback_data and len(fallback_data.get("features", [])) > 0:
             return JSONResponse(content=fallback_data)

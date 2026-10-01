@@ -56,3 +56,22 @@ def test_layer_3_gps():
     coords = gp_geom["features"][0]["geometry"]["coordinates"][0][0]
     assert 73.0 <= coords[0] <= 76.0
     assert 17.0 <= coords[1] <= 19.5
+
+
+def test_multi_state_punjab_ludhiana():
+    # Punjab districts
+    res = _build_fallback_response(1, "State_LGD=3", False, "json")
+    d_names = [f["attributes"]["D_Pan_Name"] for f in res["features"]]
+    assert "Ludhiana" in d_names
+
+    # Ludhiana blocks (using dist_lgd=300)
+    ludh_blocks = _build_fallback_response(2, "dist_lgd=300", False, "json")
+    b_names = [f["attributes"]["B_Pan_Name"] for f in ludh_blocks["features"]]
+    assert "Jagraon" in b_names
+    assert "Khanna" in b_names
+
+    # Jagraon GPs
+    jagraon_gps = _build_fallback_response(3, "blklgdcode='30000'", False, "json")
+    assert len(jagraon_gps["features"]) == 8
+    assert "Kalan Gram Panchayat" in [f["attributes"]["gp_name"] for f in jagraon_gps["features"]]
+
