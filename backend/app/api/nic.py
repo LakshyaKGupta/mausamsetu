@@ -19,14 +19,19 @@ router = APIRouter()
 GIS_BASE = "https://grammanchitragis.nic.in/grammanchitra/rest/services/panchayat/adminpanch/MapServer"
 BHARATMAPS_BASE = "https://mapservice.gov.in/mapserviceserv176/rest/services/Panchayat/AdminGPHierarchy/MapServer"
 
-# Load precomputed high-fidelity state & district boundary dataset
+# Load precomputed high-fidelity state, district, block & GP boundary dataset
 BOUNDARIES_FILE = Path(__file__).resolve().parent.parent / "gis" / "data" / "boundaries_cache.json"
-BOUNDARIES_DATA = {"states": {}, "districts": {}}
+BOUNDARIES_DATA = {"states": {}, "districts": {}, "blocks": {}, "panchayats": {"by_block": {}, "by_gp": {}}}
 if BOUNDARIES_FILE.exists():
     try:
         with open(BOUNDARIES_FILE, "r") as f:
             BOUNDARIES_DATA = json.load(f)
-        logger.info(f"Loaded {len(BOUNDARIES_DATA.get('states', {}))} state boundaries and {len(BOUNDARIES_DATA.get('districts', {}))} district boundaries.")
+        logger.info(
+            f"Loaded {len(BOUNDARIES_DATA.get('states', {}))} states, "
+            f"{len(BOUNDARIES_DATA.get('districts', {}))} districts, "
+            f"{len(BOUNDARIES_DATA.get('blocks', {}))} blocks, "
+            f"{len(BOUNDARIES_DATA.get('panchayats', {}).get('by_gp', {}))} GPs."
+        )
     except Exception as e:
         logger.warning(f"Failed to load boundaries cache: {e}")
 
@@ -209,7 +214,8 @@ def _get_district_list_for_state(target_state_lgd: int, target_state_name: str):
         for idx, d in enumerate(matched_state_entry.get("districts", [])):
             d_lower = d["district"].lower()
             cached_d = BOUNDARIES_DATA.get("districts", {}).get(d_lower)
-            dlgd = (target_state_lgd * 100) + idx
+            real_lgd = cached_d.get("dist_lgd") if cached_d else None
+            dlgd = real_lgd if real_lgd else ((target_state_lgd * 100) + idx)
             cached_geom = cached_d.get("geometry") if cached_d else None
             lat, lon = _extract_point_from_geometry(cached_geom, default_lat=float(d.get("lat", 21.0)), default_lon=float(d.get("lon", 78.0)))
             districts_list.append({
@@ -254,7 +260,8 @@ def _get_district_list_for_state(target_state_lgd: int, target_state_name: str):
                 is_target_state = True
 
         if is_target_state and d_name not in seen_names:
-            dlgd = (target_state_lgd * 100) + len(districts_list)
+            real_lgd = d_val.get("dist_lgd")
+            dlgd = real_lgd if real_lgd else ((target_state_lgd * 100) + len(districts_list))
             geom = d_val.get("geometry")
             lat, lon = _extract_point_from_geometry(geom, default_lat=21.0, default_lon=78.0)
             districts_list.append({
@@ -308,7 +315,7 @@ def _get_district_info(dist_lgd: Optional[int] = None, dname: Optional[str] = No
             s_lgd = state_lgd or cached.get("state_lgd", 27)
             lat, lon = _extract_point_from_geometry(cached.get("geometry"), default_lat=21.145, default_lon=79.088)
             return {
-                "Dist_LGD": dist_lgd or (s_lgd * 100),
+                "Dist_LGD": cached.get("dist_lgd") or dist_lgd or (s_lgd * 100),
                 "D_Pan_Name": cached.get("district", clean_name.title()),
                 "State_LGD": s_lgd,
                 "geometry": cached.get("geometry"),
@@ -330,8 +337,21 @@ def _get_district_info(dist_lgd: Optional[int] = None, dname: Optional[str] = No
                         "lon": float(d.get("lon", 79.088)),
                     }
 
-    # 2. Match by dist_lgd
+    # 2. Match by dist_lgd directly from cache
     if dist_lgd is not None:
+        cached = BOUNDARIES_DATA.get("districts", {}).get(str(dist_lgd))
+        if cached and cached.get("geometry"):
+            s_lgd = state_lgd or cached.get("state_lgd", 27)
+            lat, lon = _extract_point_from_geometry(cached.get("geometry"), default_lat=21.145, default_lon=79.088)
+            return {
+                "Dist_LGD": cached.get("dist_lgd", dist_lgd),
+                "D_Pan_Name": cached.get("district") or cached.get("name", "District"),
+                "State_LGD": s_lgd,
+                "geometry": cached.get("geometry"),
+                "lat": lat,
+                "lon": lon,
+            }
+
         target_s_lgd = state_lgd or (dist_lgd // 100 if dist_lgd >= 100 else 27)
         if target_s_lgd > 100:
             target_s_lgd = target_s_lgd // 100
@@ -346,11 +366,11 @@ def _get_district_info(dist_lgd: Optional[int] = None, dname: Optional[str] = No
             return s_dists[idx]
 
     # Fallback default
-    cached_nagpur = BOUNDARIES_DATA.get("districts", {}).get("nagpur", {})
+    cached_nagpur = BOUNDARIES_DATA.get("districts", {}).get("484") or BOUNDARIES_DATA.get("districts", {}).get("nagpur", {})
     fallback_geom = cached_nagpur.get("geometry")
     fallback_lat, fallback_lon = _extract_point_from_geometry(fallback_geom, default_lat=21.145, default_lon=79.088)
     return {
-        "Dist_LGD": dist_lgd or 2700,
+        "Dist_LGD": dist_lgd or 484,
         "D_Pan_Name": dname.title() if dname else "Nagpur",
         "State_LGD": state_lgd or 27,
         "geometry": fallback_geom,
@@ -449,153 +469,234 @@ def _build_fallback_response(layer_id: int, where: str, return_geometry: bool, f
     # LAYER 2: Blocks (Sub-Districts)
     elif layer_id == 2:
         blk_match = re.search(r"(?:block_lgd|blklgdcode)\s*=\s*['\"]?(\d+)['\"]?", where, re.IGNORECASE)
-        bname_match = re.search(r"(?:b_pan_name|block)\s*=\s*['\"]?([^'\"]+)['\"]?", where, re.IGNORECASE)
+        bname_match = re.search(r"(?:b_pan_name|block)\s*=\s*['\"]?([^'&]+)['\"]?", where, re.IGNORECASE)
         dist_match = re.search(r"(?:dist_lgd|district_lgd)\s*=\s*['\"]?(\d+)['\"]?", where, re.IGNORECASE)
-        dname_match = re.search(r"(?:d_pan_name|district)\s*=\s*['\"]?([^'\"]+)['\"]?", where, re.IGNORECASE)
+        dname_match = re.search(r"(?:d_pan_name|district)\s*=\s*['\"]?([^'&]+)['\"]?", where, re.IGNORECASE)
 
         target_blk_lgd = int(blk_match.group(1)) if blk_match else None
         target_bname = bname_match.group(1).lower().strip() if bname_match else None
         target_dist_lgd = int(dist_match.group(1)) if dist_match else None
         target_dname = dname_match.group(1).lower().strip() if dname_match else None
 
-        if target_blk_lgd and not target_dist_lgd:
-            target_dist_lgd = target_blk_lgd // 100
+        cached_blocks = BOUNDARIES_DATA.get("blocks", {})
+        matched_block = None
 
-        d_info = _get_district_info(target_dist_lgd, target_dname)
-        dist_name = d_info["D_Pan_Name"].lower()
-        dist_lat = d_info["lat"]
-        dist_lon = d_info["lon"]
-        curr_dist_lgd = d_info["Dist_LGD"]
+        if target_blk_lgd and str(target_blk_lgd) in cached_blocks:
+            matched_block = cached_blocks[str(target_blk_lgd)]
+        elif target_bname and target_bname in cached_blocks:
+            matched_block = cached_blocks[target_bname]
+        elif target_dist_lgd and target_bname and f"{target_dist_lgd}_{target_bname}" in cached_blocks:
+            matched_block = cached_blocks[f"{target_dist_lgd}_{target_bname}"]
 
-        available_blocks = []
-        for s in STATES_DATA:
-            for d in s.get("districts", []):
-                if d["district"].lower() == dist_name or (target_dist_lgd and d.get("dist_lgd") == target_dist_lgd):
-                    for b in d.get("blocks", []):
-                        available_blocks.append({
-                            "name": b["block"],
-                            "lat": b.get("lat", dist_lat),
-                            "lon": b.get("lon", dist_lon),
-                        })
-
-        if not available_blocks:
-            for k, (klat, klon) in KNOWN_BLOCK_CENTROIDS.items():
-                if abs(klat - dist_lat) < 0.6 and abs(klon - dist_lon) < 0.6:
-                    available_blocks.append({"name": k.title(), "lat": klat, "lon": klon})
-
-        if not available_blocks:
-            offsets = [
-                (f"{d_info['D_Pan_Name']} Central", 0.0, 0.0),
-                (f"{d_info['D_Pan_Name']} North", 0.09, 0.02),
-                (f"{d_info['D_Pan_Name']} South", -0.09, -0.02),
-                (f"{d_info['D_Pan_Name']} East", 0.02, 0.10),
-                (f"{d_info['D_Pan_Name']} West", -0.02, -0.10),
-            ]
-            for bname, dy, dx in offsets:
-                available_blocks.append({"name": bname, "lat": round(dist_lat + dy, 4), "lon": round(dist_lon + dx, 4)})
-
-        if target_bname:
-            matched = [b for b in available_blocks if target_bname in b["name"].lower()]
-            if not matched:
-                if target_bname in KNOWN_BLOCK_CENTROIDS:
-                    klat, klon = KNOWN_BLOCK_CENTROIDS[target_bname]
-                    matched = [{"name": target_bname.title(), "lat": klat, "lon": klon}]
-                else:
-                    matched = [{"name": target_bname.title(), "lat": dist_lat, "lon": dist_lon}]
-            blocks_to_return = matched
-        elif target_blk_lgd:
-            blk_idx = target_blk_lgd % 100
-            if 0 <= blk_idx < len(available_blocks):
-                blocks_to_return = [available_blocks[blk_idx]]
-            else:
-                blocks_to_return = [available_blocks[0]]
-        else:
-            blocks_to_return = available_blocks
-
-        for idx, b in enumerate(blocks_to_return):
-            b_code = target_blk_lgd if (target_blk_lgd and len(blocks_to_return) == 1) else (curr_dist_lgd * 100 + idx)
+        # 1. Single block match from high-fidelity cache
+        if matched_block:
             attrs = {
-                "block_lgd": b_code,
-                "B_Pan_Name": b["name"],
-                "dist_lgd": curr_dist_lgd,
+                "block_lgd": matched_block.get("block_lgd", target_blk_lgd or 4445),
+                "B_Pan_Name": matched_block.get("name") or matched_block.get("block", "Block"),
+                "dist_lgd": matched_block.get("dist_lgd", target_dist_lgd or 484),
             }
             feat = {"attributes": attrs}
             if return_geometry:
-                if b["name"].lower() == "kalmeshwar":
-                    feat["geometry"] = {"type": "Polygon", "coordinates": [KALMESHWAR_POLYGON_GEOJSON]}
-                else:
-                    feat["geometry"] = _create_natural_polygon(b["lat"], b["lon"], radius=0.09, num_points=16)
+                feat["geometry"] = matched_block.get("geometry")
             features.append(feat)
+
+        # 2. Multiple blocks for a district from cache
+        elif target_dist_lgd:
+            # Map legacy dist codes (e.g. 2700 -> 484)
+            effective_dist_lgd = target_dist_lgd
+            if target_dist_lgd == 2700:
+                effective_dist_lgd = 484
+            elif target_dist_lgd == 2701:
+                effective_dist_lgd = 487
+            elif target_dist_lgd == 2702:
+                effective_dist_lgd = 490
+            elif target_dist_lgd == 2703:
+                effective_dist_lgd = 498
+            elif target_dist_lgd == 2704:
+                effective_dist_lgd = 468
+
+            dist_blocks = [
+                b for k, b in cached_blocks.items()
+                if (k.isdigit() or "_" in k) and b.get("dist_lgd") in (target_dist_lgd, effective_dist_lgd)
+            ]
+            seen_bnames = set()
+            for b in dist_blocks:
+                bname = (b.get("name") or b.get("block") or "").lower()
+                if bname and bname not in seen_bnames:
+                    seen_bnames.add(bname)
+                    attrs = {
+                        "block_lgd": b.get("block_lgd", 4445),
+                        "B_Pan_Name": b.get("name") or b.get("block", "Block"),
+                        "dist_lgd": target_dist_lgd,
+                    }
+                    feat = {"attributes": attrs}
+                    if return_geometry:
+                        feat["geometry"] = b.get("geometry")
+                    features.append(feat)
+
+        # Fallback if not in cache
+        if not features:
+            if target_blk_lgd and not target_dist_lgd:
+                target_dist_lgd = target_blk_lgd // 100
+
+            d_info = _get_district_info(target_dist_lgd, target_dname)
+            dist_name = d_info["D_Pan_Name"].lower()
+            dist_lat = d_info["lat"]
+            dist_lon = d_info["lon"]
+            curr_dist_lgd = d_info["Dist_LGD"]
+
+            available_blocks = []
+            for s in STATES_DATA:
+                for d in s.get("districts", []):
+                    if d["district"].lower() == dist_name or (target_dist_lgd and d.get("dist_lgd") == target_dist_lgd):
+                        for b in d.get("blocks", []):
+                            available_blocks.append({
+                                "name": b["block"],
+                                "lat": b.get("lat", dist_lat),
+                                "lon": b.get("lon", dist_lon),
+                            })
+
+            if not available_blocks:
+                for k, (klat, klon) in KNOWN_BLOCK_CENTROIDS.items():
+                    if abs(klat - dist_lat) < 0.6 and abs(klon - dist_lon) < 0.6:
+                        available_blocks.append({"name": k.title(), "lat": klat, "lon": klon})
+
+            if target_bname:
+                matched = [b for b in available_blocks if target_bname in b["name"].lower()]
+                if not matched:
+                    if target_bname in KNOWN_BLOCK_CENTROIDS:
+                        klat, klon = KNOWN_BLOCK_CENTROIDS[target_bname]
+                        matched = [{"name": target_bname.title(), "lat": klat, "lon": klon}]
+                    else:
+                        matched = [{"name": target_bname.title(), "lat": dist_lat, "lon": dist_lon}]
+                blocks_to_return = matched
+            elif target_blk_lgd:
+                blk_idx = target_blk_lgd % 100
+                if 0 <= blk_idx < len(available_blocks):
+                    blocks_to_return = [available_blocks[blk_idx]]
+                else:
+                    blocks_to_return = [available_blocks[0]] if available_blocks else []
+            else:
+                blocks_to_return = available_blocks
+
+            for idx, b in enumerate(blocks_to_return):
+                b_code = target_blk_lgd if (target_blk_lgd and len(blocks_to_return) == 1) else (curr_dist_lgd * 100 + idx)
+                attrs = {
+                    "block_lgd": b_code,
+                    "B_Pan_Name": b["name"],
+                    "dist_lgd": curr_dist_lgd,
+                }
+                feat = {"attributes": attrs}
+                if return_geometry:
+                    if b["name"].lower() == "kalmeshwar":
+                        feat["geometry"] = {"type": "Polygon", "coordinates": [KALMESHWAR_POLYGON_GEOJSON]}
+                    else:
+                        feat["geometry"] = _create_natural_polygon(b["lat"], b["lon"], radius=0.09, num_points=16)
+                features.append(feat)
 
     # LAYER 3: Gram Panchayats
     elif layer_id == 3:
         gp_match = re.search(r"gp_code\s*=\s*['\"]?(\d+)['\"]?", where, re.IGNORECASE)
         blk_match = re.search(r"(?:blklgdcode|block_lgd)\s*=\s*['\"]?(\d+)['\"]?", where, re.IGNORECASE)
-        bname_match = re.search(r"(?:b_pan_name|block)\s*=\s*['\"]?([^'\"]+)['\"]?", where, re.IGNORECASE)
+        bname_match = re.search(r"(?:b_pan_name|block)\s*=\s*['\"]?([^'&]+)['\"]?", where, re.IGNORECASE)
 
         target_gp = int(gp_match.group(1)) if gp_match else None
-        target_blk_lgd = int(blk_match.group(1)) if blk_match else None
+        target_blk_lgd = blk_match.group(1) if blk_match else None
         target_bname = bname_match.group(1).lower().strip() if bname_match else None
 
-        if target_gp and not target_blk_lgd:
-            target_blk_lgd = target_gp // 100
+        cached_panchayats = BOUNDARIES_DATA.get("panchayats", {})
 
-        blk_lat, blk_lon = 21.248, 78.895
-        if target_bname and target_bname in KNOWN_BLOCK_CENTROIDS:
-            blk_lat, blk_lon = KNOWN_BLOCK_CENTROIDS[target_bname]
-        elif target_blk_lgd:
-            parent_dist = target_blk_lgd // 100
-            blk_idx = target_blk_lgd % 100
-            d_info = _get_district_info(parent_dist)
-            d_lower = d_info["D_Pan_Name"].lower()
-            found_block = None
-            for s in STATES_DATA:
-                for d in s.get("districts", []):
-                    if d["district"].lower() == d_lower:
-                        blocks = d.get("blocks", [])
-                        if 0 <= blk_idx < len(blocks):
-                            found_block = blocks[blk_idx]
-            if found_block:
-                blk_lat = found_block.get("lat", d_info["lat"])
-                blk_lon = found_block.get("lon", d_info["lon"])
-            else:
-                blk_lat = d_info["lat"]
-                blk_lon = d_info["lon"]
+        # 1. Query all GPs for a block from cache
+        if target_blk_lgd or target_bname:
+            lookup_key = str(target_blk_lgd) if target_blk_lgd else target_bname
+            block_gps = cached_panchayats.get("by_block", {}).get(lookup_key)
+            if not block_gps and target_bname:
+                block_gps = cached_panchayats.get("by_block", {}).get(target_bname)
+            if not block_gps and str(target_blk_lgd) in ("270001", "4445"):
+                block_gps = cached_panchayats.get("by_block", {}).get("4445")
+            elif not block_gps and str(target_blk_lgd) in ("270000", "4446"):
+                block_gps = cached_panchayats.get("by_block", {}).get("4446")
 
-        gp_names = ["Kalan", "Khurd", "Mandi", "East", "West", "Central", "Rampur", "Shivpuri"]
-        effective_blk_code = target_blk_lgd or 152200
+            if block_gps:
+                for gp in block_gps:
+                    attrs = gp.get("properties", {})
+                    feat = {"attributes": attrs}
+                    if return_geometry:
+                        feat["geometry"] = gp.get("geometry")
+                    features.append(feat)
 
-        if target_gp:
-            gp_idx = target_gp % 100
-            gp_subname = gp_names[gp_idx % len(gp_names)]
-            dy = (gp_idx % 3 - 1) * 0.025
-            dx = (gp_idx // 3 - 1) * 0.025
-            gp_lat = round(blk_lat + dy, 5)
-            gp_lon = round(blk_lon + dx, 5)
-            attrs = {
-                "gp_code": target_gp,
-                "gp_name": f"{gp_subname} Gram Panchayat",
-                "blklgdcode": str(effective_blk_code),
-            }
-            feat = {"attributes": attrs}
-            if return_geometry:
-                feat["geometry"] = _create_natural_polygon(gp_lat, gp_lon, radius=0.028, num_points=12)
-            features.append(feat)
-        else:
-            for idx, gp in enumerate(gp_names):
-                dy = (idx % 3 - 1) * 0.025
-                dx = (idx // 3 - 1) * 0.025
+        # 2. Query a single GP by code from cache
+        elif target_gp:
+            gp_feat = cached_panchayats.get("by_gp", {}).get(str(target_gp))
+            if gp_feat:
+                attrs = gp_feat.get("properties", {})
+                feat = {"attributes": attrs}
+                if return_geometry:
+                    feat["geometry"] = gp_feat.get("geometry")
+                features.append(feat)
+
+        # Fallback if not in cache
+        if not features:
+            if target_gp and not target_blk_lgd:
+                target_blk_lgd = str(target_gp // 100)
+
+            blk_lat, blk_lon = 21.248, 78.895
+            if target_bname and target_bname in KNOWN_BLOCK_CENTROIDS:
+                blk_lat, blk_lon = KNOWN_BLOCK_CENTROIDS[target_bname]
+            elif target_blk_lgd and target_blk_lgd.isdigit():
+                blk_num = int(target_blk_lgd)
+                parent_dist = blk_num // 100
+                blk_idx = blk_num % 100
+                d_info = _get_district_info(parent_dist)
+                d_lower = d_info["D_Pan_Name"].lower()
+                found_block = None
+                for s in STATES_DATA:
+                    for d in s.get("districts", []):
+                        if d["district"].lower() == d_lower:
+                            blocks = d.get("blocks", [])
+                            if 0 <= blk_idx < len(blocks):
+                                found_block = blocks[blk_idx]
+                if found_block:
+                    blk_lat = found_block.get("lat", d_info["lat"])
+                    blk_lon = found_block.get("lon", d_info["lon"])
+                else:
+                    blk_lat = d_info["lat"]
+                    blk_lon = d_info["lon"]
+
+            gp_names = ["Kalan", "Khurd", "Mandi", "East", "West", "Central", "Rampur", "Shivpuri"]
+            effective_blk_code = target_blk_lgd or "152200"
+
+            if target_gp:
+                gp_idx = target_gp % 100
+                gp_subname = gp_names[gp_idx % len(gp_names)]
+                dy = (gp_idx % 3 - 1) * 0.025
+                dx = (gp_idx // 3 - 1) * 0.025
                 gp_lat = round(blk_lat + dy, 5)
                 gp_lon = round(blk_lon + dx, 5)
                 attrs = {
-                    "gp_code": effective_blk_code * 100 + idx,
-                    "gp_name": f"{gp} Gram Panchayat",
+                    "gp_code": target_gp,
+                    "gp_name": f"{gp_subname} Gram Panchayat",
                     "blklgdcode": str(effective_blk_code),
                 }
                 feat = {"attributes": attrs}
                 if return_geometry:
                     feat["geometry"] = _create_natural_polygon(gp_lat, gp_lon, radius=0.028, num_points=12)
                 features.append(feat)
+            else:
+                for idx, gp in enumerate(gp_names):
+                    dy = (idx % 3 - 1) * 0.025
+                    dx = (idx // 3 - 1) * 0.025
+                    gp_lat = round(blk_lat + dy, 5)
+                    gp_lon = round(blk_lon + dx, 5)
+                    attrs = {
+                        "gp_code": int(effective_blk_code) * 100 + idx if effective_blk_code.isdigit() else 180000 + idx,
+                        "gp_name": f"{gp} Gram Panchayat",
+                        "blklgdcode": str(effective_blk_code),
+                    }
+                    feat = {"attributes": attrs}
+                    if return_geometry:
+                        feat["geometry"] = _create_natural_polygon(gp_lat, gp_lon, radius=0.028, num_points=12)
+                    features.append(feat)
 
     if f.lower() == "geojson":
         geojson_features = []
@@ -631,24 +732,26 @@ async def proxy_nic_query(
 
     is_geojson = f.lower() == "geojson"
 
-    # Layer 0 (States) and Layer 1 (Districts):
-    # boundaries_cache.json now has real polygon data — serve fast from cache.
-    if layer_id in (0, 1):
-        fallback_data = _build_fallback_response(layer_id, where, returnGeometry, f)
-        if fallback_data and len(fallback_data.get("features", [])) > 0:
+    # Check local high-fidelity cache first
+    fallback_data = _build_fallback_response(layer_id, where, returnGeometry, f)
+    if fallback_data and len(fallback_data.get("features", [])) > 0:
+        # Check if the cache contains real high-res geometry (not just a 16-point circle approximation)
+        has_real_geometry = not (returnGeometry or is_geojson) or any(
+            len(str(feat.get("geometry", {}).get("coordinates", []))) > 300
+            for feat in fallback_data.get("features", [])
+        )
+        if has_real_geometry:
             return JSONResponse(content=fallback_data)
 
-    # Layer 2 (Blocks) and Layer 3 (GPs):
-    # These are NOT in the local cache — must fetch from NIC GIS upstream.
-    if layer_id in (2, 3) and (returnGeometry or is_geojson):
+    # If cache only had a coarse approximation, try upstream NIC GIS
+    if returnGeometry or is_geojson:
         try:
-            async with httpx.AsyncClient(verify=False, timeout=6.0) as client:
+            async with httpx.AsyncClient(verify=False, timeout=3.5) as client:
                 response = await client.get(url, params=params)
                 if response.status_code == 200:
                     data = response.json()
                     features = data.get("features", [])
                     if features and len(features) > 0:
-                        # Validate real geometry (more than just a stub point)
                         has_real_geom = any(
                             isinstance(feat.get("geometry", {}).get("coordinates"), list) and
                             len(str(feat.get("geometry", {}).get("coordinates", []))) > 50
@@ -657,27 +760,11 @@ async def proxy_nic_query(
                         if has_real_geom:
                             return JSONResponse(content=data)
         except Exception as e:
-            logger.info(f"NIC upstream unavailable for layer {layer_id} ({e}); using local approximation fallback.")
+            logger.info(f"NIC upstream unavailable for layer {layer_id} ({e}); using local cache.")
 
-    # Attribute-only queries (no geometry): use local directory for speed
-    if not returnGeometry and not is_geojson:
-        fallback_data = _build_fallback_response(layer_id, where, returnGeometry, f)
-        if fallback_data and len(fallback_data.get("features", [])) > 0:
-            return JSONResponse(content=fallback_data)
-        # Try upstream if local has nothing
-        try:
-            async with httpx.AsyncClient(verify=False, timeout=1.5) as client:
-                response = await client.get(url, params=params)
-                if response.status_code == 200:
-                    data = response.json()
-                    if data.get("features") is not None and len(data.get("features", [])) > 0:
-                        return JSONResponse(content=data)
-        except Exception as e:
-            logger.info(f"NIC upstream unavailable for attributes ({e}).")
-
-    # Last resort: local approximation
-    fallback_data = _build_fallback_response(layer_id, where, returnGeometry, f)
+    # Return local cache
     return JSONResponse(content=fallback_data)
+
 
 
 

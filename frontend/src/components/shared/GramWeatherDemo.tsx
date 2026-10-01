@@ -153,6 +153,7 @@ export const GramWeatherDemo: React.FC<{
               },
             ],
           });
+          return;
         }
       }
     } else if (level === "district") {
@@ -190,6 +191,7 @@ export const GramWeatherDemo: React.FC<{
               },
             ],
           });
+          return;
         }
       }
     } else if (level === "block") {
@@ -254,6 +256,32 @@ export const GramWeatherDemo: React.FC<{
       if (bpcode) where += ` AND blklgdcode='${bpcode}'`;
       is_bharatmaps = false;
       setSelectedPinId(code);
+
+      // If we already have the block map with GP polygons loaded, simply highlight the GP and focus it
+      if (geoJson && (geoJson as any).features && (geoJson as any).features.length > 1) {
+        const gpFeat = (geoJson as any).features.find(
+          (f: any) => String(f?.properties?.gp_code) === String(code)
+        );
+        if (gpFeat) {
+          const coords = gpFeat.geometry?.coordinates?.[0];
+          if (coords && coords.length > 0) {
+            let sumLon = 0;
+            let sumLat = 0;
+            coords.forEach(([lon, lat]: [number, number]) => {
+              sumLon += lon;
+              sumLat += lat;
+            });
+            setSelectedPoint([sumLat / coords.length, sumLon / coords.length]);
+          }
+          return; // Keep outer block boundary and all GP polygons on map, highlighting selected GP
+        }
+      }
+
+      // Also check pins if coordinates are already known
+      const matchedPin = pins.find((p) => String(p.id) === String(code));
+      if (matchedPin) {
+        setSelectedPoint([matchedPin.lat, matchedPin.lon]);
+      }
     }
 
     try {
